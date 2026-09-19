@@ -74,6 +74,16 @@ class LanguageConfig(ConfigModel):
     adapter: Literal["deterministic"] = "deterministic"
 
 
+class TtsConfig(ConfigModel):
+    enabled: bool = True
+    adapter: Literal["windows-sapi"] = "windows-sapi"
+    voice: str | None = Field(default=None, min_length=1, max_length=200)
+    rate: int = Field(default=0, ge=-10, le=10)
+    volume: int = Field(default=100, ge=0, le=100)
+    playback_timeout_s: float = Field(default=10.0, gt=0, le=120, allow_inf_nan=False)
+    queue_capacity: int = Field(default=8, ge=1, le=100)
+
+
 class AppConfig(ConfigModel):
     config_version: Literal["app-config.v1"] = "app-config.v1"
     paths: PathsConfig = PathsConfig()
@@ -83,6 +93,7 @@ class AppConfig(ConfigModel):
     telemetry: TelemetryConfig = TelemetryConfig()
     policy: PolicyConfig = PolicyConfig()
     language: LanguageConfig = LanguageConfig()
+    tts: TtsConfig = TtsConfig()
 
 
 def _parse_bool(value: str) -> bool:

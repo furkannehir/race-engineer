@@ -43,3 +43,11 @@ language = "en"
 
 [language]
 adapter = "deterministic"
+
+[tts]
+enabled = true
+adapter = "windows-sapi"
+rate = 0
+volume = 100
+playback_timeout_s = 10.0
+queue_capacity = 8

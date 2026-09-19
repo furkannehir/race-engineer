@@ -52,6 +52,10 @@ used, its version 3 recording stores frames, events, intents, decisions, and gen
 utterances independently. This preserves suppressed decisions for auditing and makes the
 policy and language paths replayable without launching iRacing.
 
+Approved intents retain their deadline, priority, and interruption policy through the
+speech queue. Audio that becomes stale while waiting is dropped, and critical calls may
+interrupt lower-priority playback without moving scheduling authority into the TTS adapter.
+
 Replay the M2 acceptance fixture with:
 
 ```powershell

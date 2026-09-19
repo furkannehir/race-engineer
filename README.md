@@ -5,7 +5,7 @@ assistance. Its central policy engine decides what is worth communicating; telem
 language generation, and speech synthesis remain replaceable adapters.
 
 This repository contains the M0 architecture baseline, the M1 iRacing telemetry reader,
-the deterministic M2 policy slice, and the first M3 language slice:
+the deterministic M2 policy slice, and the local M3 speech path:
 
 - versioned domain contracts and adapter protocols;
 - validated TOML configuration with environment overrides;
@@ -14,18 +14,22 @@ the deterministic M2 policy slice, and the first M3 language slice:
 - a headless async pipeline and fake implementations;
 - automated contract, configuration, fixture, and pipeline tests;
 - a reconnecting iRacing shared-memory reader with atomic snapshots, normalization,
-  event derivation, and fixture-compatible recording; and
+  event derivation, and fixture-compatible recording;
 - deterministic race-context features, strict rules, scheduling constraints, and
-  traceable policy decisions; and
-- fact-bound English wording with deterministic replay and an explicit fallback boundary.
+  traceable policy decisions;
+- fact-bound English wording with deterministic replay and an explicit fallback boundary;
+  and
+- offline Windows speech with bounded priority queueing, expiry, interruption, and
+  failure isolation.
 
-Model-backed language generation, speech synthesis, durable decision storage, adaptive
-policies, and the desktop UI remain later work.
+Model-backed language generation, higher-quality speech adapters, durable decision storage,
+adaptive policies, and the desktop UI remain later work.
 
 ## Requirements
 
 - Python 3.12 or newer
 - Git
+- Windows with an installed SAPI voice for live iRacing speech
 
 ## Development setup
 
@@ -49,6 +53,13 @@ race-engineer replay-language fixtures/synthetic/m3_green_flag `
   --config config/default.toml
 ```
 
+List the installed local voices, then run an audible radio check:
+
+```powershell
+race-engineer list-tts-voices --config config/default.toml
+race-engineer test-tts --config config/default.toml
+```
+
 With iRacing running, print normalized frames until interrupted:
 
 ```powershell
@@ -56,7 +67,8 @@ race-engineer read-iracing --config config/default.toml
 ```
 
 Record 600 normalized frames plus their events, policy decisions, speech intents, and
-generated utterances into a new replayable session directory:
+generated utterances into a new replayable session directory. Approved, non-expired
+utterances are also spoken through the configured local voice:
 
 ```powershell
 race-engineer read-iracing --config config/default.toml --limit 600 `
@@ -77,8 +89,10 @@ The live reader intentionally does not retain driver names or arbitrary raw SDK 
 See [docs/architecture.md](docs/architecture.md) and
 [docs/fixture-format.md](docs/fixture-format.md) for the M0 decisions, and
 [docs/strict-policy.md](docs/strict-policy.md) for the M2 policy behavior. The M3 wording
-boundary is described in [docs/language-generation.md](docs/language-generation.md). The
-architecture also records Jev-assisted, shadow-mode policy ranking as a post-M3 improvement.
+boundary is described in [docs/language-generation.md](docs/language-generation.md), and
+[docs/text-to-speech.md](docs/text-to-speech.md) covers local playback. The architecture
+also records Jev-assisted, shadow-mode policy ranking as a post-M3 improvement.
 The updated [implementation
 plan](docs/personalized-ai-race-engineer-implementation-plan.docx) places that evaluation
-in M4, after the end-to-end M3 speech milestone.
+in M4, after the end-to-end M3 speech milestone. Open defects are tracked in
+[docs/known-issues.md](docs/known-issues.md).

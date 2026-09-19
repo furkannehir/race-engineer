@@ -57,9 +57,9 @@ must use identifiers and reason codes rather than unnecessary raw telemetry.
 M1 selects `pyirsdk` as the first Windows shared-memory binding, isolated behind an
 `IracingSource` protocol. The domain receives only normalized contracts and can replay
 privacy-safe source samples without importing `irsdk`. Model-backed language generation,
-inference runtime, TTS engine, adaptive ranker, UI design, distribution format, and license
-remain deferred. SQLite is the persistence baseline, but concrete domain tables wait until
-their requirements are introduced.
+inference runtime, speech engines beyond the initial Windows adapter, adaptive ranker, UI
+design, distribution format, and license remain deferred. SQLite is the persistence
+baseline, but concrete domain tables wait until their requirements are introduced.
 
 ## iRacing M1 boundary
 
@@ -91,7 +91,7 @@ The live iRacing command runs this context and policy path for every accepted fr
 policy failure is isolated: telemetry recording continues and the policy state is rebuilt
 for the next frame.
 
-## Deterministic M3 language boundary
+## Local M3 speech boundary
 
 The first language adapter converts only policy-approved `SpeechIntent` facts into short
 English `Utterance` values. Its fixed templates cover the initial phase, flag, position,
@@ -105,8 +105,19 @@ directly. Language failure is isolated from telemetry and policy processing, and
 contain identifiers and template metadata rather than utterance text.
 
 Version 3 session recordings persist frames, events, intents, decisions, and utterances as
-separate streams. Fixture replay can compare generated utterances byte-for-byte at the
-contract level before speech synthesis is introduced.
+separate streams. Fixture replay compares generated utterances byte-for-byte at the
+contract level without depending on audio hardware.
+
+The initial text-to-speech adapter uses the Windows SAPI voices already installed on the
+machine. Each playback runs in an isolated hidden process, keeping COM and platform details
+outside the domain. The async playback queue is bounded, drops expired speech, orders
+pending calls by priority, and honors the intent's interruption policy. Telemetry capture
+does not wait for audio to finish.
+
+Playback failures and shutdown timeouts are logged with intent IDs and reason codes but not
+utterance text. They do not stop telemetry, policy evaluation, language generation, or
+recording. Output-device selection and higher-quality voice engines remain replaceable
+adapter work.
 
 ## Post-M3 improvement: Jev-assisted policy ranking
 

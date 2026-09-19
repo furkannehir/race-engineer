@@ -53,8 +53,9 @@ and pit state produce deterministic `RaceEvent` values. The `read-iracing` CLI c
 frames or create a new fixture-compatible recording. Every accepted frame also passes
 through the deterministic context builder, strict policy, and fact-bound language adapter.
 Version 3 recordings include frames, events, policy decisions, speech intents, and
-generated utterances. A language failure does not interrupt telemetry capture or policy
-processing. The command never overwrites an existing recording directory.
+generated utterances. Non-expired utterances enter the bounded local speech queue without
+blocking telemetry reads. A language or playback failure does not interrupt telemetry
+capture or policy processing. The command never overwrites an existing recording directory.
 
 ## Privacy boundary
 

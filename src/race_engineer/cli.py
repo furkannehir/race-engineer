@@ -8,6 +8,7 @@ from pathlib import Path
 
 from race_engineer.config import load_config
 from race_engineer.core.contracts import (
+    PlaybackResult,
     PolicyDecision,
     RaceEvent,
     SpeechIntent,
@@ -22,6 +23,7 @@ from race_engineer.observability import configure_logging
 from race_engineer.policy import DefaultRaceContextBuilder, StrictRulePolicy
 from race_engineer.telemetry.iracing import IracingEventDeriver, IracingTelemetryAdapter
 from race_engineer.telemetry.recorder import TelemetrySessionRecorder
+from race_engineer.tts import SpeechPlaybackQueue, WindowsSapiTextToSpeechEngine, tts_factory
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,6 +51,23 @@ def _parser() -> argparse.ArgumentParser:
     )
     replay_language.add_argument("directory", type=Path)
     replay_language.add_argument("--config", type=Path, required=True)
+
+    list_voices = subparsers.add_parser(
+        "list-tts-voices",
+        help="list locally installed voices for the configured speech adapter",
+    )
+    list_voices.add_argument("--config", type=Path, required=True)
+
+    test_tts = subparsers.add_parser(
+        "test-tts",
+        help="play a local race-engineer radio check",
+    )
+    test_tts.add_argument("--config", type=Path, required=True)
+    test_tts.add_argument(
+        "--text",
+        default="Radio check. Race engineer online.",
+        help="text to speak during the audio test",
+    )
 
     read_iracing = subparsers.add_parser(
         "read-iracing",
@@ -83,6 +102,22 @@ async def _read_iracing(config_path: Path, limit: int, output: Path | None) -> i
     pending_decisions: list[PolicyDecision] = []
     policy = StrictRulePolicy(config.policy.strict, decision_sink=pending_decisions.append)
     language = language_factory(config.language)
+    playback: SpeechPlaybackQueue | None = None
+    if config.tts.enabled:
+        try:
+            playback = SpeechPlaybackQueue(
+                tts_factory(config.tts),
+                capacity=config.tts.queue_capacity,
+            )
+            playback.start()
+        except Exception as error:
+            _LOGGER.exception(
+                "text-to-speech could not start; telemetry will continue",
+                extra={
+                    "event": "tts_start_failed",
+                    "reason": type(error).__name__,
+                },
+            )
     recorder: TelemetrySessionRecorder | None = None
     previous: TelemetryFrame | None = None
     frames = 0
@@ -161,6 +196,27 @@ async def _read_iracing(config_path: Path, limit: int, output: Path | None) -> i
                                 "template_id": utterance.generator_metadata.get("template_id"),
                             },
                         )
+                        if playback is not None:
+                            try:
+                                queued = await playback.submit(intent, utterance)
+                            except Exception as error:
+                                _LOGGER.exception(
+                                    "speech could not be queued; telemetry will continue",
+                                    extra={
+                                        "event": "playback_submit_failed",
+                                        "reason": type(error).__name__,
+                                        "intent_id": intent.intent_id,
+                                    },
+                                )
+                            else:
+                                if queued:
+                                    _LOGGER.info(
+                                        "utterance queued for speech",
+                                        extra={
+                                            "event": "playback_queued",
+                                            "intent_id": intent.intent_id,
+                                        },
+                                    )
                 if recorder is not None and utterances:
                     recorder.write_utterances(utterances)
 
@@ -169,6 +225,18 @@ async def _read_iracing(config_path: Path, limit: int, output: Path | None) -> i
             if limit and frames >= limit:
                 break
     finally:
+        if playback is not None:
+            try:
+                await asyncio.wait_for(
+                    playback.aclose(drain=True),
+                    timeout=config.runtime.shutdown_timeout_s,
+                )
+            except TimeoutError:
+                _LOGGER.warning(
+                    "speech queue did not drain before shutdown",
+                    extra={"event": "playback_shutdown_timeout"},
+                )
+                await playback.aclose(drain=False)
         if recorder is not None:
             recorder.__exit__(None, None, None)
     return frames
@@ -242,6 +310,28 @@ async def _replay_language(config_path: Path, directory: Path) -> dict[str, obje
     }
 
 
+async def _list_tts_voices(config_path: Path) -> tuple[str, ...]:
+    config = load_config(config_path)
+    configure_logging(config.logging)
+    if not config.tts.enabled:
+        raise ValueError("text-to-speech is disabled")
+    if config.tts.adapter == "windows-sapi":
+        return await WindowsSapiTextToSpeechEngine.installed_voices()
+    raise AssertionError(f"unsupported text-to-speech adapter: {config.tts.adapter}")
+
+
+async def _test_tts(config_path: Path, text: str) -> PlaybackResult:
+    config = load_config(config_path)
+    configure_logging(config.logging)
+    engine = tts_factory(config.tts)
+    utterance = Utterance(
+        intent_id="tts-test",
+        text=text,
+        generator_metadata={"adapter": "manual-test"},
+    )
+    return await engine.speak(utterance)
+
+
 def main() -> None:
     args = _parser().parse_args()
     match args.command:
@@ -270,6 +360,12 @@ def main() -> None:
         case "replay-language":
             result = asyncio.run(_replay_language(args.config, args.directory))
             print(json.dumps(result, indent=2, sort_keys=True))
+        case "list-tts-voices":
+            voices = asyncio.run(_list_tts_voices(args.config))
+            print(json.dumps({"voices": voices}, indent=2, sort_keys=True))
+        case "test-tts":
+            playback_result = asyncio.run(_test_tts(args.config, args.text))
+            print(playback_result.model_dump_json(indent=2))
         case "read-iracing":
             frames = asyncio.run(_read_iracing(args.config, args.limit, args.output))
             if args.output is not None:
