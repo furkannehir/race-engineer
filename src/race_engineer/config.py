@@ -70,6 +70,10 @@ class PolicyConfig(ConfigModel):
     strict: StrictPolicyConfig = StrictPolicyConfig()
 
 
+class LanguageConfig(ConfigModel):
+    adapter: Literal["deterministic"] = "deterministic"
+
+
 class AppConfig(ConfigModel):
     config_version: Literal["app-config.v1"] = "app-config.v1"
     paths: PathsConfig = PathsConfig()
@@ -78,6 +82,7 @@ class AppConfig(ConfigModel):
     privacy: PrivacyConfig = PrivacyConfig()
     telemetry: TelemetryConfig = TelemetryConfig()
     policy: PolicyConfig = PolicyConfig()
+    language: LanguageConfig = LanguageConfig()
 
 
 def _parse_bool(value: str) -> bool:

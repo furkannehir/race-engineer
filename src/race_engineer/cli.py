@@ -12,10 +12,12 @@ from race_engineer.core.contracts import (
     RaceEvent,
     SpeechIntent,
     TelemetryFrame,
+    Utterance,
     canonical_json,
 )
 from race_engineer.core.enums import PolicyDecisionOutcome
 from race_engineer.fixtures import load_fixture
+from race_engineer.language import language_factory
 from race_engineer.observability import configure_logging
 from race_engineer.policy import DefaultRaceContextBuilder, StrictRulePolicy
 from race_engineer.telemetry.iracing import IracingEventDeriver, IracingTelemetryAdapter
@@ -41,6 +43,13 @@ def _parser() -> argparse.ArgumentParser:
     replay_policy.add_argument("directory", type=Path)
     replay_policy.add_argument("--config", type=Path, required=True)
 
+    replay_language = subparsers.add_parser(
+        "replay-language",
+        help="replay recorded speech intents through the configured language generator",
+    )
+    replay_language.add_argument("directory", type=Path)
+    replay_language.add_argument("--config", type=Path, required=True)
+
     read_iracing = subparsers.add_parser(
         "read-iracing",
         help="stream normalized telemetry from a running iRacing simulator",
@@ -55,7 +64,7 @@ def _parser() -> argparse.ArgumentParser:
     read_iracing.add_argument(
         "--output",
         type=Path,
-        help="record frames, events, policy decisions, and intents in a new fixture directory",
+        help="record the live deterministic pipeline in a new fixture directory",
     )
     return parser
 
@@ -73,6 +82,7 @@ async def _read_iracing(config_path: Path, limit: int, output: Path | None) -> i
     context_builder = DefaultRaceContextBuilder(config.policy.context)
     pending_decisions: list[PolicyDecision] = []
     policy = StrictRulePolicy(config.policy.strict, decision_sink=pending_decisions.append)
+    language = language_factory(config.language)
     recorder: TelemetrySessionRecorder | None = None
     previous: TelemetryFrame | None = None
     frames = 0
@@ -120,6 +130,39 @@ async def _read_iracing(config_path: Path, limit: int, output: Path | None) -> i
                     if pending_decisions:
                         recorder.write_decisions(pending_decisions)
                 pending_decisions.clear()
+
+                utterances: list[Utterance] = []
+                for intent in intents:
+                    try:
+                        utterance = await language.generate(intent)
+                        if utterance.intent_id != intent.intent_id:
+                            raise ValueError(
+                                "generator returned an utterance for a different intent"
+                            )
+                        if len(utterance.text.split()) > intent.max_words:
+                            raise ValueError("generator exceeded the intent word limit")
+                    except Exception as error:
+                        _LOGGER.exception(
+                            "language generation failed; telemetry and policy will continue",
+                            extra={
+                                "event": "language_failed",
+                                "reason": type(error).__name__,
+                                "intent_id": intent.intent_id,
+                            },
+                        )
+                    else:
+                        utterances.append(utterance)
+                        _LOGGER.info(
+                            "utterance generated",
+                            extra={
+                                "event": "utterance_generated",
+                                "intent_id": intent.intent_id,
+                                "adapter": utterance.generator_metadata.get("adapter"),
+                                "template_id": utterance.generator_metadata.get("template_id"),
+                            },
+                        )
+                if recorder is not None and utterances:
+                    recorder.write_utterances(utterances)
 
             previous = frame
             frames += 1
@@ -172,6 +215,33 @@ async def _replay_policy(config_path: Path, directory: Path) -> dict[str, object
     }
 
 
+async def _replay_language(config_path: Path, directory: Path) -> dict[str, object]:
+    config = load_config(config_path)
+    configure_logging(config.logging)
+    fixture = load_fixture(directory)
+    language = language_factory(config.language)
+    utterances: list[Utterance] = []
+    for intent in fixture.expected_intents:
+        utterance = await language.generate(intent)
+        if utterance.intent_id != intent.intent_id:
+            raise ValueError("generator returned an utterance for a different intent")
+        if len(utterance.text.split()) > intent.max_words:
+            raise ValueError("generator exceeded the intent word limit")
+        utterances.append(utterance)
+
+    expected_match = (
+        tuple(utterances) == fixture.expected_utterances
+        if fixture.manifest.expected_utterances_file is not None
+        else None
+    )
+    return {
+        "fixture_id": fixture.manifest.fixture_id,
+        "intents": len(fixture.expected_intents),
+        "utterances": len(utterances),
+        "expected_utterances_match": expected_match,
+    }
+
+
 def main() -> None:
     args = _parser().parse_args()
     match args.command:
@@ -188,6 +258,7 @@ def main() -> None:
                         "expected_events": len(fixture.expected_events),
                         "expected_intents": len(fixture.expected_intents),
                         "expected_decisions": len(fixture.expected_decisions),
+                        "expected_utterances": len(fixture.expected_utterances),
                     },
                     indent=2,
                     sort_keys=True,
@@ -195,6 +266,9 @@ def main() -> None:
             )
         case "replay-policy":
             result = asyncio.run(_replay_policy(args.config, args.directory))
+            print(json.dumps(result, indent=2, sort_keys=True))
+        case "replay-language":
+            result = asyncio.run(_replay_language(args.config, args.directory))
             print(json.dumps(result, indent=2, sort_keys=True))
         case "read-iracing":
             frames = asyncio.run(_read_iracing(args.config, args.limit, args.output))

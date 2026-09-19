@@ -1,0 +1,10 @@
+{
+  "fixture_version": "race-fixture.v3",
+  "fixture_id": "synthetic-m3-green-flag-v1",
+  "description": "Formation-to-green transition proving deterministic M3 language replay.",
+  "frames_file": "frames.jsonl",
+  "expected_events_file": "expected_events.jsonl",
+  "expected_intents_file": "expected_intents.jsonl",
+  "expected_decisions_file": "expected_decisions.jsonl",
+  "expected_utterances_file": "expected_utterances.jsonl"
+}

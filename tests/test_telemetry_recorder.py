@@ -23,18 +23,19 @@ def test_recorder_creates_loadable_fixture_without_overwriting(
         recorder.write_events(events)
 
     loaded = load_fixture(output)
-    assert loaded.manifest.fixture_version == "race-fixture.v2"
+    assert loaded.manifest.fixture_version == "race-fixture.v3"
     assert loaded.frames == frames
     assert loaded.expected_events == events
     assert loaded.expected_intents == ()
     assert loaded.expected_decisions == ()
+    assert loaded.expected_utterances == ()
     with pytest.raises(FileExistsError):
         TelemetrySessionRecorder(output, "recording-2", "Must fail.").__enter__()
 
 
-def test_recorder_persists_policy_intents_and_decisions(tmp_path: Path) -> None:
+def test_recorder_persists_policy_and_language_streams(tmp_path: Path) -> None:
     root = Path(__file__).parents[1]
-    fixture = load_fixture(root / "fixtures" / "synthetic" / "m2_green_flag")
+    fixture = load_fixture(root / "fixtures" / "synthetic" / "m3_green_flag")
     output = tmp_path / "policy-recording"
 
     with TelemetrySessionRecorder(output, "recording-2", "Policy recording.") as recorder:
@@ -43,9 +44,11 @@ def test_recorder_persists_policy_intents_and_decisions(tmp_path: Path) -> None:
         recorder.write_events(fixture.expected_events)
         recorder.write_intents(fixture.expected_intents)
         recorder.write_decisions(fixture.expected_decisions)
+        recorder.write_utterances(fixture.expected_utterances)
 
     loaded = load_fixture(output)
     assert loaded.frames == fixture.frames
     assert loaded.expected_events == fixture.expected_events
     assert loaded.expected_intents == fixture.expected_intents
     assert loaded.expected_decisions == fixture.expected_decisions
+    assert loaded.expected_utterances == fixture.expected_utterances

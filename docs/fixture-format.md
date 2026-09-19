@@ -10,6 +10,7 @@ fixture-name/
   expected_events.jsonl
   expected_intents.jsonl
   expected_decisions.jsonl
+  expected_utterances.jsonl
 ```
 
 The manifest declares `fixture_version`, a stable fixture identifier, a description, and
@@ -18,8 +19,8 @@ fixture can target normalization, event derivation, policy behavior, or the comp
 headless pipeline.
 
 Version 1 supports frames, events, and intents. Version 2 adds versioned policy-decision
-streams. New live recordings use version 2; the loader remains backward-compatible with
-version 1 fixtures.
+streams. Version 3 adds versioned utterance streams. New live recordings use version 3;
+the loader remains backward-compatible with version 1 and version 2 fixtures.
 
 Each non-empty JSONL line is exactly one versioned contract. Ordering is significant.
 Files are UTF-8 and deterministic snapshots use compact JSON with sorted keys. Real driver
@@ -37,3 +38,6 @@ fields.
 The synthetic M2 fixture includes normalized frames, derived events, expected speech
 intents, and expected policy decisions. Replaying it with a fixed policy configuration
 must reproduce the same intents and approval or suppression reasons.
+
+The synthetic M3 fixture adds expected utterances. Replaying it with a fixed language
+configuration must reproduce the same wording and generator metadata.

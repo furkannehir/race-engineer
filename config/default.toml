@@ -40,3 +40,6 @@ announce_position_changes = true
 announce_pit_transitions = false
 max_words = 20
 language = "en"
+
+[language]
+adapter = "deterministic"

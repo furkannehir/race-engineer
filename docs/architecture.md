@@ -56,10 +56,10 @@ must use identifiers and reason codes rather than unnecessary raw telemetry.
 
 M1 selects `pyirsdk` as the first Windows shared-memory binding, isolated behind an
 `IracingSource` protocol. The domain receives only normalized contracts and can replay
-privacy-safe source samples without importing `irsdk`. Language model, inference runtime,
-TTS engine, adaptive ranker, UI design, distribution format, and license remain deferred.
-SQLite is the persistence baseline, but concrete domain tables wait until their
-requirements are introduced.
+privacy-safe source samples without importing `irsdk`. Model-backed language generation,
+inference runtime, TTS engine, adaptive ranker, UI design, distribution format, and license
+remain deferred. SQLite is the persistence baseline, but concrete domain tables wait until
+their requirements are introduced.
 
 ## iRacing M1 boundary
 
@@ -87,7 +87,45 @@ reason. Decision time comes from the telemetry frame rather than the wall clock,
 replay deterministic. Critical calls may carry fixed templates, but ordinary intent wording
 remains the responsibility of a later language adapter.
 
-The live iRacing command runs this context and policy path for every accepted frame.
-Version 2 session recordings persist frames, events, intents, and decisions as separate
-streams. A policy failure is isolated: telemetry recording continues and the policy state
-is rebuilt for the next frame.
+The live iRacing command runs this context and policy path for every accepted frame. A
+policy failure is isolated: telemetry recording continues and the policy state is rebuilt
+for the next frame.
+
+## Deterministic M3 language boundary
+
+The first language adapter converts only policy-approved `SpeechIntent` facts into short
+English `Utterance` values. Its fixed templates cover the initial phase, flag, position,
+pit, and fuel facts. Critical fixed wording bypasses normal fact rendering. Unknown facts,
+unsupported languages, mismatched intent IDs, and word-limit violations fail closed rather
+than encouraging invented advice.
+
+The replaceable language interface includes a timeout-and-fallback wrapper for future
+model-backed generators. The initial live configuration uses the deterministic adapter
+directly. Language failure is isolated from telemetry and policy processing, and logs
+contain identifiers and template metadata rather than utterance text.
+
+Version 3 session recordings persist frames, events, intents, decisions, and utterances as
+separate streams. Fixture replay can compare generated utterances byte-for-byte at the
+contract level before speech synthesis is introduced.
+
+## Post-M3 improvement: Jev-assisted policy ranking
+
+After the M3 speech path is complete, evaluate Jev as an optional ranking adapter for
+ambiguous, noncritical communication decisions. Jev may score whether a candidate is worth
+announcing, rank simultaneous candidates, or classify a bounded message type. It does not
+create race facts, generate wording, or own the final scheduling decision.
+
+The integration must preserve these constraints:
+
+- critical safety and race-control calls remain deterministic and bypass learned ranking;
+- calls are event-triggered rather than issued for every telemetry frame;
+- the scheduler continues to enforce expiry, cooldown, deduplication, and capacity;
+- timeout, service failure, or insufficient confidence falls back to the strict policy;
+- only compact, privacy-safe derived context may leave the machine, with explicit opt-in;
+- initial operation is shadow-only, recording probabilities and disagreements without
+  changing what the driver hears; and
+- promotion beyond shadow mode requires replay fixtures plus measured latency and
+  decision-quality evidence.
+
+This keeps Jev behind a replaceable policy-ranking interface. The local strict policy
+remains sufficient for offline operation and is never dependent on the remote adapter.

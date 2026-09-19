@@ -21,6 +21,7 @@ def test_default_configuration_is_valid() -> None:
     assert config.policy.context.battle_gap_s == 1.5
     assert config.policy.strict.max_intents_per_frame == 1
     assert config.policy.strict.announce_pit_transitions is False
+    assert config.language.adapter == "deterministic"
 
 
 def test_environment_overrides_are_explicit() -> None:

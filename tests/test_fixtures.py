@@ -8,6 +8,7 @@ from race_engineer.fixtures import load_fixture
 ROOT = Path(__file__).parents[1]
 FIXTURE = ROOT / "fixtures" / "synthetic" / "green_flag"
 M2_FIXTURE = ROOT / "fixtures" / "synthetic" / "m2_green_flag"
+M3_FIXTURE = ROOT / "fixtures" / "synthetic" / "m3_green_flag"
 
 
 def test_green_flag_fixture_loads_all_versioned_streams() -> None:
@@ -59,4 +60,28 @@ def test_v1_manifest_rejects_policy_decision_stream(tmp_path: Path) -> None:
     )
 
     with pytest.raises(ValueError, match=r"race-fixture\.v2"):
+        load_fixture(fixture_dir)
+
+
+def test_m3_fixture_includes_expected_utterance() -> None:
+    bundle = load_fixture(M3_FIXTURE)
+    assert bundle.manifest.fixture_version == "race-fixture.v3"
+    assert len(bundle.expected_utterances) == 1
+    assert bundle.expected_utterances[0].text == "Green flag"
+
+
+def test_v2_manifest_rejects_utterance_stream(tmp_path: Path) -> None:
+    fixture_dir = tmp_path / "v2-with-utterances"
+    fixture_dir.mkdir()
+    (fixture_dir / "manifest.json").write_text(
+        """{
+          "fixture_version": "race-fixture.v2",
+          "fixture_id": "invalid-v2",
+          "description": "Version 2 cannot contain utterances.",
+          "expected_utterances_file": "utterances.jsonl"
+        }""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match=r"race-fixture\.v3"):
         load_fixture(fixture_dir)

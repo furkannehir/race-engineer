@@ -5,7 +5,7 @@ assistance. Its central policy engine decides what is worth communicating; telem
 language generation, and speech synthesis remain replaceable adapters.
 
 This repository contains the M0 architecture baseline, the M1 iRacing telemetry reader,
-and the first deterministic M2 policy slice:
+the deterministic M2 policy slice, and the first M3 language slice:
 
 - versioned domain contracts and adapter protocols;
 - validated TOML configuration with environment overrides;
@@ -16,10 +16,11 @@ and the first deterministic M2 policy slice:
 - a reconnecting iRacing shared-memory reader with atomic snapshots, normalization,
   event derivation, and fixture-compatible recording; and
 - deterministic race-context features, strict rules, scheduling constraints, and
-  traceable policy decisions.
+  traceable policy decisions; and
+- fact-bound English wording with deterministic replay and an explicit fallback boundary.
 
 Model-backed language generation, speech synthesis, durable decision storage, adaptive
-policies, and the desktop UI remain later milestones.
+policies, and the desktop UI remain later work.
 
 ## Requirements
 
@@ -44,6 +45,8 @@ race-engineer validate-config --config config/default.toml
 race-engineer inspect-fixture fixtures/synthetic/green_flag
 race-engineer replay-policy fixtures/synthetic/m2_green_flag `
   --config config/default.toml
+race-engineer replay-language fixtures/synthetic/m3_green_flag `
+  --config config/default.toml
 ```
 
 With iRacing running, print normalized frames until interrupted:
@@ -52,8 +55,8 @@ With iRacing running, print normalized frames until interrupted:
 race-engineer read-iracing --config config/default.toml
 ```
 
-Record 600 normalized frames plus their events, policy decisions, and speech intents into
-a new replayable session directory:
+Record 600 normalized frames plus their events, policy decisions, speech intents, and
+generated utterances into a new replayable session directory:
 
 ```powershell
 race-engineer read-iracing --config config/default.toml --limit 600 `
@@ -73,4 +76,9 @@ The live reader intentionally does not retain driver names or arbitrary raw SDK 
 
 See [docs/architecture.md](docs/architecture.md) and
 [docs/fixture-format.md](docs/fixture-format.md) for the M0 decisions, and
-[docs/strict-policy.md](docs/strict-policy.md) for the M2 policy behavior.
+[docs/strict-policy.md](docs/strict-policy.md) for the M2 policy behavior. The M3 wording
+boundary is described in [docs/language-generation.md](docs/language-generation.md). The
+architecture also records Jev-assisted, shadow-mode policy ranking as a post-M3 improvement.
+The updated [implementation
+plan](docs/personalized-ai-race-engineer-implementation-plan.docx) places that evaluation
+in M4, after the end-to-end M3 speech milestone.
