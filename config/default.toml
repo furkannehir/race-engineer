@@ -1,0 +1,24 @@
+config_version = "app-config.v1"
+
+[paths]
+data_dir = "data"
+database_path = "data/race_engineer.sqlite3"
+
+[runtime]
+queue_capacity = 128
+component_timeout_s = 2.0
+shutdown_timeout_s = 5.0
+
+[logging]
+level = "INFO"
+format = "console"
+
+[privacy]
+record_raw_telemetry = false
+record_generator_prompts = false
+record_generator_outputs = false
+
+[telemetry.iracing]
+sample_rate_hz = 10.0
+reconnect_delay_s = 2.0
+include_replay = false

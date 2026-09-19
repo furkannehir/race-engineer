@@ -1,0 +1,1 @@
+{"schema_version":"speech-intent.v1","intent_id":"session-001:1:green:speech","category":"safety","facts":{"message":"Green flag"},"priority":70,"tone":"neutral","max_words":20,"deadline":"2026-01-01T12:00:03Z","interruption_policy":"never","critical_template":null,"language":"en"}

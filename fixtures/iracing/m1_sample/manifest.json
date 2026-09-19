@@ -1,0 +1,7 @@
+{
+  "fixture_version": "race-fixture.v1",
+  "fixture_id": "iracing-m1-sample-v1",
+  "description": "Privacy-safe iRacing parade-to-green source samples and expected normalization.",
+  "frames_file": "expected_frames.jsonl",
+  "expected_events_file": "expected_events.jsonl"
+}
