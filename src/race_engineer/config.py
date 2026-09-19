@@ -47,6 +47,29 @@ class TelemetryConfig(ConfigModel):
     iracing: IracingTelemetryConfig = IracingTelemetryConfig()
 
 
+class PolicyContextConfig(ConfigModel):
+    event_history_limit: int = Field(default=32, ge=1, le=1_000)
+    fuel_trend_laps: int = Field(default=5, ge=1, le=20)
+    fuel_increase_reset_l: float = Field(default=0.25, gt=0, le=100, allow_inf_nan=False)
+    battle_gap_s: float = Field(default=1.5, gt=0, le=30, allow_inf_nan=False)
+
+
+class StrictPolicyConfig(ConfigModel):
+    max_intents_per_frame: int = Field(default=1, ge=1, le=10)
+    routine_cooldown_s: float = Field(default=15.0, ge=0, le=600, allow_inf_nan=False)
+    important_cooldown_s: float = Field(default=5.0, ge=0, le=600, allow_inf_nan=False)
+    critical_cooldown_s: float = Field(default=0.0, ge=0, le=600, allow_inf_nan=False)
+    announce_position_changes: bool = True
+    announce_pit_transitions: bool = False
+    max_words: int = Field(default=20, ge=1, le=50)
+    language: str = Field(default="en", min_length=2, max_length=35)
+
+
+class PolicyConfig(ConfigModel):
+    context: PolicyContextConfig = PolicyContextConfig()
+    strict: StrictPolicyConfig = StrictPolicyConfig()
+
+
 class AppConfig(ConfigModel):
     config_version: Literal["app-config.v1"] = "app-config.v1"
     paths: PathsConfig = PathsConfig()
@@ -54,6 +77,7 @@ class AppConfig(ConfigModel):
     logging: LoggingConfig = LoggingConfig()
     privacy: PrivacyConfig = PrivacyConfig()
     telemetry: TelemetryConfig = TelemetryConfig()
+    policy: PolicyConfig = PolicyConfig()
 
 
 def _parse_bool(value: str) -> bool:

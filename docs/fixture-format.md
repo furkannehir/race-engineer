@@ -28,3 +28,7 @@ For example, the iRacing M1 fixture contains `raw_samples.jsonl`; its manifest p
 the normalized frames and derived events that the source stream must reproduce. Source
 streams have their own schema versions and must omit names, secrets, and unrelated SDK
 fields.
+
+The synthetic M2 fixture includes normalized frames, derived events, and expected speech
+intents. Replaying it with a fixed policy configuration must reproduce the same intents;
+policy-decision reasons are asserted alongside the fixture in automated tests.

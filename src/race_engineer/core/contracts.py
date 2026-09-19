@@ -19,6 +19,8 @@ from race_engineer.core.enums import (
     InterruptionPolicy,
     MessageCategory,
     PlaybackStatus,
+    PolicyDecisionOutcome,
+    PolicyDecisionReason,
     PreferenceScope,
     PreferenceSource,
     RaceFlag,
@@ -137,6 +139,32 @@ class CandidateMessage(ContractModel):
     def validate_expiry(self) -> "CandidateMessage":
         if self.expires_at <= self.created_at:
             raise ValueError("expires_at must be later than created_at")
+        return self
+
+
+class PolicyDecision(ContractModel):
+    schema_version: Literal["policy-decision.v1"] = "policy-decision.v1"
+    decision_id: str = Field(min_length=1)
+    candidate_id: str = Field(min_length=1)
+    session_id: str = Field(min_length=1)
+    source_sequence: int = Field(ge=0)
+    decided_at: UtcDatetime
+    outcome: PolicyDecisionOutcome
+    reason: PolicyDecisionReason
+    priority: Priority
+    intent_id: str | None = None
+
+    @model_validator(mode="after")
+    def validate_outcome(self) -> "PolicyDecision":
+        approved = self.outcome is PolicyDecisionOutcome.APPROVED
+        if approved and self.reason is not PolicyDecisionReason.APPROVED:
+            raise ValueError("approved policy decisions require the approved reason")
+        if not approved and self.reason is PolicyDecisionReason.APPROVED:
+            raise ValueError("suppressed policy decisions require a suppression reason")
+        if approved and self.intent_id is None:
+            raise ValueError("approved policy decisions require an intent ID")
+        if not approved and self.intent_id is not None:
+            raise ValueError("suppressed policy decisions cannot reference an intent")
         return self
 
 

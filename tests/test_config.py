@@ -17,6 +17,10 @@ def test_default_configuration_is_valid() -> None:
     assert config.telemetry.iracing.include_replay is False
     assert config.telemetry.iracing.slow_read_warning_s == 0.05
     assert config.telemetry.iracing.sample_gap_warning_s == 0.25
+    assert config.policy.context.event_history_limit == 32
+    assert config.policy.context.battle_gap_s == 1.5
+    assert config.policy.strict.max_intents_per_frame == 1
+    assert config.policy.strict.announce_pit_transitions is False
 
 
 def test_environment_overrides_are_explicit() -> None:

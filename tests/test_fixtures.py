@@ -7,6 +7,7 @@ from race_engineer.fixtures import load_fixture
 
 ROOT = Path(__file__).parents[1]
 FIXTURE = ROOT / "fixtures" / "synthetic" / "green_flag"
+M2_FIXTURE = ROOT / "fixtures" / "synthetic" / "m2_green_flag"
 
 
 def test_green_flag_fixture_loads_all_versioned_streams() -> None:
@@ -33,3 +34,10 @@ def test_fixture_paths_cannot_escape_their_directory(tmp_path: Path) -> None:
     )
     with pytest.raises(ValueError, match="escapes"):
         load_fixture(fixture_dir)
+
+
+def test_m2_fixture_includes_expected_policy_intent() -> None:
+    bundle = load_fixture(M2_FIXTURE)
+    assert len(bundle.expected_events) == 2
+    assert len(bundle.expected_intents) == 1
+    assert bundle.expected_intents[0].facts["phase"] == "green"

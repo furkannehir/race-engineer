@@ -1,0 +1,8 @@
+{
+  "fixture_version": "race-fixture.v1",
+  "fixture_id": "synthetic-m2-green-flag-v1",
+  "description": "Formation-to-green transition proving deterministic M2 policy replay.",
+  "frames_file": "frames.jsonl",
+  "expected_events_file": "expected_events.jsonl",
+  "expected_intents_file": "expected_intents.jsonl"
+}

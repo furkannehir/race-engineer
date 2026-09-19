@@ -5,12 +5,17 @@ from pydantic import ValidationError
 
 from race_engineer.core.contracts import (
     PlayerState,
+    PolicyDecision,
     RaceContext,
     RaceEvent,
     TelemetryFrame,
     canonical_json,
 )
-from race_engineer.core.enums import EventType
+from race_engineer.core.enums import (
+    EventType,
+    PolicyDecisionOutcome,
+    PolicyDecisionReason,
+)
 
 
 def make_frame(*, session_id: str = "session-1") -> TelemetryFrame:
@@ -74,3 +79,30 @@ def test_canonical_json_is_stable_and_sorted() -> None:
     second = canonical_json(TelemetryFrame.model_validate_json(first))
     assert first == second
     assert first.index('"capabilities"') < first.index('"flags"')
+
+
+def test_policy_decision_requires_an_intent_only_when_approved() -> None:
+    with pytest.raises(ValidationError, match="require an intent"):
+        PolicyDecision(
+            decision_id="decision-1",
+            candidate_id="candidate-1",
+            session_id="session-1",
+            source_sequence=1,
+            decided_at=datetime(2026, 1, 1, tzinfo=UTC),
+            outcome=PolicyDecisionOutcome.APPROVED,
+            reason=PolicyDecisionReason.APPROVED,
+            priority=70,
+        )
+
+    with pytest.raises(ValidationError, match="cannot reference"):
+        PolicyDecision(
+            decision_id="decision-2",
+            candidate_id="candidate-2",
+            session_id="session-1",
+            source_sequence=1,
+            decided_at=datetime(2026, 1, 1, tzinfo=UTC),
+            outcome=PolicyDecisionOutcome.SUPPRESSED,
+            reason=PolicyDecisionReason.COOLDOWN,
+            priority=40,
+            intent_id="intent-2",
+        )

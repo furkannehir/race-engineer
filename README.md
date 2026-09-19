@@ -4,20 +4,22 @@ Race Engineer is a local-first, simulator-adaptable foundation for real-time rac
 assistance. Its central policy engine decides what is worth communicating; telemetry,
 language generation, and speech synthesis remain replaceable adapters.
 
-This repository contains the M0 architecture baseline and the initial M1 iRacing
-telemetry reader:
+This repository contains the M0 architecture baseline, the M1 iRacing telemetry reader,
+and the first deterministic M2 policy slice:
 
 - versioned domain contracts and adapter protocols;
 - validated TOML configuration with environment overrides;
 - structured console or JSON logging;
 - deterministic, versioned replay fixtures;
 - a headless async pipeline and fake implementations;
-- automated contract, configuration, fixture, and pipeline tests.
+- automated contract, configuration, fixture, and pipeline tests;
 - a reconnecting iRacing shared-memory reader with atomic snapshots, normalization,
-  event derivation, and fixture-compatible recording.
+  event derivation, and fixture-compatible recording; and
+- deterministic race-context features, strict rules, scheduling constraints, and
+  traceable policy decisions.
 
-Production policies, model-backed language generation, speech synthesis, persistence
-schemas, and the desktop UI remain later milestones.
+Model-backed language generation, speech synthesis, durable decision storage, adaptive
+policies, and the desktop UI remain later milestones.
 
 ## Requirements
 
@@ -40,6 +42,8 @@ Validate the default configuration or inspect a replay fixture:
 ```powershell
 race-engineer validate-config --config config/default.toml
 race-engineer inspect-fixture fixtures/synthetic/green_flag
+race-engineer replay-policy fixtures/synthetic/m2_green_flag `
+  --config config/default.toml
 ```
 
 With iRacing running, print normalized frames until interrupted:
@@ -67,4 +71,5 @@ The live reader intentionally does not retain driver names or arbitrary raw SDK 
 - Driver data and logs remain local unless explicitly exported.
 
 See [docs/architecture.md](docs/architecture.md) and
-[docs/fixture-format.md](docs/fixture-format.md) for the M0 decisions.
+[docs/fixture-format.md](docs/fixture-format.md) for the M0 decisions, and
+[docs/strict-policy.md](docs/strict-policy.md) for the M2 policy behavior.

@@ -24,3 +24,19 @@ reconnect_delay_s = 2.0
 include_replay = false
 slow_read_warning_s = 0.05
 sample_gap_warning_s = 0.25
+
+[policy.context]
+event_history_limit = 32
+fuel_trend_laps = 5
+fuel_increase_reset_l = 0.25
+battle_gap_s = 1.5
+
+[policy.strict]
+max_intents_per_frame = 1
+routine_cooldown_s = 15.0
+important_cooldown_s = 5.0
+critical_cooldown_s = 0.0
+announce_position_changes = true
+announce_pit_transitions = false
+max_words = 20
+language = "en"

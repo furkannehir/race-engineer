@@ -6,9 +6,17 @@ import json
 from pathlib import Path
 
 from race_engineer.config import load_config
-from race_engineer.core.contracts import TelemetryFrame, canonical_json
+from race_engineer.core.contracts import (
+    PolicyDecision,
+    RaceEvent,
+    SpeechIntent,
+    TelemetryFrame,
+    canonical_json,
+)
+from race_engineer.core.enums import PolicyDecisionOutcome
 from race_engineer.fixtures import load_fixture
 from race_engineer.observability import configure_logging
+from race_engineer.policy import DefaultRaceContextBuilder, StrictRulePolicy
 from race_engineer.telemetry.iracing import IracingEventDeriver, IracingTelemetryAdapter
 from race_engineer.telemetry.recorder import TelemetrySessionRecorder
 
@@ -22,6 +30,13 @@ def _parser() -> argparse.ArgumentParser:
 
     inspect = subparsers.add_parser("inspect-fixture", help="validate and summarize a fixture")
     inspect.add_argument("directory", type=Path)
+
+    replay_policy = subparsers.add_parser(
+        "replay-policy",
+        help="replay recorded events through the deterministic strict policy",
+    )
+    replay_policy.add_argument("directory", type=Path)
+    replay_policy.add_argument("--config", type=Path, required=True)
 
     read_iracing = subparsers.add_parser(
         "read-iracing",
@@ -84,6 +99,41 @@ async def _read_iracing(config_path: Path, limit: int, output: Path | None) -> i
     return frames
 
 
+async def _replay_policy(config_path: Path, directory: Path) -> dict[str, object]:
+    config = load_config(config_path)
+    configure_logging(config.logging)
+    fixture = load_fixture(directory)
+    events_by_frame: dict[tuple[str, int], list[RaceEvent]] = {}
+    for event in fixture.expected_events:
+        events_by_frame.setdefault((event.session_id, event.source_sequence), []).append(event)
+
+    decisions: list[PolicyDecision] = []
+    builder = DefaultRaceContextBuilder(config.policy.context)
+    policy = StrictRulePolicy(config.policy.strict, decision_sink=decisions.append)
+    intents: list[SpeechIntent] = []
+    for frame in fixture.frames:
+        events = tuple(events_by_frame.get((frame.session_id, frame.sequence), ()))
+        context = builder.update(frame, events)
+        intents.extend(await policy.decide(context))
+
+    approved = sum(decision.outcome is PolicyDecisionOutcome.APPROVED for decision in decisions)
+    expected_match = (
+        tuple(intents) == fixture.expected_intents
+        if fixture.manifest.expected_intents_file is not None
+        else None
+    )
+    return {
+        "fixture_id": fixture.manifest.fixture_id,
+        "frames": len(fixture.frames),
+        "events": len(fixture.expected_events),
+        "decisions": len(decisions),
+        "approved": approved,
+        "suppressed": len(decisions) - approved,
+        "intents": len(intents),
+        "expected_intents_match": expected_match,
+    }
+
+
 def main() -> None:
     args = _parser().parse_args()
     match args.command:
@@ -104,6 +154,9 @@ def main() -> None:
                     sort_keys=True,
                 )
             )
+        case "replay-policy":
+            result = asyncio.run(_replay_policy(args.config, args.directory))
+            print(json.dumps(result, indent=2, sort_keys=True))
         case "read-iracing":
             frames = asyncio.run(_read_iracing(args.config, args.limit, args.output))
             if args.output is not None:

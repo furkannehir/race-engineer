@@ -73,3 +73,16 @@ out-of-order `SessionTick` values within a session, resets ordering on session t
 and suppresses replay frames unless explicitly configured. M1 samples lap, position,
 speed, fuel, flags, pit state, traffic distance, and reliable same-lap race gaps where the
 SDK exposes all required fields.
+
+## Deterministic M2 boundary
+
+M2 receives only normalized frames and race events. The context builder owns bounded
+session state, fuel-trend calculations, nearby battle context, and event expiry. The strict
+policy maps eligible current-frame events into candidates; the scheduler then applies
+priority, expiry, semantic deduplication, cooldowns, and per-frame capacity before emitting
+`SpeechIntent` values.
+
+Each candidate produces a versioned `PolicyDecision` containing an approval or suppression
+reason. Decision time comes from the telemetry frame rather than the wall clock, keeping
+replay deterministic. Critical calls may carry fixed templates, but ordinary intent wording
+remains the responsibility of a later language adapter.

@@ -56,6 +56,20 @@ class InterruptionPolicy(StrEnum):
     INTERRUPT_ANY = "interrupt_any"
 
 
+class PolicyDecisionOutcome(StrEnum):
+    APPROVED = "approved"
+    SUPPRESSED = "suppressed"
+
+
+class PolicyDecisionReason(StrEnum):
+    APPROVED = "approved"
+    DISABLED = "disabled"
+    EXPIRED = "expired"
+    DUPLICATE = "duplicate"
+    COOLDOWN = "cooldown"
+    SUPERSEDED = "superseded"
+
+
 class PreferenceSource(StrEnum):
     CONFIG = "config"
     UI = "ui"
