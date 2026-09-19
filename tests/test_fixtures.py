@@ -38,6 +38,25 @@ def test_fixture_paths_cannot_escape_their_directory(tmp_path: Path) -> None:
 
 def test_m2_fixture_includes_expected_policy_intent() -> None:
     bundle = load_fixture(M2_FIXTURE)
+    assert bundle.manifest.fixture_version == "race-fixture.v2"
     assert len(bundle.expected_events) == 2
     assert len(bundle.expected_intents) == 1
+    assert len(bundle.expected_decisions) == 2
     assert bundle.expected_intents[0].facts["phase"] == "green"
+
+
+def test_v1_manifest_rejects_policy_decision_stream(tmp_path: Path) -> None:
+    fixture_dir = tmp_path / "v1-with-decisions"
+    fixture_dir.mkdir()
+    (fixture_dir / "manifest.json").write_text(
+        """{
+          "fixture_version": "race-fixture.v1",
+          "fixture_id": "invalid-v1",
+          "description": "Version 1 cannot contain decisions.",
+          "expected_decisions_file": "decisions.jsonl"
+        }""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match=r"race-fixture\.v2"):
+        load_fixture(fixture_dir)

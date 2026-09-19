@@ -50,8 +50,10 @@ metadata refresh when diagnosing capture gaps.
 
 Selected telemetry is normalized into `TelemetryFrame`. Changes in phase, flags, position,
 and pit state produce deterministic `RaceEvent` values. The `read-iracing` CLI can print
-frames or create a new fixture-compatible recording. It never overwrites an existing
-recording directory.
+frames or create a new fixture-compatible recording. Every accepted frame also passes
+through the deterministic context builder and strict policy. Version 2 recordings include
+frames, events, policy decisions, and speech intents. The command never overwrites an
+existing recording directory.
 
 ## Privacy boundary
 

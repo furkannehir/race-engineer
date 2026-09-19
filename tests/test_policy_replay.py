@@ -28,6 +28,7 @@ def test_m2_policy_replay_reproduces_events_decisions_and_intents() -> None:
 
     assert tuple(events) == fixture.expected_events
     assert tuple(intents) == fixture.expected_intents
+    assert tuple(decisions) == fixture.expected_decisions
     assert [decision.reason for decision in decisions] == [
         PolicyDecisionReason.APPROVED,
         PolicyDecisionReason.DUPLICATE,

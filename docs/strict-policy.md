@@ -47,6 +47,11 @@ Decisions are emitted as structured logs and may also be sent to a persistence c
 The default configuration permits one intent per frame, uses 15-second routine and
 5-second important cooldowns, and lets critical calls bypass cooldowns.
 
+The live iRacing reader executes this policy on every accepted frame. When `--output` is
+used, its version 2 recording stores frames, events, intents, and decisions independently.
+This preserves suppressed decisions for auditing and makes the entire policy path
+replayable without launching iRacing.
+
 Replay the M2 acceptance fixture with:
 
 ```powershell

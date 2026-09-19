@@ -86,3 +86,8 @@ Each candidate produces a versioned `PolicyDecision` containing an approval or s
 reason. Decision time comes from the telemetry frame rather than the wall clock, keeping
 replay deterministic. Critical calls may carry fixed templates, but ordinary intent wording
 remains the responsibility of a later language adapter.
+
+The live iRacing command runs this context and policy path for every accepted frame.
+Version 2 session recordings persist frames, events, intents, and decisions as separate
+streams. A policy failure is isolated: telemetry recording continues and the policy state
+is rebuilt for the next frame.

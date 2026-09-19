@@ -52,7 +52,8 @@ With iRacing running, print normalized frames until interrupted:
 race-engineer read-iracing --config config/default.toml
 ```
 
-Record 600 normalized frames and their deterministic events into a new fixture directory:
+Record 600 normalized frames plus their events, policy decisions, and speech intents into
+a new replayable session directory:
 
 ```powershell
 race-engineer read-iracing --config config/default.toml --limit 600 `

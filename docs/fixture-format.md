@@ -1,4 +1,4 @@
-# Replay fixture format v1
+# Replay fixture formats
 
 A fixture is a directory containing `manifest.json` and one or more JSON Lines files.
 Paths in a manifest are relative to the fixture directory and may not escape it.
@@ -9,12 +9,17 @@ fixture-name/
   frames.jsonl
   expected_events.jsonl
   expected_intents.jsonl
+  expected_decisions.jsonl
 ```
 
 The manifest declares `fixture_version`, a stable fixture identifier, a description, and
 the paths of its streams. `frames_file` is required; expected streams are optional so a
 fixture can target normalization, event derivation, policy behavior, or the complete
 headless pipeline.
+
+Version 1 supports frames, events, and intents. Version 2 adds versioned policy-decision
+streams. New live recordings use version 2; the loader remains backward-compatible with
+version 1 fixtures.
 
 Each non-empty JSONL line is exactly one versioned contract. Ordering is significant.
 Files are UTF-8 and deterministic snapshots use compact JSON with sorted keys. Real driver
@@ -29,6 +34,6 @@ the normalized frames and derived events that the source stream must reproduce. 
 streams have their own schema versions and must omit names, secrets, and unrelated SDK
 fields.
 
-The synthetic M2 fixture includes normalized frames, derived events, and expected speech
-intents. Replaying it with a fixed policy configuration must reproduce the same intents;
-policy-decision reasons are asserted alongside the fixture in automated tests.
+The synthetic M2 fixture includes normalized frames, derived events, expected speech
+intents, and expected policy decisions. Replaying it with a fixed policy configuration
+must reproduce the same intents and approval or suppression reasons.

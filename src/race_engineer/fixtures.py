@@ -4,20 +4,32 @@ import json
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from race_engineer.core.contracts import RaceEvent, SpeechIntent, TelemetryFrame
+from race_engineer.core.contracts import (
+    PolicyDecision,
+    RaceEvent,
+    SpeechIntent,
+    TelemetryFrame,
+)
 
 
 class FixtureManifest(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    fixture_version: Literal["race-fixture.v1"] = "race-fixture.v1"
+    fixture_version: Literal["race-fixture.v1", "race-fixture.v2"] = "race-fixture.v1"
     fixture_id: str = Field(min_length=1)
     description: str = Field(min_length=1)
     frames_file: str = "frames.jsonl"
     expected_events_file: str | None = None
     expected_intents_file: str | None = None
+    expected_decisions_file: str | None = None
+
+    @model_validator(mode="after")
+    def validate_versioned_streams(self) -> "FixtureManifest":
+        if self.fixture_version == "race-fixture.v1" and self.expected_decisions_file is not None:
+            raise ValueError("policy decision streams require race-fixture.v2")
+        return self
 
 
 class FixtureBundle(BaseModel):
@@ -27,6 +39,7 @@ class FixtureBundle(BaseModel):
     frames: tuple[TelemetryFrame, ...]
     expected_events: tuple[RaceEvent, ...] = ()
     expected_intents: tuple[SpeechIntent, ...] = ()
+    expected_decisions: tuple[PolicyDecision, ...] = ()
 
 
 def _safe_child(directory: Path, relative_name: str) -> Path:
@@ -63,9 +76,18 @@ def load_fixture(directory: Path) -> FixtureBundle:
         if manifest.expected_intents_file
         else ()
     )
+    decisions = (
+        _load_jsonl(
+            _safe_child(directory, manifest.expected_decisions_file),
+            PolicyDecision,
+        )
+        if manifest.expected_decisions_file
+        else ()
+    )
     return FixtureBundle(
         manifest=manifest,
         frames=frames,
         expected_events=events,
         expected_intents=intents,
+        expected_decisions=decisions,
     )

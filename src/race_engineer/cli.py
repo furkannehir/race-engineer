@@ -3,6 +3,7 @@
 import argparse
 import asyncio
 import json
+import logging
 from pathlib import Path
 
 from race_engineer.config import load_config
@@ -19,6 +20,8 @@ from race_engineer.observability import configure_logging
 from race_engineer.policy import DefaultRaceContextBuilder, StrictRulePolicy
 from race_engineer.telemetry.iracing import IracingEventDeriver, IracingTelemetryAdapter
 from race_engineer.telemetry.recorder import TelemetrySessionRecorder
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -52,7 +55,7 @@ def _parser() -> argparse.ArgumentParser:
     read_iracing.add_argument(
         "--output",
         type=Path,
-        help="record frames and events in a new fixture directory instead of stdout",
+        help="record frames, events, policy decisions, and intents in a new fixture directory",
     )
     return parser
 
@@ -67,27 +70,56 @@ async def _read_iracing(config_path: Path, limit: int, output: Path | None) -> i
     configure_logging(config.logging)
     adapter = IracingTelemetryAdapter(config.telemetry.iracing)
     event_deriver = IracingEventDeriver()
+    context_builder = DefaultRaceContextBuilder(config.policy.context)
+    pending_decisions: list[PolicyDecision] = []
+    policy = StrictRulePolicy(config.policy.strict, decision_sink=pending_decisions.append)
     recorder: TelemetrySessionRecorder | None = None
     previous: TelemetryFrame | None = None
     frames = 0
     try:
         async for frame in adapter.stream():
             events = tuple(event_deriver.derive(previous, frame))
-            if output is None:
-                print(canonical_json(frame), flush=True)
-            else:
-                if recorder is None:
-                    fixture_id = (
-                        f"{frame.session_id}:{frame.observed_at.strftime('%Y%m%dT%H%M%SZ')}"
-                    )
-                    recorder = TelemetrySessionRecorder(
-                        directory=output,
-                        fixture_id=fixture_id,
-                        description="Normalized live iRacing telemetry recording.",
-                    )
-                    recorder.__enter__()
+            if output is not None and recorder is None:
+                fixture_id = f"{frame.session_id}:{frame.observed_at.strftime('%Y%m%dT%H%M%SZ')}"
+                recorder = TelemetrySessionRecorder(
+                    directory=output,
+                    fixture_id=fixture_id,
+                    description="Live iRacing telemetry and deterministic policy recording.",
+                )
+                recorder.__enter__()
+
+            if recorder is not None:
                 recorder.write_frame(frame)
                 recorder.write_events(events)
+            else:
+                print(canonical_json(frame), flush=True)
+
+            try:
+                context = context_builder.update(frame, events)
+                intents = await policy.decide(context)
+            except Exception as error:
+                _LOGGER.exception(
+                    "policy evaluation failed; telemetry will continue",
+                    extra={
+                        "event": "policy_failed",
+                        "reason": type(error).__name__,
+                        "session_id": frame.session_id,
+                        "source_sequence": frame.sequence,
+                    },
+                )
+                pending_decisions.clear()
+                context_builder = DefaultRaceContextBuilder(config.policy.context)
+                policy = StrictRulePolicy(
+                    config.policy.strict,
+                    decision_sink=pending_decisions.append,
+                )
+            else:
+                if recorder is not None:
+                    if intents:
+                        recorder.write_intents(intents)
+                    if pending_decisions:
+                        recorder.write_decisions(pending_decisions)
+                pending_decisions.clear()
 
             previous = frame
             frames += 1
@@ -122,6 +154,11 @@ async def _replay_policy(config_path: Path, directory: Path) -> dict[str, object
         if fixture.manifest.expected_intents_file is not None
         else None
     )
+    expected_decisions_match = (
+        tuple(decisions) == fixture.expected_decisions
+        if fixture.manifest.expected_decisions_file is not None
+        else None
+    )
     return {
         "fixture_id": fixture.manifest.fixture_id,
         "frames": len(fixture.frames),
@@ -131,6 +168,7 @@ async def _replay_policy(config_path: Path, directory: Path) -> dict[str, object
         "suppressed": len(decisions) - approved,
         "intents": len(intents),
         "expected_intents_match": expected_match,
+        "expected_decisions_match": expected_decisions_match,
     }
 
 
@@ -149,6 +187,7 @@ def main() -> None:
                         "frames": len(fixture.frames),
                         "expected_events": len(fixture.expected_events),
                         "expected_intents": len(fixture.expected_intents),
+                        "expected_decisions": len(fixture.expected_decisions),
                     },
                     indent=2,
                     sort_keys=True,
