@@ -67,13 +67,19 @@ def test_sdk_source_freezes_sample_and_discards_personal_metadata(
     source = PyIrSdkSource()
     assert source.connect() is True
 
-    sample = source.read()
+    result = source.read()
+    sample = result.sample
     assert sample.session_unique_id == 123
     assert sample.speed_mps == 12.5
     assert sample.session_type == "Race"
     assert sample.drivers[0].user_id == 99
     assert "Must Not Be Retained" not in sample.model_dump_json()
     assert sdk.freeze_calls == sdk.unfreeze_calls == 1
+    assert result.metrics.metadata_refreshed is True
+    assert result.metrics.total_ms >= 0
+
+    second_result = source.read()
+    assert second_result.metrics.metadata_refreshed is False
 
     source.close()
     assert sdk.shutdown_calls == 1

@@ -15,6 +15,8 @@ def test_default_configuration_is_valid() -> None:
     assert config.privacy.record_raw_telemetry is False
     assert config.telemetry.iracing.sample_rate_hz == 10.0
     assert config.telemetry.iracing.include_replay is False
+    assert config.telemetry.iracing.slow_read_warning_s == 0.05
+    assert config.telemetry.iracing.sample_gap_warning_s == 0.25
 
 
 def test_environment_overrides_are_explicit() -> None:

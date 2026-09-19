@@ -39,6 +39,8 @@ class IracingTelemetryConfig(ConfigModel):
     sample_rate_hz: float = Field(default=10.0, ge=1.0, le=60.0, allow_inf_nan=False)
     reconnect_delay_s: float = Field(default=2.0, ge=0.1, le=60.0, allow_inf_nan=False)
     include_replay: bool = False
+    slow_read_warning_s: float = Field(default=0.05, gt=0, le=10.0, allow_inf_nan=False)
+    sample_gap_warning_s: float = Field(default=0.25, gt=0, le=60.0, allow_inf_nan=False)
 
 
 class TelemetryConfig(ConfigModel):

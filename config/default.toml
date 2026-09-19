@@ -22,3 +22,5 @@ record_generator_outputs = false
 sample_rate_hz = 10.0
 reconnect_delay_s = 2.0
 include_replay = false
+slow_read_warning_s = 0.05
+sample_gap_warning_s = 0.25

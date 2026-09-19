@@ -2,12 +2,15 @@
 
 import importlib
 from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass
 from datetime import UTC, datetime
+from time import perf_counter
 from typing import Any, Protocol, cast
 
 from race_engineer.telemetry.iracing.raw import IracingDriverMetadata, IracingRawSample
 
 Clock = Callable[[], datetime]
+MonotonicClock = Callable[[], float]
 
 SELECTED_VARIABLES = (
     "CarDistAhead",
@@ -35,13 +38,28 @@ class IracingSdkUnavailableError(RuntimeError):
     """Raised when the optional Windows SDK binding cannot be imported."""
 
 
+@dataclass(frozen=True, slots=True)
+class IracingReadMetrics:
+    buffer_wait_ms: float
+    variable_read_ms: float
+    metadata_refresh_ms: float
+    total_ms: float
+    metadata_refreshed: bool
+
+
+@dataclass(frozen=True, slots=True)
+class IracingReadResult:
+    sample: IracingRawSample
+    metrics: IracingReadMetrics
+
+
 class IracingSource(Protocol):
     def connect(self) -> bool: ...
 
     @property
     def connected(self) -> bool: ...
 
-    def read(self) -> IracingRawSample: ...
+    def read(self) -> IracingReadResult: ...
 
     def close(self) -> None: ...
 
@@ -80,7 +98,11 @@ def _float_tuple(value: object) -> tuple[float, ...]:
 class PyIrSdkSource:
     """Reads one internally consistent sample from iRacing's Windows memory map."""
 
-    def __init__(self, clock: Clock | None = None) -> None:
+    def __init__(
+        self,
+        clock: Clock | None = None,
+        monotonic: MonotonicClock = perf_counter,
+    ) -> None:
         try:
             module = importlib.import_module("irsdk")
         except ImportError as error:
@@ -89,6 +111,7 @@ class PyIrSdkSource:
             ) from error
         self._sdk: Any = module.IRSDK()
         self._clock = clock or (lambda: datetime.now(UTC))
+        self._monotonic = monotonic
         self._metadata_update: int | None = None
         self._drivers: tuple[IracingDriverMetadata, ...] = ()
         self._session_types: dict[int, str] = {}
@@ -103,10 +126,10 @@ class PyIrSdkSource:
     def _read_value(self, key: str, available: frozenset[str]) -> object:
         return self._sdk[key] if key in available else None
 
-    def _refresh_metadata(self) -> None:
+    def _refresh_metadata(self) -> bool:
         update = _optional_int(self._sdk.session_info_update)
         if update is not None and update == self._metadata_update:
-            return
+            return False
 
         drivers: list[IracingDriverMetadata] = []
         driver_info = self._sdk["DriverInfo"]
@@ -144,19 +167,27 @@ class PyIrSdkSource:
         self._drivers = tuple(sorted(drivers, key=lambda driver: driver.car_idx))
         self._session_types = session_types
         self._metadata_update = update
+        return True
 
-    def read(self) -> IracingRawSample:
+    def read(self) -> IracingReadResult:
+        total_started = self._monotonic()
+        buffer_wait_started = total_started
         self._sdk.freeze_var_buffer_latest()
+        buffer_ready = self._monotonic()
         try:
             available = frozenset(str(name) for name in (self._sdk.var_headers_names or ()))
             values = {name: self._read_value(name, available) for name in SELECTED_VARIABLES}
         finally:
             self._sdk.unfreeze_var_buffer_latest()
+        variables_read = self._monotonic()
+        observed_at = self._clock()
 
-        self._refresh_metadata()
+        metadata_started = self._monotonic()
+        metadata_refreshed = self._refresh_metadata()
+        metadata_finished = self._monotonic()
         session_num = _optional_int(values["SessionNum"])
-        return IracingRawSample(
-            observed_at=self._clock(),
+        sample = IracingRawSample(
+            observed_at=observed_at,
             available_variables=tuple(sorted(available.intersection(SELECTED_VARIABLES))),
             session_unique_id=_optional_int(values["SessionUniqueID"]),
             session_num=session_num,
@@ -178,6 +209,17 @@ class PyIrSdkSource:
             car_idx_laps_completed=_int_tuple(values["CarIdxLapCompleted"]),
             car_idx_f2_time_s=_float_tuple(values["CarIdxF2Time"]),
             drivers=self._drivers,
+        )
+        total_finished = self._monotonic()
+        return IracingReadResult(
+            sample=sample,
+            metrics=IracingReadMetrics(
+                buffer_wait_ms=(buffer_ready - buffer_wait_started) * 1000,
+                variable_read_ms=(variables_read - buffer_ready) * 1000,
+                metadata_refresh_ms=(metadata_finished - metadata_started) * 1000,
+                total_ms=(total_finished - total_started) * 1000,
+                metadata_refreshed=metadata_refreshed,
+            ),
         )
 
     def close(self) -> None:
