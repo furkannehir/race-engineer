@@ -1,0 +1,6 @@
+{
+  "fixture_version": "race-fixture.v1",
+  "fixture_id": "synthetic:conversation:1",
+  "description": "Made-up race snapshots for bilingual conversation, changing facts, and missing data.",
+  "frames_file": "frames.jsonl"
+}

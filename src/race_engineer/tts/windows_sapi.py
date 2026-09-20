@@ -10,6 +10,7 @@ from datetime import UTC, datetime
 from race_engineer.config import TtsConfig
 from race_engineer.core.contracts import PlaybackResult, Utterance
 from race_engineer.core.enums import PlaybackStatus
+from race_engineer.processes import start_owned_process
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,7 +92,7 @@ class WindowsSapiTextToSpeechEngine:
 
     @staticmethod
     async def installed_voices() -> tuple[str, ...]:
-        process = await asyncio.create_subprocess_exec(
+        process = await start_owned_process(
             *_powershell_arguments(_LIST_VOICES_SCRIPT),
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
@@ -117,7 +118,7 @@ class WindowsSapiTextToSpeechEngine:
                 }
             )
             try:
-                process = await asyncio.create_subprocess_exec(
+                process = await start_owned_process(
                     *_powershell_arguments(_SPEAK_SCRIPT),
                     stdout=asyncio.subprocess.DEVNULL,
                     stderr=asyncio.subprocess.PIPE,

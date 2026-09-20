@@ -1,5 +1,39 @@
 # Known issues
 
+## CONV-001: Vague fuel follow-up switches to position
+
+**Status:** Open - first conversational prototype
+
+**Observed:** 2026-09-20, local Qwen3-4B-Instruct-2507 Q4_K_M, CPU
+
+After "How is fuel looking?", "Where are we now?" returns current position rather than
+staying with fuel or clarifying the topic. The position value is grounded, but the intended
+topic is lost. Reproduced by `fuel-context` in `fixtures/conversation/cases.json`.
+
+## CONV-002: Ambiguous opponent reference can be guessed
+
+**Status:** Open - first conversational prototype
+
+**Observed:** 2026-09-20, same local-model setup
+
+With no preceding opponent context, "Is he pulling away?" can select the car ahead instead
+of asking which car. Gap trends are unsupported, so it does not invent a trend, but the
+reference resolution is wrong. Reproduced by `ambiguous-reference` in the model evaluation.
+
+## CONV-003: Unsupported part of a compound question can be omitted
+
+**Status:** Open - first conversational prototype
+
+**Observed:** 2026-09-20, additional paraphrase evaluation
+
+"Tell me the overall position and recommended tyre pressures" returns position but omits
+the explicit acknowledgement that tire advice is unavailable. It does not invent tire
+pressures. Reproduced by `partially-supported-compound` in
+`fixtures/conversation/holdout.json`.
+
+These are model interpretation issues, not transcription issues; this prototype takes typed
+input. Keep the failing evaluation cases rather than weakening their expected behaviour.
+
 ## IR-001: False blue-flag call immediately after race start
 
 **Status:** Open - investigation deferred  

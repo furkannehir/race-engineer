@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from collections.abc import AsyncIterator, Awaitable, Callable
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from math import floor
 from time import perf_counter
 
@@ -29,17 +29,27 @@ class IracingTelemetryAdapter:
         source_provider: SourceFactory = source_factory,
         sleeper: Sleeper = asyncio.sleep,
         monotonic: MonotonicClock = perf_counter,
+        availability_sink: Callable[[bool], None] | None = None,
     ) -> None:
         self._config = config
         self._source_provider = source_provider
         self._sleep = sleeper
         self._monotonic = monotonic
+        self._availability_sink = availability_sink
+        self._available: bool | None = None
         self._last_session_id: str | None = None
         self._last_sequence: int | None = None
         self._last_accepted_frame: TelemetryFrame | None = None
         self._last_accepted_started_at: float | None = None
         self._last_accepted_metrics: IracingReadMetrics | None = None
         self._logger = logging.getLogger(__name__)
+
+    def _availability(self, available: bool) -> None:
+        if self._available == available:
+            return
+        self._available = available
+        if self._availability_sink is not None:
+            self._availability_sink(available)
 
     def _accept_order(self, frame: TelemetryFrame) -> bool:
         if frame.session_id != self._last_session_id:
@@ -143,12 +153,13 @@ class IracingTelemetryAdapter:
         self._last_accepted_started_at = sample_started_at
         self._last_accepted_metrics = metrics
 
-    async def stream(self) -> AsyncIterator[TelemetryFrame]:
+    async def stream(self) -> AsyncGenerator[TelemetryFrame, None]:
         interval_s = 1.0 / self._config.sample_rate_hz
         while True:
             source = self._source_provider()
             try:
                 if not source.connect():
+                    self._availability(False)
                     self._logger.info(
                         "waiting for iRacing",
                         extra={"event": "connection_wait", "reason": "simulator_unavailable"},
@@ -181,16 +192,19 @@ class IracingTelemetryAdapter:
                     self._log_read_metrics(read_result.metrics, normalization_ms)
 
                     if frame is None:
+                        self._availability(False)
                         self._logger.debug(
                             "incomplete iRacing sample dropped",
                             extra={"event": "frame_dropped", "reason": "incomplete_identity"},
                         )
                     elif frame.is_replay and not self._config.include_replay:
+                        self._availability(False)
                         self._logger.debug(
                             "iRacing replay frame dropped",
                             extra={"event": "frame_dropped", "reason": "replay_disabled"},
                         )
                     elif self._accept_order(frame):
+                        self._availability(True)
                         self._observe_sample_gap(
                             frame,
                             sample_started_at,
@@ -201,5 +215,12 @@ class IracingTelemetryAdapter:
                 self._logger.info("iRacing disconnected", extra={"event": "disconnected"})
             finally:
                 source.close()
+                self._availability(False)
+                # A reconnected simulator may reuse IDs and restart its tick counter.
+                self._last_session_id = None
+                self._last_sequence = None
+                self._last_accepted_frame = None
+                self._last_accepted_started_at = None
+                self._last_accepted_metrics = None
 
             await self._sleep(self._config.reconnect_delay_s)

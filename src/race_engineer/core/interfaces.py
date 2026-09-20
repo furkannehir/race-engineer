@@ -1,6 +1,6 @@
 """Replaceable component boundaries for the race-engineer pipeline."""
 
-from collections.abc import AsyncIterator, Sequence
+from collections.abc import AsyncIterator, Callable, Sequence
 from typing import Protocol
 
 from race_engineer.core.contracts import (
@@ -11,6 +11,9 @@ from race_engineer.core.contracts import (
     TelemetryFrame,
     Utterance,
 )
+from race_engineer.core.conversation import ConversationPlan, ConversationReply, ConversationRequest
+from race_engineer.core.speech_input import AudioClip, Transcription
+from race_engineer.core.speech_output import SpeechOutputResult
 
 
 class TelemetryAdapter(Protocol):
@@ -45,3 +48,40 @@ class TextToSpeechEngine(Protocol):
     async def speak(self, utterance: Utterance) -> PlaybackResult: ...
 
     async def cancel(self) -> None: ...
+
+
+class ConversationPlanner(Protocol):
+    async def plan(self, request: ConversationRequest) -> ConversationPlan: ...
+
+
+class SpeechRecognizer(Protocol):
+    async def start(self) -> None: ...
+
+    async def transcribe(self, audio: AudioClip) -> Transcription: ...
+
+    async def aclose(self) -> None: ...
+
+
+class ConversationSpeaker(Protocol):
+    async def start(self) -> None: ...
+
+    async def speak(
+        self,
+        reply: ConversationReply,
+        *,
+        play_audio: bool = True,
+        before_playback: Callable[[], bool] | None = None,
+    ) -> SpeechOutputResult: ...
+
+    async def aclose(self) -> None: ...
+
+
+class LiveTelemetryBridge(Protocol):
+    @property
+    def available(self) -> bool: ...
+
+    def availability_changed(self, available: bool) -> None: ...
+
+    def update(self, context: RaceContext) -> None: ...
+
+    async def submit(self, intent: SpeechIntent, utterance: Utterance) -> bool: ...

@@ -4,6 +4,10 @@ The initial speech adapter plays validated `Utterance` values through the Window
 API (SAPI). It uses voices already installed on the machine, works offline, and adds no
 Python package or hosted-service dependency.
 
+Conversational `voice-replay` replies now use a separate bilingual Piper adapter. See
+[conversational-speech.md](conversational-speech.md) for its setup and `[radio_tts]` settings.
+The automatic race-call SAPI path described here is unchanged.
+
 ## Runtime behavior
 
 Speech runs outside the telemetry loop in a bounded async queue. The queue:
@@ -52,7 +56,8 @@ custom `--text` value.
 
 ## Deliberately deferred
 
-The first adapter uses the Windows default audio output and installed desktop voices. Voice
-downloads, neural voice engines, explicit output-device routing, pre-generated critical
-audio, and audio latency benchmarking remain later adapter improvements. None require a
-change to the policy or language contracts.
+This automatic-call adapter uses the Windows default audio output and installed desktop
+voices. Piper voice downloads and output-device selection are available for the separate
+conversation prototype, but are not used to render automatic calls. The new
+[live conversation command](live-conversation.md) coordinates both engines in one radio
+scheduler. Pre-generated critical audio and in-race latency benchmarking remain later work.

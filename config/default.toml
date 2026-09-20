@@ -51,3 +51,42 @@ rate = 0
 volume = 100
 playback_timeout_s = 10.0
 queue_capacity = 8
+
+[conversation]
+adapter = "llama-cpp"
+model = "Qwen3-4B-Instruct-2507"
+port = 8087
+timeout_s = 30.0
+history_turns = 6
+max_snapshot_age_s = 3.0
+default_language = "en"
+
+[stt]
+adapter = "qwen3-asr"
+python_path = "data/stt-prototype/runtime/Scripts/python.exe"
+model_path = "data/stt-prototype/Qwen3-ASR-0.6B-hf"
+device = "cpu"
+threads = 8
+language = "auto"
+startup_timeout_s = 120.0
+timeout_s = 45.0
+sample_rate_hz = 16000
+ptt_key = "F8"
+max_capture_s = 15.0
+min_capture_s = 0.2
+silence_threshold_dbfs = -42.0
+# input_device = 1  # choose an index from list-input-devices; otherwise system default
+
+# Conversational replies only; [tts] still controls automatic iRacing calls.
+[radio_tts]
+enabled = true
+adapter = "piper"
+python_path = "data/tts-prototype/runtime/Scripts/python.exe"
+english_model_path = "data/tts-prototype/voices/en_US-ljspeech-high.onnx"
+turkish_model_path = "data/tts-prototype/voices/tr_TR-dfki-medium.onnx"
+volume = 0.8
+length_scale = 1.0
+threads = 4
+startup_timeout_s = 60
+playback_timeout_s = 90
+# output_device = 4  # See list-output-devices; omitted uses system default.

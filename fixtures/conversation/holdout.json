@@ -1,0 +1,43 @@
+[
+  {
+    "id": "english-paraphrase",
+    "turns": [
+      {"question": "Give me an update on the car chasing us.", "queries": ["gap_behind"], "language": "en", "status": "answered"},
+      {"question": "Are they getting closer?", "queries": ["gap_trend_behind"], "language": "en", "status": "unavailable"}
+    ]
+  },
+  {
+    "id": "turkish-paraphrase",
+    "turns": [
+      {"question": "Önümüzdeki araç kaç saniye uzakta?", "queries": ["gap_ahead"], "language": "tr", "status": "answered"},
+      {"question": "Arkamızdakiyle aramız kaç saniye?", "queries": ["gap_behind"], "language": "tr", "status": "answered"},
+      {"question": "Bize yetişiyor mu?", "queries": ["gap_trend_behind"], "language": "tr", "status": "unavailable"}
+    ]
+  },
+  {
+    "id": "explicit-topic-change",
+    "turns": [
+      {"question": "How many litres are still in the tank?", "frame_index": 1, "queries": ["fuel_remaining"], "language": "en", "status": "answered"},
+      {"question": "How much are we using each lap?", "queries": ["fuel_consumption"], "language": "en", "status": "answered"},
+      {"question": "What's our overall race place?", "queries": ["position"], "language": "en", "status": "answered"}
+    ]
+  },
+  {
+    "id": "turkish-fuel-strategy",
+    "turns": [
+      {"question": "Yakıt finişe yeter mi?", "queries": ["fuel_to_finish"], "language": "tr", "status": "unavailable"}
+    ]
+  },
+  {
+    "id": "partially-supported-compound",
+    "turns": [
+      {"question": "Tell me the overall position and recommended tyre pressures.", "queries": ["position", "unsupported"], "language": "en", "status": "answered"}
+    ]
+  },
+  {
+    "id": "lap-paraphrase",
+    "turns": [
+      {"question": "Kaçıncı turdayız?", "queries": ["lap"], "language": "tr", "status": "answered"}
+    ]
+  }
+]

@@ -14,6 +14,14 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+audio = ["sounddevice>=0.5.3,<0.6"]
+radio = ["piper-tts==1.8.0", "sounddevice>=0.5.3,<0.6"]
+asr = [
+  "transformers==5.17.0",
+  "numpy>=2,<3",
+  "librosa>=0.11,<0.12",
+  "soundfile>=0.13,<0.14",
+]
 dev = [
   "mypy>=1.13,<2",
   "pytest>=8.3,<9",
@@ -36,6 +44,8 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+# Turkish radio text uses dotless i intentionally.
+allowed-confusables = ["ı"]
 
 [tool.mypy]
 python_version = "3.12"

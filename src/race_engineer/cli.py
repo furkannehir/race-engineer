@@ -17,6 +17,7 @@ from race_engineer.core.contracts import (
     canonical_json,
 )
 from race_engineer.core.enums import PolicyDecisionOutcome
+from race_engineer.core.interfaces import LiveTelemetryBridge
 from race_engineer.fixtures import load_fixture
 from race_engineer.language import language_factory
 from race_engineer.observability import configure_logging
@@ -31,6 +32,67 @@ _LOGGER = logging.getLogger(__name__)
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="race-engineer")
     subparsers = parser.add_subparsers(dest="command", required=True)
+
+    subparsers.add_parser("list-input-devices", help="list microphone devices without recording")
+    subparsers.add_parser("list-output-devices", help="list speaker/headphone output devices")
+    radio = subparsers.add_parser("test-radio", help="test local English/Turkish Piper speech")
+    radio.add_argument("--config", type=Path, required=True)
+    radio.add_argument("--language", choices=("en", "tr"), default="en")
+    radio.add_argument("--text", help="custom radio-check text")
+    radio.add_argument("--output-device", type=int, help="index from list-output-devices")
+    radio.add_argument(
+        "--no-playback", action="store_true", help="synthesize without playing audio"
+    )
+    transcribe = subparsers.add_parser(
+        "transcribe-wav", help="transcribe a local PCM16 WAV offline"
+    )
+    transcribe.add_argument("audio", type=Path)
+    transcribe.add_argument("--config", type=Path, required=True)
+    voice = subparsers.add_parser(
+        "voice-replay", help="push-to-talk replay questions with local spoken and text replies"
+    )
+    voice.add_argument("directory", type=Path)
+    voice.add_argument("--config", type=Path, required=True)
+    voice.add_argument("--frame-index", type=int, default=0)
+    voice.add_argument("--device", type=int, help="microphone index from list-input-devices")
+    voice.add_argument("--ptt-key", help="hold key, e.g. F8, F9, RCTRL; default: config")
+    voice.add_argument("--audio", type=Path, help="use one WAV file instead of microphone capture")
+    voice.add_argument("--language", choices=("en", "tr"), help="force answer language")
+    voice.add_argument(
+        "--text-only", action="store_true", help="disable conversational audio output"
+    )
+    voice.add_argument("--output-device", type=int, help="speaker index from list-output-devices")
+
+    live_voice = subparsers.add_parser(
+        "voice-iracing",
+        help="live iRacing telemetry, automatic calls, and push-to-talk conversation",
+    )
+    live_voice.add_argument("--config", type=Path, required=True)
+    live_voice.add_argument(
+        "--limit", type=int, default=0, help="frame limit; zero runs until exit"
+    )
+    live_voice.add_argument("--output", type=Path, help="new telemetry recording directory")
+    live_voice.add_argument("--device", type=int, help="microphone index from list-input-devices")
+    live_voice.add_argument("--ptt-key", help="hold key; default: config (F8)")
+    live_voice.add_argument(
+        "--output-device", type=int, help="Piper output device; SAPI uses default"
+    )
+    live_voice.add_argument(
+        "--language", choices=("en", "tr"), help="force conversational language"
+    )
+    live_voice.add_argument("--text-only", action="store_true", help="mute ALL speech in live mode")
+
+    chat = subparsers.add_parser(
+        "chat-replay", help="ask the local Qwen model questions about a paused replay"
+    )
+    chat.add_argument("directory", type=Path)
+    chat.add_argument("--config", type=Path, required=True)
+    chat.add_argument("--frame-index", type=int, default=0)
+    chat.add_argument("--question", help="ask once instead of opening an interactive conversation")
+    chat.add_argument(
+        "--language", choices=("en", "tr"), help="force reply language; default: auto"
+    )
+    chat.add_argument("--json", action="store_true", help="structured output with --question")
 
     validate = subparsers.add_parser("validate-config", help="validate a TOML configuration")
     validate.add_argument("--config", type=Path, required=True)
@@ -88,7 +150,9 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
-async def _read_iracing(config_path: Path, limit: int, output: Path | None) -> int:
+async def _read_iracing(
+    config_path: Path, limit: int, output: Path | None, *, live: LiveTelemetryBridge | None = None
+) -> int:
     if limit < 0:
         raise ValueError("--limit must be zero or greater")
     if output is not None and output.exists():
@@ -96,14 +160,30 @@ async def _read_iracing(config_path: Path, limit: int, output: Path | None) -> i
 
     config = load_config(config_path)
     configure_logging(config.logging)
-    adapter = IracingTelemetryAdapter(config.telemetry.iracing)
+    reset_requested = False
+
+    def availability_changed(available: bool) -> None:
+        nonlocal reset_requested
+        if not available:
+            reset_requested = True
+        assert live is not None
+        live.availability_changed(available)
+
+    adapter = (
+        IracingTelemetryAdapter(
+            config.telemetry.iracing.model_copy(update={"include_replay": False}),
+            availability_sink=availability_changed,
+        )
+        if live is not None
+        else IracingTelemetryAdapter(config.telemetry.iracing)
+    )
     event_deriver = IracingEventDeriver()
     context_builder = DefaultRaceContextBuilder(config.policy.context)
     pending_decisions: list[PolicyDecision] = []
     policy = StrictRulePolicy(config.policy.strict, decision_sink=pending_decisions.append)
     language = language_factory(config.language)
     playback: SpeechPlaybackQueue | None = None
-    if config.tts.enabled:
+    if config.tts.enabled and live is None:
         try:
             playback = SpeechPlaybackQueue(
                 tts_factory(config.tts),
@@ -121,8 +201,17 @@ async def _read_iracing(config_path: Path, limit: int, output: Path | None) -> i
     recorder: TelemetrySessionRecorder | None = None
     previous: TelemetryFrame | None = None
     frames = 0
+    stream = adapter.stream()
     try:
-        async for frame in adapter.stream():
+        async for frame in stream:
+            if live is not None and (reset_requested or not live.available):
+                previous = None
+                context_builder = DefaultRaceContextBuilder(config.policy.context)
+                policy = StrictRulePolicy(
+                    config.policy.strict, decision_sink=pending_decisions.append
+                )
+                pending_decisions.clear()
+                reset_requested = False
             events = tuple(event_deriver.derive(previous, frame))
             if output is not None and recorder is None:
                 fixture_id = f"{frame.session_id}:{frame.observed_at.strftime('%Y%m%dT%H%M%SZ')}"
@@ -136,11 +225,13 @@ async def _read_iracing(config_path: Path, limit: int, output: Path | None) -> i
             if recorder is not None:
                 recorder.write_frame(frame)
                 recorder.write_events(events)
-            else:
+            elif live is None:
                 print(canonical_json(frame), flush=True)
 
             try:
                 context = context_builder.update(frame, events)
+                if live is not None:
+                    live.update(context)
                 intents = await policy.decide(context)
             except Exception as error:
                 _LOGGER.exception(
@@ -196,9 +287,10 @@ async def _read_iracing(config_path: Path, limit: int, output: Path | None) -> i
                                 "template_id": utterance.generator_metadata.get("template_id"),
                             },
                         )
-                        if playback is not None:
+                        speech_sink = live if live is not None else playback
+                        if speech_sink is not None:
                             try:
-                                queued = await playback.submit(intent, utterance)
+                                queued = await speech_sink.submit(intent, utterance)
                             except Exception as error:
                                 _LOGGER.exception(
                                     "speech could not be queued; telemetry will continue",
@@ -225,20 +317,27 @@ async def _read_iracing(config_path: Path, limit: int, output: Path | None) -> i
             if limit and frames >= limit:
                 break
     finally:
-        if playback is not None:
+        try:
+            await stream.aclose()
+        finally:
             try:
-                await asyncio.wait_for(
-                    playback.aclose(drain=True),
-                    timeout=config.runtime.shutdown_timeout_s,
-                )
-            except TimeoutError:
-                _LOGGER.warning(
-                    "speech queue did not drain before shutdown",
-                    extra={"event": "playback_shutdown_timeout"},
-                )
-                await playback.aclose(drain=False)
-        if recorder is not None:
-            recorder.__exit__(None, None, None)
+                if live is not None:
+                    live.availability_changed(False)
+                if playback is not None:
+                    try:
+                        await asyncio.wait_for(
+                            playback.aclose(drain=True),
+                            timeout=config.runtime.shutdown_timeout_s,
+                        )
+                    except TimeoutError:
+                        _LOGGER.warning(
+                            "speech queue did not drain before shutdown",
+                            extra={"event": "playback_shutdown_timeout"},
+                        )
+                        await playback.aclose(drain=False)
+            finally:
+                if recorder is not None:
+                    recorder.__exit__(None, None, None)
     return frames
 
 
@@ -335,6 +434,114 @@ async def _test_tts(config_path: Path, text: str) -> PlaybackResult:
 def main() -> None:
     args = _parser().parse_args()
     match args.command:
+        case "voice-iracing":
+            from race_engineer.application.live_conversation import voice_iracing
+            from race_engineer.core.speech_input import SpeechInputError
+
+            try:
+                live_code = asyncio.run(
+                    voice_iracing(
+                        args.config,
+                        limit=args.limit,
+                        output=args.output,
+                        input_device=args.device,
+                        ptt_key=args.ptt_key,
+                        output_device=args.output_device,
+                        text_only=args.text_only,
+                        reply_language=args.language,
+                    )
+                )
+            except SpeechInputError as error:
+                print(f"Live speech input failed: {error}. See docs/live-conversation.md.")
+                live_code = 1
+            except (ValueError, OSError):
+                print("Cannot start live conversation; check configuration and recording path.")
+                live_code = 2
+            except KeyboardInterrupt:
+                live_code = 130
+            raise SystemExit(live_code)
+        case "list-output-devices" | "test-radio":
+            from race_engineer.application.speech_cli import radio_check
+            from race_engineer.core.speech_output import SpeechOutputError
+            from race_engineer.tts.devices import output_devices
+
+            try:
+                if args.command == "list-output-devices":
+                    print(json.dumps(output_devices(), indent=2, ensure_ascii=False))
+                    radio_code = 0
+                else:
+                    radio_code = asyncio.run(
+                        radio_check(
+                            args.config,
+                            language=args.language,
+                            text=args.text,
+                            output_device=args.output_device,
+                            play_audio=not args.no_playback,
+                        )
+                    )
+            except SpeechOutputError as error:
+                print(f"Speech output failed: {error}. See docs/conversational-speech.md.")
+                radio_code = 1
+            except (ValueError, OSError):
+                print("Cannot start radio check; check configuration and voice paths.")
+                radio_code = 2
+            except KeyboardInterrupt:
+                radio_code = 130
+            raise SystemExit(radio_code)
+        case "list-input-devices" | "transcribe-wav" | "voice-replay":
+            from race_engineer.application.speech_cli import transcribe_wav, voice_replay
+            from race_engineer.core.speech_input import SpeechInputError
+            from race_engineer.stt.capture import input_devices
+
+            try:
+                if args.command == "list-input-devices":
+                    print(json.dumps(input_devices(), indent=2, ensure_ascii=False))
+                    speech_code = 0
+                elif args.command == "transcribe-wav":
+                    speech_code = asyncio.run(transcribe_wav(args.config, args.audio))
+                else:
+                    speech_code = asyncio.run(
+                        voice_replay(
+                            args.config,
+                            args.directory,
+                            frame_index=args.frame_index,
+                            input_device=args.device,
+                            ptt_key=args.ptt_key,
+                            audio_path=args.audio,
+                            reply_language=args.language,
+                            text_only=args.text_only,
+                            output_device=args.output_device,
+                        )
+                    )
+            except SpeechInputError as error:
+                print(f"Speech input failed: {error}. See docs/speech-to-text.md.")
+                speech_code = 1
+            except (ValueError, OSError):
+                print("Cannot start speech input; check configuration, fixture, and audio path.")
+                speech_code = 2
+            except KeyboardInterrupt:
+                speech_code = 130
+            raise SystemExit(speech_code)
+        case "chat-replay":
+            from race_engineer.application.conversation_cli import chat_replay
+
+            try:
+                result_code = asyncio.run(
+                    chat_replay(
+                        args.config,
+                        args.directory,
+                        frame_index=args.frame_index,
+                        question=args.question,
+                        reply_language=args.language,
+                        json_output=args.json,
+                    )
+                )
+            except KeyboardInterrupt:
+                result_code = 130
+            except (OSError, ValueError):
+                print("Cannot start replay conversation; check config, fixture, and arguments.")
+                result_code = 2
+            raise SystemExit(result_code)
         case "validate-config":
             config = load_config(args.config)
             print(config.model_dump_json(indent=2))

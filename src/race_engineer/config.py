@@ -84,6 +84,50 @@ class TtsConfig(ConfigModel):
     queue_capacity: int = Field(default=8, ge=1, le=100)
 
 
+class ConversationConfig(ConfigModel):
+    adapter: Literal["llama-cpp"] = "llama-cpp"
+    model: Literal["Qwen3-4B-Instruct-2507"] = "Qwen3-4B-Instruct-2507"
+    # The adapter connects only to literal 127.0.0.1, never a remote host or proxy.
+    port: int = Field(default=8087, ge=1, le=65535)
+    timeout_s: float = Field(default=30.0, gt=0, le=120, allow_inf_nan=False)
+    history_turns: int = Field(default=6, ge=0, le=12)
+    max_snapshot_age_s: float = Field(default=3.0, gt=0, le=30, allow_inf_nan=False)
+    default_language: Literal["en", "tr"] = "en"
+
+
+class SttConfig(ConfigModel):
+    adapter: Literal["qwen3-asr"] = "qwen3-asr"
+    python_path: Path = Path("data/stt-prototype/runtime/Scripts/python.exe")
+    model_path: Path = Path("data/stt-prototype/Qwen3-ASR-0.6B-hf")
+    device: Literal["cpu", "cuda"] = "cpu"
+    threads: int = Field(default=8, ge=1, le=32)
+    language: Literal["auto", "en", "tr"] = "auto"
+    startup_timeout_s: float = Field(default=120, gt=0, le=600, allow_inf_nan=False)
+    timeout_s: float = Field(default=45, gt=0, le=180, allow_inf_nan=False)
+    input_device: int | None = Field(default=None, ge=0)
+    sample_rate_hz: Literal[16000, 44100, 48000] = 16000
+    ptt_key: str = Field(default="F8", pattern=r"^(F([1-9]|1[0-9]|2[0-4])|SPACE|RCTRL|RALT)$")
+    max_capture_s: float = Field(default=15, ge=1, le=30, allow_inf_nan=False)
+    min_capture_s: float = Field(default=0.2, ge=0.05, le=1, allow_inf_nan=False)
+    silence_threshold_dbfs: float = Field(default=-42, ge=-80, le=-10, allow_inf_nan=False)
+
+
+class RadioTtsConfig(ConfigModel):
+    """Conversational speech only; automatic race calls retain their SAPI settings."""
+
+    enabled: bool = True
+    adapter: Literal["piper"] = "piper"
+    python_path: Path = Path("data/tts-prototype/runtime/Scripts/python.exe")
+    english_model_path: Path = Path("data/tts-prototype/voices/en_US-ljspeech-high.onnx")
+    turkish_model_path: Path = Path("data/tts-prototype/voices/tr_TR-dfki-medium.onnx")
+    output_device: int | None = Field(default=None, ge=0)
+    volume: float = Field(default=0.8, ge=0, le=1, allow_inf_nan=False)
+    length_scale: float = Field(default=1.0, ge=0.5, le=2, allow_inf_nan=False)
+    threads: int = Field(default=4, ge=1, le=16)
+    startup_timeout_s: float = Field(default=60, gt=0, le=180, allow_inf_nan=False)
+    playback_timeout_s: float = Field(default=90, gt=0, le=180, allow_inf_nan=False)
+
+
 class AppConfig(ConfigModel):
     config_version: Literal["app-config.v1"] = "app-config.v1"
     paths: PathsConfig = PathsConfig()
@@ -94,6 +138,9 @@ class AppConfig(ConfigModel):
     policy: PolicyConfig = PolicyConfig()
     language: LanguageConfig = LanguageConfig()
     tts: TtsConfig = TtsConfig()
+    conversation: ConversationConfig = ConversationConfig()
+    stt: SttConfig = SttConfig()
+    radio_tts: RadioTtsConfig = RadioTtsConfig()
 
 
 def _parse_bool(value: str) -> bool:

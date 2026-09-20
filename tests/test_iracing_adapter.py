@@ -73,6 +73,21 @@ async def no_sleep(delay: float) -> None:
     del delay
 
 
+def test_disconnect_invalidates_live_context_and_reused_ticks_are_accepted(iracing_samples):
+    first, second = iracing_samples
+    sources = iter((FakeSource([second]), FakeSource([first])))
+    availability = []
+    adapter = IracingTelemetryAdapter(
+        IracingTelemetryConfig(),
+        source_provider=lambda: next(sources),
+        sleeper=no_sleep,
+        availability_sink=availability.append,
+    )
+    frames = collect_frames(adapter, 2)
+    assert [frame.sequence for frame in frames] == [101, 100]
+    assert availability == [True, False, True, False]
+
+
 def collect_frames(
     adapter: IracingTelemetryAdapter,
     count: int,

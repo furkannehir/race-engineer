@@ -20,10 +20,24 @@ the deterministic M2 policy slice, and the local M3 speech path:
 - fact-bound English wording with deterministic replay and an explicit fallback boundary;
   and
 - offline Windows speech with bounded priority queueing, expiry, interruption, and
-  failure isolation.
+  failure isolation; and
+- local English/Turkish conversations over paused replay data, using Qwen to
+  interpret questions and follow-ups with fact-bound bilingual replies; and
+- local Qwen3-ASR push-to-talk and Piper spoken replies with text fallback.
 
 Model-backed language generation, higher-quality speech adapters, durable decision storage,
 adaptive policies, and the desktop UI remain later work.
+
+The conversational prototype supports text chat and local Qwen3-ASR push-to-talk, with
+bilingual Piper spoken replies over replay data and live iRacing context. The combined
+`voice-iracing` command coordinates automatic calls and questions; its first in-game
+shakedown is still required. See the [live run guide](docs/live-conversation.md).
+
+faster-whisper is reserved as a future performance alternative. See the
+[speech-input setup](docs/speech-to-text.md),
+[spoken-reply setup and voice license notices](docs/conversational-speech.md),
+[conversation setup and demo](docs/conversation.md) and
+[prototype decisions](docs/architecture.md#conversational-prototype).
 
 ## Requirements
 
