@@ -6,7 +6,7 @@ import json
 import logging
 from pathlib import Path
 
-from race_engineer.config import load_config
+from race_engineer.config import AppConfig, load_config
 from race_engineer.core.contracts import (
     PlaybackResult,
     PolicyDecision,
@@ -151,15 +151,21 @@ def _parser() -> argparse.ArgumentParser:
 
 
 async def _read_iracing(
-    config_path: Path, limit: int, output: Path | None, *, live: LiveTelemetryBridge | None = None
+    config_path: Path,
+    limit: int,
+    output: Path | None,
+    *,
+    live: LiveTelemetryBridge | None = None,
+    app_config: AppConfig | None = None,
 ) -> int:
     if limit < 0:
         raise ValueError("--limit must be zero or greater")
     if output is not None and output.exists():
         raise FileExistsError(f"recording directory already exists: {output}")
 
-    config = load_config(config_path)
-    configure_logging(config.logging)
+    config = app_config or load_config(config_path)
+    if app_config is None:
+        configure_logging(config.logging)
     reset_requested = False
 
     def availability_changed(available: bool) -> None:

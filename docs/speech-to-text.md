@@ -51,7 +51,9 @@ Use `--device 1` to select a listed microphone or `--ptt-key F9` to change the b
 Indices are machine-specific and may change after reconnecting devices. The default uses
 the system input device. Supported keyboard bindings are F1-F24, SPACE, RCTRL, and RALT.
 Keys are not intercepted, so choose one that does not conflict with other applications.
-Native steering-wheel/controller bindings remain later work.
+The terminal flag retains this deliberately small keyboard vocabulary. The native
+[control panel](control-panel.md) adds press-to-bind for arbitrary keys, standard mouse
+buttons, and digital steering-wheel/controller buttons or hats.
 
 ESC exits while waiting or recording; Ctrl+C also exits, including during processing.
 A press held during processing must be released before starting another question. The
@@ -129,11 +131,15 @@ Setup pins Transformers 5.17.0 and CPU PyTorch 2.14.0. SHA256 checks:
 - `tokenizer.json`: `fe1fad59be22a41ee293363fcf95fdedbc7c93f3b49270b1d2e18bd1399a7a05`
 
 Capture uses [sounddevice raw streams](https://python-sounddevice.readthedocs.io/en/0.5.3/api/raw-streams.html).
-Push-to-talk polls the high held-state bit of
+Keyboard and mouse push-to-talk poll the high held-state bit of
 [GetAsyncKeyState](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getasynckeystate);
-it does not log keystrokes or install a global keyboard hook.
+wheel/controller input uses [pygame-ce's joystick API](https://pyga.me/docs/ref/joystick.html)
+with SDL background events. It does not log input activity or install a global keyboard
+hook. Only the explicitly bound digital control is read during capture; analog axes are
+never sampled by the binding layer.
 
-Automated tests use synthetic PCM, fake key states, fake microphone streams, and fake worker
-pipes. They verify capture bounds, release/cancel behaviour, silence rejection, bilingual
-result parsing, timeout cleanup, and the conversation handoff. Human microphone tests in
-English and Turkish are still required before claiming recognition accuracy.
+Automated tests use synthetic PCM, fake key/button states, fake microphone streams, fake
+SDL devices, and fake worker pipes. They verify capture bounds, release/cancel behaviour,
+device-qualified button selection, silence rejection, bilingual result parsing, timeout
+cleanup, and the conversation handoff. Human microphone and real wheel tests are still
+required before claiming recognition or hardware compatibility.

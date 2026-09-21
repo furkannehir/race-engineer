@@ -14,6 +14,7 @@ from race_engineer.core.speech_input import AudioClip, SpeechInputError, Transcr
 from race_engineer.core.speech_output import SpeechOutputError
 from race_engineer.observability import configure_logging
 from race_engineer.stt.audio import load_wav
+from race_engineer.stt.buttons import binding_label, legacy_binding
 from race_engineer.stt.capture import PushToTalkMicrophone
 from race_engineer.stt.qwen import QwenSpeechRecognizer
 from race_engineer.tts.piper import PiperConversationSpeaker
@@ -71,6 +72,7 @@ async def voice_replay(
         settings["input_device"] = input_device
     if ptt_key is not None:
         settings["ptt_key"] = ptt_key.upper()
+        settings["ptt_binding"] = legacy_binding(ptt_key.upper()).model_dump()
     stt = SttConfig.model_validate(settings)
     speech_settings = config.radio_tts.model_dump()
     if output_device is not None:
@@ -101,7 +103,10 @@ async def voice_replay(
                     await speaker.aclose()
                     speaker = None
             microphone = PushToTalkMicrophone(stt)
-            print(f"Ready. Hold {stt.ptt_key} to talk; ESC exits while waiting/listening.")
+            print(
+                f"Ready. Hold {binding_label(stt)} to talk; "
+                "ESC exits while waiting/listening."
+            )
             print("Spoken + text replies." if speaker is not None else "Text replies only.")
             print("Replay stays on the selected frame. Ctrl+C stops processing/playback and exits.")
         while True:
@@ -154,7 +159,10 @@ async def voice_replay(
                         and not playback_failed
                         else 1
                     )
-                print(f"Ready for another question. Hold {stt.ptt_key} to talk.", flush=True)
+                print(
+                    f"Ready for another question. Hold {binding_label(stt)} to talk.",
+                    flush=True,
+                )
             except SpeechInputError as error:
                 print(f"Speech input failed: {error}. See docs/speech-to-text.md.")
                 if audio_path is not None:

@@ -6,7 +6,7 @@ import wave
 import pytest
 from pydantic import ValidationError
 
-from race_engineer.config import SttConfig
+from race_engineer.config import PttBindingConfig, SttConfig
 from race_engineer.core.speech_input import AudioClip, SpeechInputError, Transcription
 from race_engineer.stt.audio import load_wav, silence_reason
 from race_engineer.stt.capture import CaptureBuffer, PushToTalkMicrophone, virtual_key
@@ -98,6 +98,12 @@ def test_key_mapping_and_config_validation():
         SttConfig(ptt_key="ESC")
     with pytest.raises(ValidationError):
         SttConfig(sample_rate_hz=12345)
+    arbitrary = PttBindingConfig(kind="keyboard", code=ord("A"), label="A")
+    assert SttConfig(ptt_binding=arbitrary).ptt_binding == arbitrary
+    with pytest.raises(ValidationError):
+        PttBindingConfig(kind="mouse", code=3, label="Not a supported mouse button")
+    with pytest.raises(ValidationError):
+        PttBindingConfig(kind="joystick", code=1, label="Unqualified button")
 
 
 def test_push_to_talk_starts_on_press_and_stops_on_release():
@@ -158,6 +164,86 @@ def test_escape_before_press_does_not_start_capture():
         await mic.aclose()
 
     asyncio.run(run())
+
+
+def test_desktop_capture_does_not_treat_iracing_escape_as_exit():
+    class Stream:
+        def __init__(self, **kwargs):
+            self.callback = kwargs["callback"]
+
+        def start(self):
+            self.callback(tone().pcm16, 6400, None, False)
+
+        def stop(self):
+            pass
+
+        def close(self):
+            pass
+
+    keys = iter((False, True, True, False))
+    mic = PushToTalkMicrophone(
+        SttConfig(),
+        stream_factory=Stream,
+        exit_on_escape=False,
+        key_down=lambda key: next(keys) if key == 0x77 else key == 0x1B,
+    )
+
+    async def run():
+        clip = await mic.next_clip()
+        await mic.aclose()
+        assert clip is not None and clip.duration_s == pytest.approx(0.4)
+
+    asyncio.run(run())
+
+
+def test_controller_binding_uses_injected_held_button_reader():
+    class Stream:
+        def __init__(self, **kwargs):
+            self.callback = kwargs["callback"]
+
+        def start(self):
+            self.callback(tone().pcm16, 6400, None, False)
+
+        def stop(self):
+            pass
+
+        def close(self):
+            pass
+
+    class Button:
+        def __init__(self):
+            self.states = iter((False, True, True, False))
+            self.closed = False
+
+        def is_down(self):
+            return next(self.states)
+
+        def close(self):
+            self.closed = True
+
+    binding = PttBindingConfig(
+        kind="joystick",
+        code=4,
+        label="Wheel · Button 5",
+        device_guid="0123456789abcdef0123456789abcdef",
+        device_name="Wheel",
+        device_index=0,
+    )
+    button = Button()
+    mic = PushToTalkMicrophone(
+        SttConfig(ptt_binding=binding),
+        button_input=button,
+        stream_factory=Stream,
+        exit_on_escape=False,
+    )
+
+    async def run():
+        clip = await mic.next_clip()
+        await mic.aclose()
+        return clip
+
+    assert asyncio.run(run()).duration_s == pytest.approx(0.4)
+    assert button.closed
 
 
 def test_bilingual_model_output_and_language_filtering():

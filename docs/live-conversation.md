@@ -7,6 +7,10 @@ It is read-only: there are no pit commands, setup changes, or simulator controls
 
 ## Run
 
+For the native Windows controls, use the [control panel](control-panel.md). It manages
+the local model server and this same live pipeline. The terminal workflow below remains
+available; do not run it at the same time as a panel session.
+
 Use the existing [conversation](conversation.md), [STT](speech-to-text.md), and
 [Piper](conversational-speech.md) installations. No new model download is required.
 Start with a practice/test session, not a competitive race.
@@ -33,8 +37,10 @@ already runs the automatic policy/speech pipeline. Separate processes cannot coo
 their audio and would produce duplicate or overlapping calls.
 
 F8 is a global held-key check, not an intercepted key. If it conflicts with iRacing or
-another application, choose a free supported binding, for example `--ptt-key RCTRL`.
-Native steering-wheel/controller bindings remain future work.
+another application, choose a free terminal binding, for example `--ptt-key RCTRL`.
+The control panel additionally offers press-to-bind for arbitrary keyboard keys, standard
+mouse buttons, and digital wheel/controller buttons or hats. Those bindings remain active
+while iRacing has focus; analog axes such as steering and pedals are ignored.
 
 ESC exits while waiting/listening; Ctrl+C exits during processing or playback too.
 Shutdown cancels capture, radio playback, and workers and closes the telemetry source
@@ -131,5 +137,9 @@ Automated tests simulate moving telemetry during model inference, disconnection,
 frames, same-ID reconnection, microphone cancellation, bounded priority playback,
 critical-call preemption, late TTS freshness rejection, recorder continuity, and shutdown.
 The real Piper worker's prepared-audio gate was checked with playback denied; no microphone
-was recorded for that check. A human iRacing shakedown, audio quality, and in-game resource
-impact are still pending. Processing timers are diagnostics, not a measured first-audio SLA.
+was recorded for that check. On 2026-09-21 the driver reported that the combined live run
+works sufficiently for now, with short-input STT issues, unnatural TTS, and a request for
+more contextual engineer-style reactions. These are deferred in [known-issues.md](known-issues.md).
+This is qualitative feedback, not completion of every test above. Measured audio quality,
+latency, in-game resource impact, and extended live scenarios remain to be evaluated.
+Processing timers are diagnostics, not a measured first-audio SLA.

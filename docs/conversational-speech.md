@@ -139,8 +139,9 @@ Reported `synthesis_ms` excludes voice loading. `playback_ms` includes stream se
 drain. `ASR + reply processing` excludes synthesis/playback and starts after capture stops.
 These are diagnostics, not a measured push-to-talk release-to-first-audible-response SLA.
 Live integration and critical-call interruption are implemented in `voice-iracing`.
-The actual iRacing shakedown, in-race CPU/frame-time impact, and detailed end-to-end latency
-evaluation remain pending.
+The driver accepted the combined live prototype as sufficient to continue on 2026-09-21,
+while deferring improved voice quality (especially Turkish) under TTS-001. Measured
+in-race CPU/frame-time impact and detailed end-to-end latency evaluation remain pending.
 
 The pinned voice repository revision is `c10ece1aade47bb51c153c893d14e5bf8e5b7117`.
 Setup verifies the published LFS SHA256 values:

@@ -123,7 +123,8 @@ adapter work.
 
 The following direction was agreed on 2026-09-19. Text-over-replay, local push-to-talk
 speech input, bilingual Piper audio output, and live iRacing integration are implemented;
-in-game shakedown validation remains pending:
+the driver accepted the combined live prototype as sufficient to continue on 2026-09-21.
+Quantitative validation and the [deferred quality upgrades](known-issues.md) remain open:
 
 - push-to-talk input, with English and Turkish supported from the first prototype;
 - entirely local speech recognition, conversational inference, and speech synthesis;
@@ -140,7 +141,9 @@ runtime fallback.
 The initial ASR adapter uses the native Transformers Qwen3-ASR-0.6B-hf checkpoint in an
 isolated CPU worker, with local-only loading and bounded private-pipe requests. Microphone
 capture is push-to-talk, memory-only, duration-limited, and guarded against silence and
-overflow. The worker is killed on cancellation or timeout. See
+overflow. The desktop binding adapter accepts held keyboard/mouse controls and
+device-qualified digital wheel/controller buttons or hats while excluding analog axes.
+The worker is killed on cancellation or timeout. See
 [speech-to-text.md](speech-to-text.md) for setup and limitations.
 Evaluation must still cover human English and Turkish recognition quality,
 push-to-talk release-to-first-audio latency, memory use, and iRacing frame-time impact.

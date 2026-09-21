@@ -33,6 +33,7 @@ class LiveRadio:
         *,
         capacity: int = 8,
         clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+        activity: Callable[[str], None] = lambda _: None,
     ) -> None:
         if capacity < 1:
             raise ValueError("radio capacity must be positive")
@@ -48,6 +49,18 @@ class LiveRadio:
         self._worker: asyncio.Task[None] | None = None
         self._wakeup = asyncio.Event()
         self._closing = False
+        self._muted = False
+        self._activity = activity
+
+    def set_muted(self, muted: bool) -> None:
+        """Drop, never defer, muted speech; keep telemetry and capture running."""
+        self._muted = muted
+        if muted:
+            for job in self._pending:
+                self._finish(job, "muted")
+            self._pending.clear()
+            self._cancel(self._active)
+            self._wakeup.set()
 
     @staticmethod
     def _cancel(task: asyncio.Task[object] | None) -> None:
@@ -98,6 +111,9 @@ class LiveRadio:
         future: asyncio.Future[str] = asyncio.get_running_loop().create_future()
         job = _Job(identifier, priority, self._sequence, epoch, deadline, action, future)
         self._sequence += 1
+        if self._muted:
+            self._finish(job, "muted")
+            return job
         if self._closing or epoch != self._epoch:
             self._finish(job, "invalidated")
             return job
@@ -194,6 +210,7 @@ class LiveRadio:
                 await action()
 
             self._active = asyncio.create_task(invoke(), name="live-radio-playback")
+            self._activity("speaking")
             outcome = "completed"
             try:
                 await self._active
@@ -219,6 +236,7 @@ class LiveRadio:
                 self._finish(job, outcome)
                 self._current = None
                 self._active = None
+                self._activity("idle")
 
     async def aclose(self) -> None:
         self._closing = True

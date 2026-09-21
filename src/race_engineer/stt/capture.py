@@ -11,6 +11,12 @@ from typing import Any
 
 from race_engineer.config import SttConfig
 from race_engineer.core.speech_input import AudioClip, SpeechInputError
+from race_engineer.stt.buttons import (
+    ButtonInput,
+    JoystickButtonInput,
+    effective_binding,
+    legacy_virtual_key,
+)
 
 
 def _sounddevice() -> Any:
@@ -43,12 +49,7 @@ def input_devices() -> list[dict[str, object]]:
 
 
 def virtual_key(name: str) -> int:
-    special = {"SPACE": 0x20, "RCTRL": 0xA3, "RALT": 0xA5}
-    if name in special:
-        return special[name]
-    if name.startswith("F") and name[1:].isdigit() and 1 <= int(name[1:]) <= 24:
-        return 0x70 + int(name[1:]) - 1
-    raise ValueError("unsupported push-to-talk key")
+    return legacy_virtual_key(name)
 
 
 def windows_key_reader() -> Callable[[int], bool]:
@@ -105,17 +106,43 @@ class CaptureBuffer:
         return AudioClip(raw, self._rate)
 
 
+class _CallableButtonInput:
+    def __init__(self, read: Callable[[], bool]) -> None:
+        self._read = read
+
+    def is_down(self) -> bool:
+        return self._read()
+
+    def close(self) -> None:
+        pass
+
+
 class PushToTalkMicrophone:
     def __init__(
         self,
         config: SttConfig,
         *,
         key_down: Callable[[int], bool] | None = None,
+        button_input: ButtonInput | None = None,
         stream_factory: Callable[..., Any] | None = None,
+        exit_on_escape: bool = True,
     ) -> None:
         self._config = config
-        self._key = virtual_key(config.ptt_key)
-        self._key_down = key_down or windows_key_reader()
+        binding = effective_binding(config)
+        native_keys = key_down
+        if button_input is not None:
+            self._button = button_input
+        elif binding.kind == "joystick":
+            self._button = JoystickButtonInput(binding)
+        else:
+            button_keys = native_keys or windows_key_reader()
+            self._button = _CallableButtonInput(lambda: bool(button_keys(binding.code)))
+        self._escape_down: Callable[[], bool]
+        if exit_on_escape:
+            native_keys = native_keys or windows_key_reader()
+            self._escape_down = lambda: bool(native_keys(0x1B))
+        else:
+            self._escape_down = lambda: False
         self._buffer = CaptureBuffer(config.sample_rate_hz, config.max_capture_s)
         self._stream: Any = None
         try:
@@ -129,8 +156,10 @@ class PushToTalkMicrophone:
                 callback=self._callback,
             )
         except SpeechInputError:
+            self._button.close()
             raise
         except Exception as error:
+            self._button.close()
             raise SpeechInputError("microphone_open_failed") from error
 
     def _callback(self, data: Any, frames: int, times: Any, status: Any) -> None:
@@ -153,12 +182,12 @@ class PushToTalkMicrophone:
         before_capture: Callable[[], None] | None = None,
     ) -> AudioClip | None:
         # A key held during model inference must be released before a new recording.
-        while self._key_down(self._key):
-            if self._key_down(0x1B):
+        while self._button.is_down():
+            if self._escape_down():
                 return None
             await asyncio.sleep(0.01)
-        while not self._key_down(self._key):
-            if self._key_down(0x1B):
+        while not self._button.is_down():
+            if self._escape_down():
                 return None
             await asyncio.sleep(0.01)
         if before_capture is not None:
@@ -166,10 +195,10 @@ class PushToTalkMicrophone:
         self._buffer.begin()
         try:
             await self._operate(self._stream.start)
-            notify("Listening... release the push-to-talk key to submit.")
+            notify("Listening... release the push-to-talk button to submit.")
             started = time.monotonic()
-            while self._key_down(self._key):
-                if self._key_down(0x1B):
+            while self._button.is_down():
+                if self._escape_down():
                     self._buffer.discard()
                     return None
                 if time.monotonic() - started >= self._config.max_capture_s:
@@ -189,6 +218,10 @@ class PushToTalkMicrophone:
 
     async def aclose(self) -> None:
         self._buffer.discard()
-        if self._stream is not None:
-            stream, self._stream = self._stream, None
-            await asyncio.to_thread(stream.close)
+        try:
+            if self._stream is not None:
+                stream, self._stream = self._stream, None
+                await asyncio.to_thread(stream.close)
+        finally:
+            button, self._button = self._button, _CallableButtonInput(lambda: False)
+            await asyncio.to_thread(button.close)

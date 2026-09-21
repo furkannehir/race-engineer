@@ -1,4 +1,73 @@
-# Known issues
+# Known issues and deferred improvements
+
+## STT-001: Short and single-word questions are sometimes misrecognized
+
+**Status:** Deferred improvement - accepted prototype limitation
+
+**Reported:** 2026-09-21, driver feedback after the combined live test
+
+Recognition sometimes fails, especially for one-word input. The driver accepts the current
+prototype for now. This report does not yet identify whether capture boundaries, the energy
+gate, language detection, or the recognizer is responsible; do not assume an engine defect.
+
+Future work:
+
+- distinguish clipped/discarded capture from incorrect transcription using explicitly
+  supplied or consented English/Turkish test samples; no background microphone recording;
+- evaluate one-word questions such as "Position", "Fuel", "Sıra", and "Yakıt", along with
+  longer paraphrases and realistic racing noise;
+- assess capture timing, silence thresholds, language selection, accuracy, and latency
+  before choosing tuning or an alternative local recognizer; and
+- request a repeat when input cannot be reliably understood, rather than inventing a query.
+
+Keep Qwen3-ASR as the current adapter. faster-whisper remains an evaluation alternative,
+not a newly selected engine or automatic fallback. Natural phrasing must remain supported;
+the test examples are not a restricted command vocabulary.
+
+## TTS-001: Spoken replies need a more natural voice
+
+**Status:** Deferred improvement - accepted prototype limitation
+
+**Reported:** 2026-09-21; follows earlier feedback about the Turkish voice
+
+The voice feels unnatural/off to the driver, particularly in Turkish. Current Piper voices
+are sufficient for the prototype; no voice or engine change is requested in this increment.
+
+Future work: compare local English/Turkish voices or engines using racing vocabulary,
+numbers, gaps, pronunciation, prosody, and short conversational acknowledgments. Include
+driver listening feedback, synthesis latency, resource impact during iRacing, and engine/
+voice distribution terms. Preserve replaceable adapters, language routing, cancellation,
+and the live radio scheduler. Do not select on naturalness alone.
+
+## CONV-004: Add contextual race-engineer acknowledgments and reassurance
+
+**Status:** Deferred feature request - not implemented
+
+**Requested:** 2026-09-21
+
+Conversation should respond naturally to remarks as well as factual questions. For
+example, "That's dirty" could receive a concise acknowledgment or "Focus on your race
+now", rather than being forced into a position/fuel query or a generic unsupported reply.
+The requested feel is a supportive race engineer, not simply a spoken telemetry lookup.
+
+Future work:
+
+- add bounded conversational acts for acknowledgments, reassurance, and refocusing,
+  alongside the existing read-only factual-query route;
+- support English/Turkish paraphrases and conversational context without requiring fixed
+  phrases or generating a reply to every remark;
+- keep responses short and subject to radio priority, expiry, and interruption; critical
+  calls still take precedence and busy racing situations should not gain extra chatter;
+- distinguish the driver's report from verified race evidence: "Copy. Focus on your race"
+  is a possible neutral reply, while "Yes, we saw it" requires evidence the system can
+  actually observe. Do not invent witnessed contact, assign blame, or imply steward review;
+- keep factual race answers grounded and critical calls deterministic; personality must
+  not become an unrestricted source of race facts or strategy; and
+- add evaluation cases separating factual questions, emotional remarks, mixed inputs,
+  and ambiguous comments, including when clarification or silence is preferable.
+
+These three items are follow-up quality/features, not changes to current runtime behavior.
+See [roadmap.md](roadmap.md) for milestone status and the proposed next implementation slice.
 
 ## CONV-001: Vague fuel follow-up switches to position
 
@@ -31,8 +100,8 @@ the explicit acknowledgement that tire advice is unavailable. It does not invent
 pressures. Reproduced by `partially-supported-compound` in
 `fixtures/conversation/holdout.json`.
 
-These are model interpretation issues, not transcription issues; this prototype takes typed
-input. Keep the failing evaluation cases rather than weakening their expected behaviour.
+CONV-001 through CONV-003 were reproduced with typed input, independently of transcription.
+Keep the failing evaluation cases rather than weakening their expected behaviour.
 
 ## IR-001: False blue-flag call immediately after race start
 

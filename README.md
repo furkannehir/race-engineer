@@ -23,15 +23,19 @@ the deterministic M2 policy slice, and the local M3 speech path:
   failure isolation; and
 - local English/Turkish conversations over paused replay data, using Qwen to
   interpret questions and follow-ups with fact-bound bilingual replies; and
-- local Qwen3-ASR push-to-talk and Piper spoken replies with text fallback.
+- local Qwen3-ASR push-to-talk and Piper spoken replies with text fallback; and
+- a native Windows control panel for the live radio, audio checks, press-to-bind
+  keyboard/mouse/wheel PTT, mute and explicit defaults.
 
 Model-backed language generation, higher-quality speech adapters, durable decision storage,
-adaptive policies, and the desktop UI remain later work.
+adaptive policies, and advanced desktop controls remain later work.
 
 The conversational prototype supports text chat and local Qwen3-ASR push-to-talk, with
 bilingual Piper spoken replies over replay data and live iRacing context. The combined
-`voice-iracing` command coordinates automatic calls and questions; its first in-game
-shakedown is still required. See the [live run guide](docs/live-conversation.md).
+`voice-iracing` command coordinates automatic calls and questions. The driver accepted
+the initial live prototype as sufficient to continue; quality upgrades and quantitative
+validation remain open. See the [live run guide](docs/live-conversation.md) and
+[current roadmap / next task](docs/roadmap.md).
 
 faster-whisper is reserved as a future performance alternative. See the
 [speech-input setup](docs/speech-to-text.md),
@@ -50,11 +54,24 @@ faster-whisper is reserved as a future performance alternative. See the
 ```powershell
 python -m venv .venv
 .venv\Scripts\Activate.ps1
-python -m pip install -e ".[dev]"
+python -m pip install -e ".[dev,desktop]"
 pytest
 ruff check .
 mypy
 ```
+
+## Desktop control panel
+
+With the existing local speech/model installations available, double-click
+`start-panel.cmd` or run `python -m race_engineer.ui` from the repository root.
+The panel starts/reuses the local conversation server when you click Start. It does not
+start the microphone just by opening the window. See the [control panel guide](docs/control-panel.md)
+for audio checks, steering-wheel/controller binding, preferences, tray controls and
+current limitations.
+
+Do not run a separate live engineer CLI alongside the panel.
+
+## Command-line tools
 
 Validate the default configuration or inspect a replay fixture:
 

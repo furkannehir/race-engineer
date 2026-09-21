@@ -6,7 +6,7 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class ConfigModel(BaseModel):
@@ -95,6 +95,40 @@ class ConversationConfig(ConfigModel):
     default_language: Literal["en", "tr"] = "en"
 
 
+class PttBindingConfig(ConfigModel):
+    """One digital control used as a hold-to-talk switch."""
+
+    kind: Literal["keyboard", "mouse", "joystick"] = "keyboard"
+    code: int = Field(default=0x77, ge=0, le=511)
+    label: str = Field(default="F8", min_length=1, max_length=200, pattern=r"^[^\x00-\x1f]+$")
+    control: Literal["button", "hat"] = "button"
+    hat_value: tuple[Literal[-1, 0, 1], Literal[-1, 0, 1]] | None = None
+    device_guid: str | None = Field(default=None, pattern=r"^[0-9A-Fa-f]{32}$")
+    device_name: str | None = Field(
+        default=None, min_length=1, max_length=200, pattern=r"^[^\x00-\x1f]+$"
+    )
+    device_index: int | None = Field(default=None, ge=0, le=255)
+
+    @model_validator(mode="after")
+    def validate_device_scope(self) -> "PttBindingConfig":
+        device_fields = (self.device_guid, self.device_name, self.device_index)
+        if self.kind == "joystick":
+            if any(value is None for value in device_fields):
+                raise ValueError("joystick bindings require device identity")
+        elif any(value is not None for value in device_fields):
+            raise ValueError("keyboard and mouse bindings cannot name a joystick")
+        if self.control == "hat":
+            if self.kind != "joystick" or self.hat_value in {None, (0, 0)}:
+                raise ValueError("hat bindings require a non-neutral joystick hat direction")
+        elif self.hat_value is not None:
+            raise ValueError("button bindings cannot carry a hat direction")
+        if self.kind in {"keyboard", "mouse"} and not 1 <= self.code <= 0xFF:
+            raise ValueError("Windows keyboard and mouse codes must fit in one byte")
+        if self.kind == "mouse" and self.code not in {0x01, 0x02, 0x04, 0x05, 0x06}:
+            raise ValueError("unsupported mouse button")
+        return self
+
+
 class SttConfig(ConfigModel):
     adapter: Literal["qwen3-asr"] = "qwen3-asr"
     python_path: Path = Path("data/stt-prototype/runtime/Scripts/python.exe")
@@ -107,6 +141,8 @@ class SttConfig(ConfigModel):
     input_device: int | None = Field(default=None, ge=0)
     sample_rate_hz: Literal[16000, 44100, 48000] = 16000
     ptt_key: str = Field(default="F8", pattern=r"^(F([1-9]|1[0-9]|2[0-4])|SPACE|RCTRL|RALT)$")
+    # When absent, ptt_key remains the backwards-compatible source of truth.
+    ptt_binding: PttBindingConfig | None = None
     max_capture_s: float = Field(default=15, ge=1, le=30, allow_inf_nan=False)
     min_capture_s: float = Field(default=0.2, ge=0.05, le=1, allow_inf_nan=False)
     silence_threshold_dbfs: float = Field(default=-42, ge=-80, le=-10, allow_inf_nan=False)
