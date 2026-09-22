@@ -7,6 +7,7 @@ import pytest
 from race_engineer.cli import _read_iracing, _replay_language, _replay_policy
 from race_engineer.config import IracingTelemetryConfig
 from race_engineer.fixtures import load_fixture
+from race_engineer.memory import DurableHistory, SqliteDriverProfileRepository
 from race_engineer.testing import RecordingTextToSpeechEngine
 
 ROOT = Path(__file__).parents[1]
@@ -44,12 +45,16 @@ def test_live_reader_records_policy_intents_and_decisions(
 ) -> None:
     monkeypatch.setattr("race_engineer.cli.IracingTelemetryAdapter", FixtureTelemetryAdapter)
     output = tmp_path / "live-policy"
+    repository = SqliteDriverProfileRepository(tmp_path / "history.sqlite3")
+    profile = repository.ensure_default_profile()
+    history = DurableHistory(repository, profile.profile_id)
 
     frames = asyncio.run(
         _read_iracing(
             ROOT / "config" / "default.toml",
             limit=0,
             output=output,
+            history=history,
         )
     )
     recording = load_fixture(output)
@@ -62,6 +67,11 @@ def test_live_reader_records_policy_intents_and_decisions(
     assert recording.expected_intents[0].facts["phase"] == "green"
     assert recording.expected_utterances[0].text == "Green flag"
     assert [utterance.text for utterance in recording_tts.utterances] == ["Green flag"]
+    summaries = repository.recent_session_history(profile.profile_id)
+    assert len(summaries) == 1
+    assert summaries[0].decisions == 2
+    assert summaries[0].approved == 1 and summaries[0].suppressed == 1
+    assert summaries[0].radio_completed == 1
 
     replay = asyncio.run(_replay_policy(ROOT / "config" / "default.toml", output))
     assert replay["expected_intents_match"] is True

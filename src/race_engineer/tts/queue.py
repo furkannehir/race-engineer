@@ -131,6 +131,15 @@ class SpeechPlaybackQueue:
             worst = max(self._pending, key=lambda pending: self._sort_key(pending))
             if self._sort_key(request) < self._sort_key(worst):
                 self._pending.remove(worst)
+                self._emit(
+                    worst,
+                    PlaybackResult(
+                        intent_id=worst.intent.intent_id,
+                        status=PlaybackStatus.CANCELLED,
+                        finished_at=self._clock(),
+                        error_code="superseded_in_queue",
+                    ),
+                )
                 _LOGGER.warning(
                     "lower-priority speech dropped from full queue",
                     extra={
@@ -140,6 +149,15 @@ class SpeechPlaybackQueue:
                     },
                 )
             else:
+                self._emit(
+                    request,
+                    PlaybackResult(
+                        intent_id=request.intent.intent_id,
+                        status=PlaybackStatus.CANCELLED,
+                        finished_at=self._clock(),
+                        error_code="queue_full",
+                    ),
+                )
                 _LOGGER.warning(
                     "speech dropped because playback queue is full",
                     extra={
@@ -196,6 +214,16 @@ class SpeechPlaybackQueue:
     async def aclose(self, *, drain: bool) -> None:
         self._closing = True
         if not drain:
+            for request in self._pending:
+                self._emit(
+                    request,
+                    PlaybackResult(
+                        intent_id=request.intent.intent_id,
+                        status=PlaybackStatus.CANCELLED,
+                        finished_at=self._clock(),
+                        error_code="shutdown",
+                    ),
+                )
             self._pending.clear()
             await self._engine.cancel()
         self._wakeup.set()

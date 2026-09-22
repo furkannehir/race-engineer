@@ -3,6 +3,7 @@
 import asyncio
 import logging
 import time
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -11,10 +12,12 @@ from race_engineer.config import AppConfig, RadioTtsConfig, SttConfig, load_conf
 from race_engineer.conversation.live import LiveRaceState, LiveTelemetryUnavailable
 from race_engineer.conversation.local_model import LocalQwenPlanner
 from race_engineer.conversation.session import ConversationSession
-from race_engineer.core.contracts import RaceContext, SpeechIntent, Utterance
+from race_engineer.core.contracts import PlaybackResult, RaceContext, SpeechIntent, Utterance
 from race_engineer.core.conversation import ConversationReply, RadioLanguage
+from race_engineer.core.enums import PlaybackStatus
 from race_engineer.core.interfaces import ConversationSpeaker, SpeechRecognizer
 from race_engineer.core.speech_input import AudioClip, SpeechInputError
+from race_engineer.memory import DurableHistory
 from race_engineer.observability import configure_logging
 from race_engineer.stt.buttons import binding_label, legacy_binding
 from race_engineer.stt.capture import PushToTalkMicrophone
@@ -28,11 +31,16 @@ _LOGGER = logging.getLogger(__name__)
 
 class LiveBridge:
     def __init__(
-        self, state: LiveRaceState, radio: LiveRadio, control: LiveControl | None = None
+        self,
+        state: LiveRaceState,
+        radio: LiveRadio,
+        control: LiveControl | None = None,
+        result_sink: Callable[[PlaybackResult], None] | None = None,
     ) -> None:
         self.state = state
         self.radio = radio
         self.control = control
+        self.result_sink = result_sink
         self._reported_available = False
 
     def _report_availability(self) -> None:
@@ -71,6 +79,25 @@ class LiveBridge:
 
     async def submit(self, intent: SpeechIntent, utterance: Utterance) -> bool:
         if not self.available:
+            if self.result_sink is not None:
+                try:
+                    self.result_sink(
+                        PlaybackResult(
+                            intent_id=intent.intent_id,
+                            status=PlaybackStatus.CANCELLED,
+                            finished_at=datetime.now(UTC),
+                            error_code="telemetry_unavailable",
+                        )
+                    )
+                except Exception as error:
+                    _LOGGER.warning(
+                        "radio result sink failed; live telemetry will continue",
+                        extra={
+                            "event": "live_bridge_result_sink_failed",
+                            "intent_id": intent.intent_id,
+                            "reason": type(error).__name__,
+                        },
+                    )
             return False
         return await self.radio.submit(intent, utterance, self.state.epoch)
 
@@ -243,6 +270,8 @@ async def voice_iracing(
     reply_language: RadioLanguage | None = None,
     app_config: AppConfig | None = None,
     control: LiveControl | None = None,
+    persist_history: bool = False,
+    history_database_path: Path | None = None,
 ) -> int:
     # Existing recorder and policy pipeline are shared, not run in a second process.
     from race_engineer.cli import _read_iracing
@@ -264,6 +293,12 @@ async def voice_iracing(
         output_settings["output_device"] = output_device
     radio_tts = RadioTtsConfig.model_validate(output_settings)
     state = LiveRaceState(config.conversation.max_snapshot_age_s)
+    history = None
+    if persist_history and config.history.enabled:
+        history = DurableHistory.try_open(
+            history_database_path or config.paths.database_path,
+            retention_days=config.history.retention_days,
+        )
     automatic = None
     if config.tts.enabled and not text_only:
         try:
@@ -280,9 +315,20 @@ async def voice_iracing(
         automatic,
         capacity=config.tts.queue_capacity,
         activity=lambda value: control.emit("speech", value) if control else None,
+        result_sink=(history.record_playback_result if history is not None else None),
+        engine_unavailable_reason=(
+            "audio_disabled"
+            if text_only or not config.tts.enabled
+            else "engine_unavailable"
+        ),
     )
     radio.set_muted(control.muted.is_set() if control else False)
-    bridge = LiveBridge(state, radio, control)
+    bridge = LiveBridge(
+        state,
+        radio,
+        control,
+        result_sink=(history.record_playback_result if history is not None else None),
+    )
     recognizer = QwenSpeechRecognizer(stt)
     speaker = PiperConversationSpeaker(radio_tts) if radio_tts.enabled and not text_only else None
     tasks: list[asyncio.Task[object]] = []
@@ -300,7 +346,14 @@ async def voice_iracing(
     try:
         print("LIVE mode. Waiting for iRacing. Do not also run read-iracing or voice-replay.")
         telemetry = asyncio.create_task(
-            _read_iracing(config_path, limit, output, live=bridge, app_config=config)
+            _read_iracing(
+                config_path,
+                limit,
+                output,
+                live=bridge,
+                app_config=config,
+                history=history,
+            )
         )
         dialogue = asyncio.create_task(
             live_dialogue(config, stt, state, radio, recognizer, speaker, reply_language, control)

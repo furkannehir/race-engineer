@@ -17,6 +17,7 @@ from race_engineer.application.control import LiveControl
 from race_engineer.application.live_conversation import voice_iracing
 from race_engineer.config import AppConfig
 from race_engineer.core.conversation import ConversationReply, RadioLanguage
+from race_engineer.memory import CommunicationPreferences
 from race_engineer.processes import start_owned_process
 from race_engineer.stt.capture import _sounddevice
 from race_engineer.tts.piper import PiperConversationSpeaker
@@ -110,6 +111,7 @@ async def run_engineer(
     config_path: Path,
     config: AppConfig,
     settings: PanelSettings,
+    preferences: CommunicationPreferences,
     control: LiveControl,
 ) -> None:
     server = ConversationServer(root, config, control)
@@ -120,17 +122,30 @@ async def run_engineer(
         control.emit("phase", "loading_speech")
         await voice_iracing(
             config_path,
-            app_config=settings.apply(config),
+            app_config=settings.apply(config, preferences),
             control=control,
-            reply_language=None if settings.reply_language == "auto" else settings.reply_language,
+            reply_language=(
+                None if preferences.reply_language == "auto" else preferences.reply_language
+            ),
+            persist_history=True,
+            history_database_path=(
+                config.paths.database_path
+                if config.paths.database_path.is_absolute()
+                else root / config.paths.database_path
+            ),
         )
     finally:
         await server.aclose()
 
 
-async def test_voice(config: AppConfig, settings: PanelSettings, control: LiveControl) -> None:
-    language: RadioLanguage = "tr" if settings.reply_language == "tr" else "en"
-    speaker = PiperConversationSpeaker(settings.apply(config).radio_tts)
+async def test_voice(
+    config: AppConfig,
+    settings: PanelSettings,
+    preferences: CommunicationPreferences,
+    control: LiveControl,
+) -> None:
+    language: RadioLanguage = "tr" if preferences.reply_language == "tr" else "en"
+    speaker = PiperConversationSpeaker(settings.apply(config, preferences).radio_tts)
     try:
         control.emit("phase", "testing_voice")
         await speaker.start()

@@ -4,8 +4,8 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from test_speech_playback_queue import RecordingEngine, make_intent
 
-from race_engineer.core.contracts import Utterance
-from race_engineer.core.enums import InterruptionPolicy
+from race_engineer.core.contracts import PlaybackResult, Utterance
+from race_engineer.core.enums import InterruptionPolicy, PlaybackStatus
 from race_engineer.core.speech_input import SpeechInputError
 from race_engineer.tts.live_radio import LiveRadio
 
@@ -156,3 +156,31 @@ def test_failure_does_not_block_following_answers():
         await radio.aclose()
 
     asyncio.run(run())
+
+
+def test_automatic_calls_emit_content_free_terminal_results():
+    async def run():
+        results: list[PlaybackResult] = []
+        unavailable = LiveRadio(None, result_sink=results.append)
+        assert not await submit(unavailable, "no-engine")
+        await unavailable.aclose()
+
+        muted = LiveRadio(RecordingEngine(), result_sink=results.append)
+        muted.set_muted(True)
+        assert not await submit(muted, "muted")
+        await muted.aclose()
+
+        completed = LiveRadio(RecordingEngine(), result_sink=results.append)
+        assert await submit(completed, "completed")
+        for _ in range(10):
+            await asyncio.sleep(0)
+        await completed.aclose()
+        return results
+
+    results = asyncio.run(run())
+    assert [(result.intent_id, result.status, result.error_code) for result in results] == [
+        ("no-engine", PlaybackStatus.FAILED, "engine_unavailable"),
+        ("muted", PlaybackStatus.CANCELLED, "muted"),
+        ("completed", PlaybackStatus.COMPLETED, None),
+    ]
+    assert all(result.finished_at is not None for result in results)

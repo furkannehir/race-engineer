@@ -6,13 +6,14 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
-from race_engineer.core.contracts import SpeechIntent, Utterance
+from race_engineer.core.contracts import PlaybackResult, SpeechIntent, Utterance
 from race_engineer.core.enums import InterruptionPolicy, PlaybackStatus
 from race_engineer.core.interfaces import TextToSpeechEngine
 from race_engineer.core.speech_input import SpeechInputError
 from race_engineer.core.speech_output import SpeechOutputError
 
 _LOGGER = logging.getLogger(__name__)
+PlaybackResultSink = Callable[[PlaybackResult], None]
 
 
 @dataclass
@@ -24,6 +25,8 @@ class _Job:
     deadline: datetime
     action: Callable[[], Awaitable[None]]
     done: asyncio.Future[str]
+    started_at: datetime | None = None
+    track_result: bool = False
 
 
 class LiveRadio:
@@ -34,6 +37,8 @@ class LiveRadio:
         capacity: int = 8,
         clock: Callable[[], datetime] = lambda: datetime.now(UTC),
         activity: Callable[[str], None] = lambda _: None,
+        result_sink: PlaybackResultSink | None = None,
+        engine_unavailable_reason: str = "engine_unavailable",
     ) -> None:
         if capacity < 1:
             raise ValueError("radio capacity must be positive")
@@ -51,6 +56,8 @@ class LiveRadio:
         self._closing = False
         self._muted = False
         self._activity = activity
+        self._result_sink = result_sink
+        self._engine_unavailable_reason = engine_unavailable_reason
 
     def set_muted(self, muted: bool) -> None:
         """Drop, never defer, muted speech; keep telemetry and capture running."""
@@ -68,8 +75,10 @@ class LiveRadio:
             task.cancel()
 
     def _finish(self, job: _Job, outcome: str) -> None:
-        if not job.done.done():
-            job.done.set_result(outcome)
+        if job.done.done():
+            return
+        job.done.set_result(outcome)
+        finished_at = self._clock()
         _LOGGER.info(
             "live radio result",
             extra={
@@ -78,6 +87,34 @@ class LiveRadio:
                 "outcome": outcome,
             },
         )
+        if job.track_result and self._result_sink is not None:
+            if outcome == "completed":
+                status, error_code = PlaybackStatus.COMPLETED, None
+            elif outcome == "expired":
+                status, error_code = PlaybackStatus.EXPIRED, "deadline_expired"
+            elif outcome in {"failed", "engine_unavailable"}:
+                status, error_code = PlaybackStatus.FAILED, outcome
+            else:
+                status, error_code = PlaybackStatus.CANCELLED, outcome
+            try:
+                self._result_sink(
+                    PlaybackResult(
+                        intent_id=job.identifier,
+                        status=status,
+                        started_at=job.started_at,
+                        finished_at=finished_at,
+                        error_code=error_code,
+                    )
+                )
+            except Exception as error:
+                _LOGGER.warning(
+                    "radio result sink failed; live speech will continue",
+                    extra={
+                        "event": "live_radio_result_sink_failed",
+                        "intent_id": job.identifier,
+                        "reason": type(error).__name__,
+                    },
+                )
 
     def reset(self, epoch: int) -> None:
         self._epoch = epoch
@@ -107,9 +144,19 @@ class LiveRadio:
         action: Callable[[], Awaitable[None]],
         *,
         interruption: InterruptionPolicy,
+        track_result: bool = False,
     ) -> _Job:
         future: asyncio.Future[str] = asyncio.get_running_loop().create_future()
-        job = _Job(identifier, priority, self._sequence, epoch, deadline, action, future)
+        job = _Job(
+            identifier,
+            priority,
+            self._sequence,
+            epoch,
+            deadline,
+            action,
+            future,
+            track_result=track_result,
+        )
         self._sequence += 1
         if self._muted:
             self._finish(job, "muted")
@@ -154,6 +201,22 @@ class LiveRadio:
         if intent.intent_id != utterance.intent_id:
             raise ValueError("speech intent and utterance IDs do not match")
         if self._engine is None:
+            async def unavailable() -> None:
+                return None
+
+            future: asyncio.Future[str] = asyncio.get_running_loop().create_future()
+            job = _Job(
+                intent.intent_id,
+                intent.priority,
+                self._sequence,
+                epoch,
+                intent.deadline,
+                unavailable,
+                future,
+                track_result=True,
+            )
+            self._sequence += 1
+            self._finish(job, self._engine_unavailable_reason)
             return False
 
         async def play() -> None:
@@ -172,6 +235,7 @@ class LiveRadio:
             intent.deadline,
             play,
             interruption=intent.interruption_policy,
+            track_result=True,
         )
         # No playback/cancellation waits on the telemetry loop.
         return not job.done.done()
@@ -205,6 +269,7 @@ class LiveRadio:
                 self._finish(job, "expired")
                 continue
             self._current = job
+            job.started_at = self._clock()
 
             async def invoke(action: Callable[[], Awaitable[None]] = job.action) -> None:
                 await action()

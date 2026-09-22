@@ -13,6 +13,8 @@ def test_default_configuration_is_valid() -> None:
     assert config.config_version == "app-config.v1"
     assert config.runtime.queue_capacity == 128
     assert config.privacy.record_raw_telemetry is False
+    assert config.history.enabled is True
+    assert config.history.retention_days == 30
     assert config.telemetry.iracing.sample_rate_hz == 10.0
     assert config.telemetry.iracing.include_replay is False
     assert config.telemetry.iracing.slow_read_warning_s == 0.05

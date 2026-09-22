@@ -1,3 +1,4 @@
+import json
 import os
 from pathlib import Path
 
@@ -16,6 +17,7 @@ from PySide6.QtWidgets import QApplication, QCheckBox, QDialog, QDialogButtonBox
 from race_engineer.application.control import LiveControl
 from race_engineer.config import PttBindingConfig
 from race_engineer.core.speech_input import SpeechInputError
+from race_engineer.memory import SqliteDriverProfileRepository
 from race_engineer.ui.app import BindingDialog, RadioDesk
 from race_engineer.ui.settings import PanelSettings, load_settings, save_settings
 
@@ -39,8 +41,13 @@ def panel(app, tmp_path, monkeypatch):
     outputs = [{"name": "Test headset", "host_api": "Test", "index": 2}]
     monkeypatch.setattr("race_engineer.ui.app.input_devices", lambda: inputs)
     monkeypatch.setattr("race_engineer.ui.app.output_devices", lambda: outputs)
+    repository = SqliteDriverProfileRepository(tmp_path / "driver-profile.sqlite3")
     widget = RadioDesk(
-        ROOT, ROOT / "config/default.toml", tmp_path / "panel.json", devices=(inputs, outputs)
+        ROOT,
+        ROOT / "config/default.toml",
+        tmp_path / "panel.json",
+        devices=(inputs, outputs),
+        profile_repository=repository,
     )
     widget.show()
     app.processEvents()
@@ -56,10 +63,10 @@ class FakeWorker(QObject):
     finished = Signal()
     calls = 0
 
-    def __init__(self, root, path, config, settings, mode, muted):
+    def __init__(self, root, path, config, settings, preferences, mode, muted):
         super().__init__()
         self.control = LiveControl()
-        self.settings, self.mode = settings, mode
+        self.settings, self.preferences, self.mode = settings, preferences, mode
         if muted:
             self.control.muted.set()
 
@@ -82,9 +89,15 @@ def test_inputs_persist_and_volume_applies_to_both_engines(panel):
     panel.volume.setValue(42)
     panel.language.setCurrentIndex(2)
     settings = load_settings(panel.settings_path, PanelSettings())
+    preferences = panel.profile_repository.preferences(panel.profile.profile_id)
     assert settings.input_device == 1 and settings.output_device == 2
     assert settings.input_name == "Test microphone (Test)"
-    assert settings.reply_language == "tr" and settings.volume == 42
+    assert preferences.reply_language == "tr" and settings.volume == 42
+    assert not {
+        "reply_language",
+        "announce_position_changes",
+        "announce_pit_transitions",
+    } & json.loads(panel.settings_path.read_text(encoding="utf-8")).keys()
     assert panel.volume_label.text() == "42%"
 
 
@@ -201,8 +214,9 @@ def test_preferences_dialog_saves_only_explicit_supported_toggles(panel, app):
 
     QTimer.singleShot(0, edit)
     panel._preferences()
-    settings = load_settings(panel.settings_path, PanelSettings())
-    assert not settings.announce_position_changes and settings.announce_pit_transitions
+    preferences = panel.profile_repository.preferences(panel.profile.profile_id)
+    assert not preferences.announce_position_changes
+    assert preferences.announce_pit_transitions
 
 
 def test_stale_device_identity_fails_closed(panel, monkeypatch):
@@ -247,9 +261,52 @@ def test_device_reordering_is_resolved_by_name_at_load(app, tmp_path):
         ROOT / "config/default.toml",
         path,
         devices=([{"name": "Mic", "host_api": "Test", "index": 5}], []),
+        profile_repository=SqliteDriverProfileRepository(tmp_path / "profile.sqlite3"),
     )
     assert panel.microphone.currentData() == 5
     panel.close()
+
+
+def test_legacy_panel_preferences_are_imported_once_then_sqlite_wins(app, tmp_path):
+    path = tmp_path / "panel.json"
+    legacy = {
+        **PanelSettings().model_dump(mode="json"),
+        "version": 2,
+        "reply_language": "tr",
+        "announce_position_changes": False,
+        "announce_pit_transitions": True,
+    }
+    path.write_text(json.dumps(legacy), encoding="utf-8")
+    repository = SqliteDriverProfileRepository(tmp_path / "profile.sqlite3")
+    panel = RadioDesk(
+        ROOT,
+        ROOT / "config/default.toml",
+        path,
+        devices=([], []),
+        profile_repository=repository,
+    )
+    profile_id = panel.profile.profile_id
+    imported = repository.preferences(profile_id)
+    assert imported.reply_language == "tr"
+    assert not imported.announce_position_changes and imported.announce_pit_transitions
+    assert json.loads(path.read_text(encoding="utf-8"))["version"] == 3
+    panel.close()
+
+    conflicting = {**legacy, "reply_language": "en", "announce_position_changes": True}
+    path.write_text(json.dumps(conflicting), encoding="utf-8")
+    reopened = RadioDesk(
+        ROOT,
+        ROOT / "config/default.toml",
+        path,
+        devices=([], []),
+        profile_repository=repository,
+    )
+    persisted = repository.preferences(profile_id)
+    assert persisted.reply_language == "tr"
+    assert not persisted.announce_position_changes and persisted.announce_pit_transitions
+    assert reopened.language.currentData() == "tr"
+    assert json.loads(path.read_text(encoding="utf-8"))["version"] == 3
+    reopened.close()
 
 
 def test_preview_never_starts_hardware_or_persists_settings(app, tmp_path):

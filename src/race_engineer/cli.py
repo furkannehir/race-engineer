@@ -4,6 +4,8 @@ import argparse
 import asyncio
 import json
 import logging
+import uuid
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from race_engineer.config import AppConfig, load_config
@@ -16,10 +18,11 @@ from race_engineer.core.contracts import (
     Utterance,
     canonical_json,
 )
-from race_engineer.core.enums import PolicyDecisionOutcome
+from race_engineer.core.enums import PlaybackStatus, PolicyDecisionOutcome
 from race_engineer.core.interfaces import LiveTelemetryBridge
 from race_engineer.fixtures import load_fixture
 from race_engineer.language import language_factory
+from race_engineer.memory import DurableHistory
 from race_engineer.observability import configure_logging
 from race_engineer.policy import DefaultRaceContextBuilder, StrictRulePolicy
 from race_engineer.telemetry.iracing import IracingEventDeriver, IracingTelemetryAdapter
@@ -147,7 +150,124 @@ def _parser() -> argparse.ArgumentParser:
         type=Path,
         help="record the live deterministic pipeline in a new fixture directory",
     )
+
+    profile = subparsers.add_parser(
+        "profile", help="inspect or change the local default driver profile"
+    )
+    profile.add_argument("--config", type=Path, required=True)
+    profile_actions = profile.add_subparsers(dest="profile_action", required=True)
+    profile_actions.add_parser("show", help="show the default profile and preferences")
+    rename = profile_actions.add_parser("rename", help="rename the default profile")
+    rename.add_argument("display_name")
+    preference = profile_actions.add_parser(
+        "set", help="set an explicit driver-scoped communication preference"
+    )
+    preference.add_argument(
+        "setting",
+        choices=(
+            "announce_position_changes",
+            "announce_pit_transitions",
+            "reply_language",
+        ),
+    )
+    preference.add_argument("value")
+    profile_actions.add_parser("reset", help="reset communication preferences to defaults")
+
+    history = subparsers.add_parser(
+        "history", help="inspect privacy-safe policy and radio session history"
+    )
+    history.add_argument("--config", type=Path, required=True)
+    history_actions = history.add_subparsers(dest="history_action", required=True)
+    recent = history_actions.add_parser("recent", help="summarize recent recorded sessions")
+    recent.add_argument("--limit", type=int, default=10)
+    history_actions.add_parser("prune", help="apply the configured history retention period")
     return parser
+
+
+def _parse_profile_value(setting: str, raw: str) -> bool | str:
+    if setting in {"announce_position_changes", "announce_pit_transitions"}:
+        normalized = raw.strip().lower()
+        if normalized not in {"true", "false"}:
+            raise ValueError(f"{setting} expects true or false")
+        return normalized == "true"
+    if setting == "reply_language" and raw in {"auto", "en", "tr"}:
+        return raw
+    raise ValueError("reply_language expects auto, en, or tr")
+
+
+def _profile_action(
+    config_path: Path,
+    action: str,
+    *,
+    display_name: str | None = None,
+    setting: str | None = None,
+    value: str | None = None,
+) -> dict[str, object]:
+    from race_engineer.core.contracts import PreferenceCommand
+    from race_engineer.core.enums import PreferenceScope, PreferenceSource
+    from race_engineer.memory import SqliteDriverProfileRepository
+
+    config = load_config(config_path)
+    repository = SqliteDriverProfileRepository(config.paths.database_path)
+    profile = repository.ensure_default_profile()
+    if action == "rename":
+        if display_name is None:
+            raise ValueError("profile name is required")
+        profile = repository.rename_profile(profile.profile_id, display_name)
+    elif action == "set":
+        if setting is None or value is None:
+            raise ValueError("preference setting and value are required")
+        repository.apply(
+            profile.profile_id,
+            PreferenceCommand(
+                command_id=uuid.uuid4().hex,
+                setting=setting,
+                value=_parse_profile_value(setting, value),
+                source=PreferenceSource.CLI,
+                timestamp=datetime.now(UTC),
+                scope=PreferenceScope.DRIVER,
+            ),
+        )
+    elif action == "reset":
+        repository.reset_preferences(profile.profile_id, source=PreferenceSource.CLI)
+    elif action != "show":
+        raise ValueError("unsupported profile action")
+    return {
+        "profile": profile.model_dump(mode="json"),
+        "preferences": repository.preferences(profile.profile_id).model_dump(mode="json"),
+    }
+
+
+def _history_action(
+    config_path: Path,
+    action: str,
+    *,
+    limit: int = 10,
+) -> dict[str, object]:
+    from race_engineer.memory import SqliteDriverProfileRepository
+
+    config = load_config(config_path)
+    repository = SqliteDriverProfileRepository(config.paths.database_path)
+    profile = repository.ensure_default_profile()
+    result: dict[str, object] = {
+        "profile_id": profile.profile_id,
+        "retention_days": config.history.retention_days,
+    }
+    if action == "recent":
+        result["sessions"] = [
+            summary.model_dump(mode="json")
+            for summary in repository.recent_session_history(
+                profile.profile_id, limit=limit
+            )
+        ]
+    elif action == "prune":
+        result["deleted_decisions"] = repository.prune_history(
+            profile.profile_id,
+            before=datetime.now(UTC) - timedelta(days=config.history.retention_days),
+        )
+    else:
+        raise ValueError("unsupported history action")
+    return result
 
 
 async def _read_iracing(
@@ -157,6 +277,7 @@ async def _read_iracing(
     *,
     live: LiveTelemetryBridge | None = None,
     app_config: AppConfig | None = None,
+    history: DurableHistory | None = None,
 ) -> int:
     if limit < 0:
         raise ValueError("--limit must be zero or greater")
@@ -186,7 +307,13 @@ async def _read_iracing(
     event_deriver = IracingEventDeriver()
     context_builder = DefaultRaceContextBuilder(config.policy.context)
     pending_decisions: list[PolicyDecision] = []
-    policy = StrictRulePolicy(config.policy.strict, decision_sink=pending_decisions.append)
+
+    def capture_decision(decision: PolicyDecision) -> None:
+        pending_decisions.append(decision)
+        if history is not None:
+            history.record_decision(decision)
+
+    policy = StrictRulePolicy(config.policy.strict, decision_sink=capture_decision)
     language = language_factory(config.language)
     playback: SpeechPlaybackQueue | None = None
     if config.tts.enabled and live is None:
@@ -194,6 +321,7 @@ async def _read_iracing(
             playback = SpeechPlaybackQueue(
                 tts_factory(config.tts),
                 capacity=config.tts.queue_capacity,
+                result_sink=(history.record_playback_result if history is not None else None),
             )
             playback.start()
         except Exception as error:
@@ -214,7 +342,7 @@ async def _read_iracing(
                 previous = None
                 context_builder = DefaultRaceContextBuilder(config.policy.context)
                 policy = StrictRulePolicy(
-                    config.policy.strict, decision_sink=pending_decisions.append
+                    config.policy.strict, decision_sink=capture_decision
                 )
                 pending_decisions.clear()
                 reset_requested = False
@@ -253,7 +381,7 @@ async def _read_iracing(
                 context_builder = DefaultRaceContextBuilder(config.policy.context)
                 policy = StrictRulePolicy(
                     config.policy.strict,
-                    decision_sink=pending_decisions.append,
+                    decision_sink=capture_decision,
                 )
             else:
                 if recorder is not None:
@@ -282,6 +410,15 @@ async def _read_iracing(
                                 "intent_id": intent.intent_id,
                             },
                         )
+                        if history is not None:
+                            history.record_playback_result(
+                                PlaybackResult(
+                                    intent_id=intent.intent_id,
+                                    status=PlaybackStatus.FAILED,
+                                    finished_at=datetime.now(UTC),
+                                    error_code="language_generation_failed",
+                                )
+                            )
                     else:
                         utterances.append(utterance)
                         _LOGGER.info(
@@ -306,6 +443,15 @@ async def _read_iracing(
                                         "intent_id": intent.intent_id,
                                     },
                                 )
+                                if history is not None:
+                                    history.record_playback_result(
+                                        PlaybackResult(
+                                            intent_id=intent.intent_id,
+                                            status=PlaybackStatus.FAILED,
+                                            finished_at=datetime.now(UTC),
+                                            error_code="playback_submit_failed",
+                                        )
+                                    )
                             else:
                                 if queued:
                                     _LOGGER.info(
@@ -315,6 +461,23 @@ async def _read_iracing(
                                             "intent_id": intent.intent_id,
                                         },
                                     )
+                        elif history is not None:
+                            history.record_playback_result(
+                                PlaybackResult(
+                                    intent_id=intent.intent_id,
+                                    status=(
+                                        PlaybackStatus.CANCELLED
+                                        if not config.tts.enabled
+                                        else PlaybackStatus.FAILED
+                                    ),
+                                    finished_at=datetime.now(UTC),
+                                    error_code=(
+                                        "audio_disabled"
+                                        if not config.tts.enabled
+                                        else "speech_unavailable"
+                                    ),
+                                )
+                            )
                 if recorder is not None and utterances:
                     recorder.write_utterances(utterances)
 
@@ -455,6 +618,7 @@ def main() -> None:
                         output_device=args.output_device,
                         text_only=args.text_only,
                         reply_language=args.language,
+                        persist_history=True,
                     )
                 )
             except SpeechInputError as error:
@@ -580,9 +744,48 @@ def main() -> None:
             playback_result = asyncio.run(_test_tts(args.config, args.text))
             print(playback_result.model_dump_json(indent=2))
         case "read-iracing":
-            frames = asyncio.run(_read_iracing(args.config, args.limit, args.output))
+            config = load_config(args.config)
+            history = (
+                DurableHistory.try_open(
+                    config.paths.database_path,
+                    retention_days=config.history.retention_days,
+                )
+                if config.history.enabled
+                else None
+            )
+            frames = asyncio.run(
+                _read_iracing(args.config, args.limit, args.output, history=history)
+            )
             if args.output is not None:
                 print(f"recorded {frames} normalized frames to {args.output}")
+        case "profile":
+            from race_engineer.memory import DriverMemoryError
+
+            try:
+                result = _profile_action(
+                    args.config,
+                    args.profile_action,
+                    display_name=getattr(args, "display_name", None),
+                    setting=getattr(args, "setting", None),
+                    value=getattr(args, "value", None),
+                )
+            except (DriverMemoryError, OSError, ValueError) as error:
+                print(f"Driver profile update failed: {error}")
+                raise SystemExit(2) from None
+            print(json.dumps(result, indent=2, ensure_ascii=False, sort_keys=True))
+        case "history":
+            from race_engineer.memory import DriverMemoryError
+
+            try:
+                result = _history_action(
+                    args.config,
+                    args.history_action,
+                    limit=getattr(args, "limit", 10),
+                )
+            except (DriverMemoryError, OSError, ValueError) as error:
+                print(f"History query failed: {error}")
+                raise SystemExit(2) from None
+            print(json.dumps(result, indent=2, ensure_ascii=False, sort_keys=True))
         case _:
             raise AssertionError(f"unhandled command: {args.command}")
 

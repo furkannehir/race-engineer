@@ -26,6 +26,8 @@ child process without changing the domain contracts.
 
 - `core` owns contracts and interfaces and imports no adapter implementation.
 - `telemetry`, `policy`, `language`, and `tts` implement core interfaces.
+- `memory` owns local persistence adapters and consumes versioned core commands; it does
+  not ingest simulator SDK objects, audio, transcripts, or unrestricted model output.
 - `application` composes interfaces but does not depend on vendor SDKs.
 - `observability` and `config` are cross-cutting infrastructure.
 - Qt is permitted only under a future `ui` package.
@@ -59,7 +61,30 @@ M1 selects `pyirsdk` as the first Windows shared-memory binding, isolated behind
 privacy-safe source samples without importing `irsdk`. Model-backed language generation,
 inference runtime, speech engines beyond the initial Windows adapter, adaptive ranker, UI
 design, distribution format, and license remain deferred. SQLite is the persistence
-baseline, but concrete domain tables wait until their requirements are introduced.
+baseline; its first concrete profile/preference boundary is described below.
+
+## Driver-memory foundation
+
+SQLite schema v1 stores local driver profiles and explicit, driver-scoped communication
+preferences. Current values are materialized for predictable reads, while the versioned
+`PreferenceCommand` that produced each change is retained for provenance and later voice/UI
+convergence. Command IDs are idempotent, stale/conflicting updates fail closed, migrations
+are transactional, and unrelated or newer databases are rejected.
+
+The setting vocabulary is restricted to reply language plus the existing position and pit
+announcement switches. The control panel reads and writes the default profile through the
+same repository as the headless commands and passes an immutable preference snapshot into
+each runtime worker. Critical behavior cannot be disabled here. Session/global override
+precedence, inferred preferences, driver-feedback semantics, and ranking remain later
+migrations or application work. See
+[driver-profile.md](driver-profile.md).
+
+SQLite schema v2 adds content-free policy-decision and automatic-radio outcome history.
+Existing decision and playback contracts cross this boundary without telemetry facts or
+spoken text. Writes are idempotent and failure-isolated from the live loop; a configurable
+rolling retention cutoff deletes decisions and linked outcomes together. The data is
+observational only and cannot influence policy in this slice. See
+[decision-history.md](decision-history.md).
 
 ## iRacing M1 boundary
 

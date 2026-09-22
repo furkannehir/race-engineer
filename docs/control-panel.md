@@ -71,23 +71,38 @@ The current preference dialog exposes only supported policy switches: position-c
 and pit-entry/exit announcements. Flags and critical policy rules are unchanged. There
 is no invented Quiet/Talkative or answer-style setting that the backend cannot apply.
 
-Explicit defaults are validated and atomically saved in ignored `data/control-panel.json`.
-They take effect on the next Start. The base TOML stays untouched. This is one local
-configuration, **not** the planned SQLite driver-profile/learning system. Session-scoped
-preferences, learning, voice-based edits and broader personality controls remain deferred.
-To reset defaults, stop and close the panel and move that file aside. Corrupt settings
-are reported and left intact rather than silently overwritten.
+Driver communication preferences are validated and atomically written to the default
+profile in ignored `data/race_engineer.sqlite3`. The language selector saves immediately;
+the dialog saves its two switches only when **Save** is pressed. All three take effect on
+the next Start, when the panel refreshes the profile before creating the runtime worker.
+Headless `profile set` changes are therefore picked up without reopening the panel.
+
+Machine-local PTT, audio-device and volume settings remain in
+`data/control-panel.json` version 3. On the first launch after upgrading from version 1 or
+2, old communication preferences are imported into SQLite only when the profile has no
+explicit preferences; an existing profile always wins. The JSON is then rewritten without
+driver preferences. The base TOML stays untouched.
+
+Use `race-engineer profile --config config/default.toml reset` to restore the driver's
+three safe defaults while retaining their audit history. Moving `control-panel.json` aside
+resets only machine controls. Corrupt settings or incompatible profile databases are
+reported and left intact rather than silently overwritten. Session-scoped preferences,
+learning, voice-based edits and broader personality controls remain deferred.
 
 Bounded diagnostic logs live in ignored `logs/control-panel.jsonl` (2 MB plus two rotated
 files). They do not persist microphone audio, question/reply text or model prompts. The
 terminal launch can still print conversational text, as the existing CLI does; the
 double-click/pythonw launch discards console output. The panel does not record telemetry
 fixtures; use the existing CLI recording option when specifically collecting one.
+Live panel sessions do retain content-free policy decisions and terminal automatic-radio
+statuses for 30 days by default. They contain no spoken text or conversational questions;
+see [decision-history.md](decision-history.md).
 
 ## Validation and limits
 
-Automated tests cover preferences, audio and PTT device identity, keyboard/mouse/wheel
-capture, digital hat directions, GUI controls/dialogs, preview isolation, cancellation,
+Automated tests cover SQLite-backed preferences and legacy import, audio and PTT device
+identity, keyboard/mouse/wheel capture, digital hat directions, GUI controls/dialogs,
+preview isolation, cancellation,
 model ownership, telemetry readiness and master mute. Native
 Qt screenshots and the selected source are in `docs/design/control-panel/`, with the
 visual comparison in the root `design-qa.md`. No real microphone recording, model speech,

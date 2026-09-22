@@ -25,10 +25,13 @@ the deterministic M2 policy slice, and the local M3 speech path:
   interpret questions and follow-ups with fact-bound bilingual replies; and
 - local Qwen3-ASR push-to-talk and Piper spoken replies with text fallback; and
 - a native Windows control panel for the live radio, audio checks, press-to-bind
-  keyboard/mouse/wheel PTT, mute and explicit defaults.
+  keyboard/mouse/wheel PTT, mute and SQLite-backed driver preferences; and
+- versioned local SQLite driver profiles with validated, auditable explicit preferences;
+  and
+- privacy-safe durable policy-decision and automatic-radio outcome history.
 
-Model-backed language generation, higher-quality speech adapters, durable decision storage,
-adaptive policies, and advanced desktop controls remain later work.
+Model-backed language generation, higher-quality speech adapters, adaptive policies, and
+advanced desktop controls remain later work.
 
 The conversational prototype supports text chat and local Qwen3-ASR push-to-talk, with
 bilingual Piper spoken replies over replay data and live iRacing context. The combined
@@ -70,6 +73,27 @@ for audio checks, steering-wheel/controller binding, preferences, tray controls 
 current limitations.
 
 Do not run a separate live engineer CLI alongside the panel.
+
+Inspect or update the default local driver profile:
+
+```powershell
+race-engineer profile --config config/default.toml show
+race-engineer profile --config config/default.toml rename "Furkan"
+race-engineer profile --config config/default.toml set reply_language tr
+```
+
+The panel and these commands use the same default profile. See the
+[driver-profile storage guide](docs/driver-profile.md) for persistence, migration and reset
+behavior.
+
+Inspect recent content-free decision and automatic-radio totals:
+
+```powershell
+.\.venv\Scripts\python.exe -m race_engineer history --config config\default.toml recent
+```
+
+See the [decision-history guide](docs/decision-history.md) for the exact data boundary and
+30-day default retention.
 
 ## Command-line tools
 

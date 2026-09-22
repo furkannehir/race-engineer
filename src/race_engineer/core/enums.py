@@ -72,6 +72,7 @@ class PolicyDecisionReason(StrEnum):
 
 class PreferenceSource(StrEnum):
     CONFIG = "config"
+    CLI = "cli"
     UI = "ui"
     VOICE = "voice"
 

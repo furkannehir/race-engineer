@@ -18,6 +18,10 @@ record_raw_telemetry = false
 record_generator_prompts = false
 record_generator_outputs = false
 
+[history]
+enabled = true
+retention_days = 30
+
 [telemetry.iracing]
 sample_rate_hz = 10.0
 reconnect_delay_s = 2.0

@@ -35,6 +35,11 @@ class PrivacyConfig(ConfigModel):
     record_generator_outputs: bool = False
 
 
+class HistoryConfig(ConfigModel):
+    enabled: bool = True
+    retention_days: int = Field(default=30, ge=1, le=3650)
+
+
 class IracingTelemetryConfig(ConfigModel):
     sample_rate_hz: float = Field(default=10.0, ge=1.0, le=60.0, allow_inf_nan=False)
     reconnect_delay_s: float = Field(default=2.0, ge=0.1, le=60.0, allow_inf_nan=False)
@@ -170,6 +175,7 @@ class AppConfig(ConfigModel):
     runtime: RuntimeConfig = RuntimeConfig()
     logging: LoggingConfig = LoggingConfig()
     privacy: PrivacyConfig = PrivacyConfig()
+    history: HistoryConfig = HistoryConfig()
     telemetry: TelemetryConfig = TelemetryConfig()
     policy: PolicyConfig = PolicyConfig()
     language: LanguageConfig = LanguageConfig()

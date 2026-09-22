@@ -5,11 +5,13 @@ import asyncio
 import logging
 import os
 import sys
+import uuid
 from collections.abc import Callable
+from datetime import UTC, datetime
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-from PySide6.QtCore import QLockFile, QSize, Qt, QThread, QTimer, Signal
+from PySide6.QtCore import QLockFile, QSignalBlocker, QSize, Qt, QThread, QTimer, Signal
 from PySide6.QtGui import QAction, QCloseEvent, QFont, QKeyEvent, QKeySequence, QMouseEvent
 from PySide6.QtWidgets import (
     QApplication,
@@ -32,7 +34,15 @@ from PySide6.QtWidgets import (
 
 from race_engineer.application.control import LiveControl
 from race_engineer.config import AppConfig, PttBindingConfig, load_config
+from race_engineer.core.contracts import PreferenceCommand
+from race_engineer.core.enums import PreferenceScope, PreferenceSource
 from race_engineer.core.speech_input import SpeechInputError
+from race_engineer.memory import (
+    CommunicationPreferences,
+    DriverMemoryError,
+    DriverProfile,
+    SqliteDriverProfileRepository,
+)
 from race_engineer.observability import JsonFormatter
 from race_engineer.stt.buttons import (
     JoystickBindingDetector,
@@ -49,7 +59,7 @@ from race_engineer.ui.runtime import (
     test_microphone,
     test_voice,
 )
-from race_engineer.ui.settings import PanelSettings, load_settings, save_settings
+from race_engineer.ui.settings import PanelSettings, load_settings_state, save_settings
 
 _ACCENT = "#2dc9c0"
 _MUTED = "#a7b0bd"
@@ -133,6 +143,11 @@ def _friendly_error(error: Exception) -> str:
         "push_to_talk_controller_read_failed": (
             "Push-to-talk controller disconnected. Stop and bind it again."
         ),
+        "driver_memory_open_failed": "Driver profile storage could not be opened.",
+        "driver_memory_read_failed": "Driver preferences could not be read.",
+        "driver_memory_write_failed": "Driver preferences could not be saved.",
+        "driver_memory_schema_too_new": "Driver profile storage is from a newer version.",
+        "driver_memory_wrong_database": "The configured driver database is not compatible.",
     }
     return messages.get(str(error), str(error) or type(error).__name__)
 
@@ -338,12 +353,13 @@ class EngineWorker(QThread):
         config_path: Path,
         config: AppConfig,
         settings: PanelSettings,
+        preferences: CommunicationPreferences,
         mode: str,
         muted: bool,
     ) -> None:
         super().__init__()
         self.root, self.config_path, self.config = root, config_path, config
-        self.settings, self.mode = settings, mode
+        self.settings, self.preferences, self.mode = settings, preferences, mode
         self.control = LiveControl(self.status.emit)
         if muted:
             self.control.muted.set()
@@ -353,10 +369,17 @@ class EngineWorker(QThread):
             if self.mode == "mic":
                 job = test_microphone(self.settings, self.control)
             elif self.mode == "voice":
-                job = test_voice(self.config, self.settings, self.control)
+                job = test_voice(
+                    self.config, self.settings, self.preferences, self.control
+                )
             else:
                 job = run_engineer(
-                    self.root, self.config_path, self.config, self.settings, self.control
+                    self.root,
+                    self.config_path,
+                    self.config,
+                    self.settings,
+                    self.preferences,
+                    self.control,
                 )
             if self.mode == "engineer":
                 # Live mode owns graceful shutdown. Do not cancel it a second time
@@ -384,19 +407,60 @@ class RadioDesk(QWidget):
         *,
         preview: bool = False,
         devices: tuple[list[dict[str, object]], list[dict[str, object]]] | None = None,
+        profile_repository: SqliteDriverProfileRepository | None = None,
     ) -> None:
         super().__init__()
         self.root, self.config_path, self.settings_path = root, config_path, settings_path
+        self.preview = preview
         self.config = load_config(config_path)
         self.settings = PanelSettings.from_config(self.config)
+        loaded_legacy: CommunicationPreferences | None = None
         self._settings_error = ""
         try:
-            self.settings = load_settings(settings_path, self.settings)
+            loaded = load_settings_state(settings_path, self.settings)
+            self.settings = loaded.settings
+            loaded_legacy = loaded.legacy_preferences
         except (OSError, ValueError):
             self._settings_error = (
                 "Saved settings could not be read. Fix or move the settings file."
             )
-        self.preview = preview
+        self.profile_repository: SqliteDriverProfileRepository | None = None
+        self.profile: DriverProfile | None = None
+        self.driver_preferences = CommunicationPreferences(
+            profile_id="default",
+            announce_position_changes=self.config.policy.strict.announce_position_changes,
+            announce_pit_transitions=self.config.policy.strict.announce_pit_transitions,
+        )
+        if not preview and not self._settings_error:
+            try:
+                database_path = self.config.paths.database_path
+                if not database_path.is_absolute():
+                    database_path = root / database_path
+                self.profile_repository = profile_repository or SqliteDriverProfileRepository(
+                    database_path
+                )
+                self.profile = self.profile_repository.ensure_default_profile()
+                if not self.profile_repository.has_explicit_preferences(
+                    self.profile.profile_id
+                ):
+                    seed = loaded_legacy or self.driver_preferences
+                    seed = seed.model_copy(update={"profile_id": self.profile.profile_id})
+                    source = (
+                        PreferenceSource.UI
+                        if loaded_legacy is not None
+                        else PreferenceSource.CONFIG
+                    )
+                    self.profile_repository.apply_many(
+                        self.profile.profile_id,
+                        self._preference_commands(seed, source=source),
+                    )
+                self.driver_preferences = self.profile_repository.preferences(
+                    self.profile.profile_id
+                )
+                if loaded_legacy is not None:
+                    save_settings(settings_path, self.settings)
+            except (DriverMemoryError, OSError, ValueError) as error:
+                self._settings_error = _friendly_error(error)
         self.worker: EngineWorker | None = None
         self._quitting = False
         self._telemetry_ready = False
@@ -633,7 +697,9 @@ class RadioDesk(QWidget):
             combo.setCurrentIndex(found)
         self.volume.setValue(self.settings.volume)
         self.volume_label.setText(f"{self.settings.volume}%")
-        self.language.setCurrentIndex(self.language.findData(self.settings.reply_language))
+        self.language.setCurrentIndex(
+            self.language.findData(self.driver_preferences.reply_language)
+        )
         self._show_binding()
 
     def _show_binding(self) -> None:
@@ -654,8 +720,9 @@ class RadioDesk(QWidget):
         self.volume.valueChanged.connect(lambda value: self.volume_label.setText(f"{value}%"))
         self.volume.sliderReleased.connect(self._save)
         self.volume.valueChanged.connect(self._volume_changed)
-        for combo in (self.microphone, self.output, self.language):
+        for combo in (self.microphone, self.output):
             combo.currentIndexChanged.connect(self._save)
+        self.language.currentIndexChanged.connect(self._language_changed)
 
     def _volume_changed(self, value: int) -> None:
         del value
@@ -674,9 +741,92 @@ class RadioDesk(QWidget):
             if self.output.currentData() is not None
             else None,
             volume=self.volume.value(),
-            reply_language=self.language.currentData(),
         )
         return PanelSettings.model_validate(raw)
+
+    @staticmethod
+    def _preference_commands(
+        preferences: CommunicationPreferences,
+        *,
+        source: PreferenceSource,
+        settings: tuple[str, ...] = (
+            "announce_position_changes",
+            "announce_pit_transitions",
+            "reply_language",
+        ),
+    ) -> tuple[PreferenceCommand, ...]:
+        timestamp = datetime.now(UTC)
+        return tuple(
+            PreferenceCommand(
+                command_id=uuid.uuid4().hex,
+                setting=setting,
+                value=getattr(preferences, setting),
+                source=source,
+                timestamp=timestamp,
+                scope=PreferenceScope.DRIVER,
+            )
+            for setting in settings
+        )
+
+    def _set_language_control(self, value: str) -> None:
+        blocker = QSignalBlocker(self.language)
+        self.language.setCurrentIndex(self.language.findData(value))
+        del blocker
+
+    def _refresh_preferences(self) -> bool:
+        if self.preview:
+            return True
+        if self.profile_repository is None or self.profile is None:
+            self.notice.setText(self._settings_error or "Driver profile is unavailable.")
+            return False
+        try:
+            self.driver_preferences = self.profile_repository.preferences(
+                self.profile.profile_id
+            )
+        except DriverMemoryError as error:
+            self.notice.setText(_friendly_error(error))
+            return False
+        self._set_language_control(self.driver_preferences.reply_language)
+        return True
+
+    def _persist_preferences(
+        self,
+        candidate: CommunicationPreferences,
+        changed: tuple[str, ...],
+    ) -> bool:
+        if self.preview:
+            self.driver_preferences = candidate
+            return True
+        if self.profile_repository is None or self.profile is None:
+            self.notice.setText(self._settings_error or "Driver profile is unavailable.")
+            return False
+        if not changed:
+            return True
+        try:
+            self.driver_preferences = self.profile_repository.apply_many(
+                self.profile.profile_id,
+                self._preference_commands(
+                    candidate, source=PreferenceSource.UI, settings=changed
+                ),
+            )
+        except (DriverMemoryError, ValueError) as error:
+            self.notice.setText(_friendly_error(error))
+            self._set_language_control(self.driver_preferences.reply_language)
+            return False
+        self._set_language_control(self.driver_preferences.reply_language)
+        self.notice.setText(
+            f"Preferences saved for {self.profile.display_name}. Applied at the next Start."
+        )
+        return True
+
+    def _language_changed(self, index: int) -> None:
+        del index
+        value = self.language.currentData()
+        if value == self.driver_preferences.reply_language:
+            return
+        candidate = self.driver_preferences.model_copy(update={"reply_language": value})
+        candidate = CommunicationPreferences.model_validate(candidate.model_dump())
+        self._persist_preferences(candidate, ("reply_language",))
 
     def _save(self) -> bool:
         if self.preview:
@@ -707,22 +857,26 @@ class RadioDesk(QWidget):
             self._save()
 
     def _preferences(self) -> None:
+        if not self._refresh_preferences():
+            return
         dialog = QDialog(self)
         dialog.setWindowTitle("Engineer preferences")
         dialog.setMinimumWidth(460)
         layout = QVBoxLayout(dialog)
         layout.setSpacing(18)
         layout.addWidget(label("My defaults", "instruction"))
+        profile_name = self.profile.display_name if self.profile is not None else "Design preview"
+        layout.addWidget(label(f"Driver profile · {profile_name}", "muted"))
         position = QCheckBox("Announce position changes")
-        position.setChecked(self.settings.announce_position_changes)
+        position.setChecked(self.driver_preferences.announce_position_changes)
         pits = QCheckBox("Announce pit entry and exit")
-        pits.setChecked(self.settings.announce_pit_transitions)
+        pits.setChecked(self.driver_preferences.announce_pit_transitions)
         layout.addWidget(position)
         layout.addWidget(pits)
         note = label(
             "Saved only on this PC, applied at the next Start.\n"
             "Flags and critical calls are unchanged.\n"
-            "No automatic learning or voice-based settings yet.",
+            "Stored in the local driver profile. No automatic learning yet.",
             "muted",
         )
         layout.addWidget(note)
@@ -733,13 +887,22 @@ class RadioDesk(QWidget):
         buttons.rejected.connect(dialog.reject)
         layout.addWidget(buttons)
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            self.settings = self.settings.model_copy(
+            candidate = self.driver_preferences.model_copy(
                 update={
                     "announce_position_changes": position.isChecked(),
                     "announce_pit_transitions": pits.isChecked(),
                 }
             )
-            self._save()
+            candidate = CommunicationPreferences.model_validate(candidate.model_dump())
+            changed = tuple(
+                setting
+                for setting in (
+                    "announce_position_changes",
+                    "announce_pit_transitions",
+                )
+                if getattr(candidate, setting) != getattr(self.driver_preferences, setting)
+            )
+            self._persist_preferences(candidate, changed)
 
     def _start_or_stop(self) -> None:
         if self.worker:
@@ -751,7 +914,7 @@ class RadioDesk(QWidget):
         if self.preview:
             self.notice.setText("Design preview only. Launch without --preview for a real session.")
             return
-        if self.worker or not self._save():
+        if self.worker or not self._refresh_preferences() or not self._save():
             return
         if mode == "voice" and self.mute_button.isChecked():
             self.notice.setText("Turn off Mute all audio before testing the voice.")
@@ -788,6 +951,7 @@ class RadioDesk(QWidget):
             self.config_path,
             self.config,
             self.settings,
+            self.driver_preferences,
             mode,
             self.mute_button.isChecked(),
         )
