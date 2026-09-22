@@ -61,7 +61,33 @@ def _driver_id(driver: IracingDriverMetadata | None, car_idx: int) -> str:
     return f"iracing:car:{car_idx}"
 
 
-def _flags(bitfield: int | None) -> tuple[RaceFlag, ...]:
+def _blue_flag_is_applicable(sample: IracingRawSample) -> bool:
+    """Reject transient/global blue bits that cannot apply to the player's race car."""
+
+    if sample.player_car_idx is None or _valid_positive_int(sample.player_position) is None:
+        return False
+    session_type = (sample.session_type or "").casefold()
+    if not session_type:
+        return False
+    if session_type != "race":
+        return True
+
+    player_idx = sample.player_car_idx
+    player_lap = _at(sample.car_idx_laps_completed, player_idx)
+    if player_lap is None or player_lap < 0:
+        return False
+    pace_car_indices = {driver.car_idx for driver in sample.drivers if driver.is_pace_car}
+    return any(
+        car_idx != player_idx
+        and opponent_lap > player_lap
+        and (_at(sample.car_idx_positions, car_idx) or 0) > 0
+        and car_idx not in pace_car_indices
+        for car_idx, opponent_lap in enumerate(sample.car_idx_laps_completed)
+    )
+
+
+def _flags(sample: IracingRawSample) -> tuple[RaceFlag, ...]:
+    bitfield = sample.session_flags
     if bitfield is None:
         return ()
     mapping = (
@@ -70,10 +96,13 @@ def _flags(bitfield: int | None) -> tuple[RaceFlag, ...]:
         (FLAG_GREEN, RaceFlag.GREEN),
         (FLAG_YELLOW | FLAG_YELLOW_WAVING | FLAG_CAUTION | FLAG_CAUTION_WAVING, RaceFlag.YELLOW),
         (FLAG_RED, RaceFlag.RED),
-        (FLAG_BLUE, RaceFlag.BLUE),
-        (FLAG_BLACK, RaceFlag.BLACK),
     )
-    return tuple(flag for mask, flag in mapping if bitfield & mask)
+    flags = [flag for mask, flag in mapping if bitfield & mask]
+    if bitfield & FLAG_BLUE and _blue_flag_is_applicable(sample):
+        flags.append(RaceFlag.BLUE)
+    if bitfield & FLAG_BLACK:
+        flags.append(RaceFlag.BLACK)
+    return tuple(flags)
 
 
 def _session_phase(state: int | None, flags: tuple[RaceFlag, ...]) -> SessionPhase:
@@ -156,7 +185,7 @@ def normalize_sample(sample: IracingRawSample) -> TelemetryFrame | None:
     )
     drivers = {driver.car_idx: driver for driver in sample.drivers}
     player_idx = sample.player_car_idx
-    flags = _flags(sample.session_flags)
+    flags = _flags(sample)
     session_id = f"iracing:{sample.session_unique_id}:{sample.session_num}"
     return TelemetryFrame(
         source="iracing",

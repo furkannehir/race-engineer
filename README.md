@@ -40,6 +40,11 @@ the initial live prototype as sufficient to continue; quality upgrades and quant
 validation remain open. See the [live run guide](docs/live-conversation.md) and
 [current roadmap / next task](docs/roadmap.md).
 
+Conversation model identity and llama.cpp execution are separately configurable. The panel
+and standalone launcher share the same bounded runtime lifecycle and one CPU fallback.
+CPU remains the installed default; CUDA/Vulkan packages and UI selection are later measured
+work, not current support claims. See the [conversation setup](docs/conversation.md#local-model-setup).
+
 faster-whisper is reserved as a future performance alternative. See the
 [speech-input setup](docs/speech-to-text.md),
 [spoken-reply setup and voice license notices](docs/conversational-speech.md),
@@ -146,8 +151,10 @@ See [docs/architecture.md](docs/architecture.md) and
 [docs/strict-policy.md](docs/strict-policy.md) for the M2 policy behavior. The M3 wording
 boundary is described in [docs/language-generation.md](docs/language-generation.md), and
 [docs/text-to-speech.md](docs/text-to-speech.md) covers local playback. The architecture
-also records Jev-assisted, shadow-mode policy ranking as a post-M3 improvement.
-The updated [implementation
-plan](docs/personalized-ai-race-engineer-implementation-plan.docx) places that evaluation
-in M4, after the end-to-end M3 speech milestone. Open defects are tracked in
+also records the historical Jev-assisted ranking proposal. The next increment is the
+[local context engine and portable inference plan](docs/context-engine-implementation-plan.md),
+covering smaller bilingual judges, optional CPU/GPU execution, and local shadow ranking.
+It extends the [original implementation
+plan](docs/personalized-ai-race-engineer-implementation-plan.docx); hosted Jev is deferred.
+These next-increment capabilities are planned, not yet implemented. Open defects are tracked in
 [docs/known-issues.md](docs/known-issues.md).

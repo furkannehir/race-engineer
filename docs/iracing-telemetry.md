@@ -29,6 +29,18 @@ the opponent is behind. It is populated only in race sessions when both cars hav
 completed-lap count and valid `CarIdxF2Time` values. Other contexts remain `None` rather
 than presenting an unreliable estimate.
 
+### Player-applicable blue flags
+
+The raw blue bit is not exposed blindly in a race session. A normalized blue flag requires
+a valid player classification plus at least one active, non-pace-car opponent whose
+completed-lap count is greater than the player's. This rejects impossible startup
+transitions while retaining iRacing's raw signal as the indication that the lapping car is
+close enough to matter. If the required race-order data is incomplete, blue fails closed.
+
+In non-race sessions, the completed-lap relationship is not a reliable applicability test,
+so the raw blue signal is preserved after the player has a valid position. See IR-001 in
+[known-issues.md](known-issues.md) and its source-level regression fixture.
+
 ## Lifecycle behavior
 
 The adapter waits for iRacing, reconnects after disconnection, freezes the latest SDK

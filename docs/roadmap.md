@@ -13,17 +13,24 @@ are deferred under [STT-001, TTS-001, and CONV-004](known-issues.md).
 This is qualitative functional acceptance. There are no new measured accuracy, latency,
 frame-time, or endurance results accompanying the feedback. Existing defects remain open.
 
+The next implementation increment is the
+[local context engine and portable inference plan](context-engine-implementation-plan.md):
+smaller bilingual judges, optional CPU/GPU execution including AMD/Vulkan, measured resource
+budgets, and independent promotion gates for conversation and proactive ranking. All CE
+CE-01 configuration/runtime foundations are implemented; CE-02 evaluation is next. This
+updates the next-task order without closing pending live validation.
+
 | Milestone | Current position | Remaining/deferred work |
 | --- | --- | --- |
 | M0: Foundation | Contracts, configuration, logging, fixtures, and tests implemented | Maintain compatibility as new domains are added |
-| M1: iRacing telemetry | Live reading, normalization, recording, reconnect handling implemented | IR-001 blue-flag investigation; broader scenario validation |
+| M1: iRacing telemetry | Live reading, normalization, recording, reconnect handling, and the IR-001 source-level fix implemented | Genuine-blue live validation; broader scenario validation |
 | M2: Strict policy | Core policy, SQLite-backed preferences, and durable content-free decision/outcome history implemented | Broader scenario and real-race validation remain |
-| M3: Speech / conversational increment | Automatic calls and local English/Turkish live voice conversation implemented; driver accepts the current prototype | Deferred quality upgrades; measured latency/resource and extended live validation |
-| M4: Adaptive personalization | SQLite profile/preferences plus observational policy-decision and radio-outcome history implemented; no inferred learning yet | Define feedback signals, baseline ranker, shadow evaluation |
-| M5: Driver controls / UI | Basic PySide6 radio desk implemented early: lifecycle, audio checks, press-to-bind keyboard/mouse/wheel PTT, mute, tray and driver preferences | Real-race panel and wheel-button shakedown; voice preference commands, resource controls, session review |
+| M3: Speech / conversational increment | Automatic calls and local English/Turkish live voice conversation plus CE-01 runtime foundation implemented; driver accepts the current prototype | CE-02/04/05 evaluation and planner/context work; speech quality and extended live validation |
+| M4: Adaptive personalization | SQLite profile/preferences plus observational policy-decision and radio-outcome history implemented; no inferred learning yet | CE-06/07 feedback definitions, local shadow ranker, small-model evaluation; no hosted Jev in current scope |
+| M5: Driver controls / UI | Basic PySide6 radio desk implemented early: lifecycle, audio checks, press-to-bind keyboard/mouse/wheel PTT, mute, tray and driver preferences | CE-03/08 CPU/GPU controls and hardware validation; real-race shakedown, later voice preference commands/session review |
 | M6: Second simulator | Not started | Another adapter and cross-simulator contract validation |
 
-## Current priority: control-panel shakedown
+## Pending live validation: control-panel shakedown
 
 The driver selected the second radio-desk design and asked to prioritize testing the
 existing engineer in a real race before learning or voice-based settings. The basic
@@ -33,7 +40,7 @@ continue, with noticeable but currently acceptable layered speech latency. Exten
 responsiveness, tray operation, timing breakdowns, and endurance remain validation tasks.
 Existing defects are not resolved by the UI.
 
-## Current priority: feedback signals and shadow evaluation
+## Driver-memory foundation and scheduled shadow evaluation
 
 The versioned SQLite profile repository, validated preference vocabulary, audit commands,
 safe reset, headless controls, panel integration, runtime handoff, and content-free durable
@@ -57,10 +64,25 @@ Recommended implementation order:
 5. Use that foundation to define feedback signals and evaluate a local ranker in shadow
    mode before allowing it to influence audible output.
 
-Step 5 is the proposed next implementation slice, not already implemented work. Feedback
-semantics and shadow-evaluation acceptance criteria must be specified before implementation.
-Natural-language preference commands and the existing UI should share that validated
-service later; contextual social responses remain the separate deferred CONV-004 feature.
+Step 5 is now scheduled as CE-06 after the runtime/evaluation foundations and shared context
+in the [merged implementation plan](context-engine-implementation-plan.md). Playback
+outcomes are not usefulness labels; feedback semantics and separate shadow observations
+must be defined before training. Natural-language preference commands and the existing UI
+should share the validated service later. CONV-004 is scheduled in CE-05, not yet implemented.
+
+## Next implementation order
+
+1. **Done — CE-01:** configurable planners, shared runtime launch, and bounded backend
+   discovery; CPU defaults preserved.
+2. **Next — CE-02:** bilingual quality suite and CPU/stage-latency baseline, with promotion
+   targets.
+3. CE-03 and CE-04: optional CUDA/Vulkan controls and a small local NLI judge, each measured
+   against the baseline. AMD support requires an actual AMD test.
+4. CE-05: grounded hybrid conversation and bounded bilingual acknowledgments.
+5. CE-06: labeled proactive usefulness evaluation in shadow mode.
+6. CE-07: train/evaluate smaller classifiers or alternatives if data justifies them.
+7. CE-08: representative hardware and race validation, conservative Automatic mode,
+   independent promotion decisions, and open-source distribution readiness.
 
 ## Constraints carried forward
 
@@ -70,7 +92,10 @@ service later; contextual social responses remain the separate deferred CONV-004
   Any such evaluation needs a separate explicit opt-in.
 - Preserve critical deterministic calls and factual grounding; quality/personality upgrades
   must not weaken them.
-- Keep all three reported upgrades in the backlog rather than tuning or replacing engines
-  as part of the next storage/preferences task.
+- Keep STT-001 and TTS-001 as separate measured improvements. CONV-004 has a planned CE-05
+  slice; none is resolved merely by adopting the new plan.
+- CPU remains a required execution path; acceleration is optional and includes an AMD
+  validation target. Automatic selection is not a current capability or a proven default.
 - Do not treat the driver's prototype acceptance as resolution of the blue-flag defect or
-  the existing conversation interpretation failures.
+  the existing conversation interpretation failures. IR-001 remains pending live
+  validation even though its normalization fix and regression coverage are implemented.

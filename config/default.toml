@@ -65,6 +65,22 @@ history_turns = 6
 max_snapshot_age_s = 3.0
 default_language = "en"
 
+# Machine-local inference settings. CPU is the compatibility baseline. Configure an
+# accelerated runtime explicitly before selecting gpu/auto; unsupported acceleration
+# falls back to CPU unless fallback_to_cpu is disabled.
+[conversation.runtime]
+mode = "cpu"
+cpu_executable_path = "data/conversation-prototype/llama-b10964-cpu/llama-server.exe"
+model_path = "data/conversation-prototype/Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
+threads = 8
+context_size = 8192
+parallel = 1
+gpu_layers = -1
+fallback_to_cpu = true
+probe_timeout_s = 5.0
+startup_timeout_s = 120.0
+shutdown_timeout_s = 5.0
+
 [stt]
 adapter = "qwen3-asr"
 python_path = "data/stt-prototype/runtime/Scripts/python.exe"

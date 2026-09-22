@@ -173,7 +173,7 @@ def test_live_dialogue_refreshes_facts_and_closes_microphone(monkeypatch, capsys
     monkeypatch.setattr(
         "race_engineer.application.live_conversation.PushToTalkMicrophone", Microphone
     )
-    monkeypatch.setattr("race_engineer.application.live_conversation.LocalQwenPlanner", Planner)
+    monkeypatch.setattr("race_engineer.application.live_conversation.conversation_planner", Planner)
 
     async def run():
         radio = LiveRadio(None)

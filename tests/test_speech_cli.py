@@ -74,7 +74,7 @@ def test_voice_file_path_does_not_open_microphone(monkeypatch, capsys):
         raise AssertionError("file mode must not open a microphone")
 
     monkeypatch.setattr("race_engineer.application.speech_cli.QwenSpeechRecognizer", FakeRecognizer)
-    monkeypatch.setattr("race_engineer.application.speech_cli.LocalQwenPlanner", Planner)
+    monkeypatch.setattr("race_engineer.application.speech_cli.conversation_planner", Planner)
     monkeypatch.setattr("race_engineer.application.speech_cli.PushToTalkMicrophone", microphone)
     monkeypatch.setattr("race_engineer.application.speech_cli.load_wav", lambda *a, **kw: tone())
     code = asyncio.run(
@@ -166,7 +166,7 @@ def test_interactive_audio_handoff_and_text_fallback(monkeypatch, capsys, langua
             steps.append("tts_close")
 
     monkeypatch.setattr("race_engineer.application.speech_cli.QwenSpeechRecognizer", FakeRecognizer)
-    monkeypatch.setattr("race_engineer.application.speech_cli.LocalQwenPlanner", Planner)
+    monkeypatch.setattr("race_engineer.application.speech_cli.conversation_planner", Planner)
     monkeypatch.setattr("race_engineer.application.speech_cli.PushToTalkMicrophone", Microphone)
     monkeypatch.setattr("race_engineer.application.speech_cli.PiperConversationSpeaker", Speaker)
     code = asyncio.run(

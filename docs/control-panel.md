@@ -39,7 +39,9 @@ the push-to-talk binding dialog. There is no download or cloud fallback.
    other analog axes are deliberately ignored so driving cannot open the microphone. Save
    the detected binding; there is no device-name or button-number hunting.
 4. Click **Start engineer**. The panel reuses a matching local conversation server or
-   starts the downloaded CPU runtime on literal `127.0.0.1`. Wait for both iRacing and
+   starts the runtime selected in `[conversation.runtime]` on literal `127.0.0.1`. The
+   default remains the downloaded CPU runtime; accelerated setup and controls are planned.
+   Wait for both iRacing and
    speech readiness. A green iRacing indicator requires accepted, fresh telemetry, not
    just an SDK connection. A stopped panel does not monitor iRacing.
 5. Start stationary in practice. Check English/Turkish questions and automatic calls

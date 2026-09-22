@@ -91,7 +91,9 @@ def _unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
     return result
 
 
-class LocalQwenPlanner:
+class LocalLlamaCppPlanner:
+    """Schema-constrained planner for any compatible local llama.cpp chat model."""
+
     def __init__(self, config: ConversationConfig) -> None:
         self._config = config
 
@@ -200,3 +202,7 @@ class LocalQwenPlanner:
             raise ConversationModelError("model_timeout") from error
         except ValidationError as error:
             raise ConversationModelError("model_response_invalid") from error
+
+
+# Compatibility name for downstream code written against the first Qwen prototype.
+LocalQwenPlanner = LocalLlamaCppPlanner

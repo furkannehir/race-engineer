@@ -19,7 +19,9 @@ class Planner:
 
 
 def test_one_shot_replay_cli(monkeypatch, capsys):
-    monkeypatch.setattr("race_engineer.application.conversation_cli.LocalQwenPlanner", Planner)
+    monkeypatch.setattr(
+        "race_engineer.application.conversation_cli.conversation_planner", Planner
+    )
     code = asyncio.run(
         chat_replay(
             ROOT / "config/default.toml",
@@ -37,7 +39,9 @@ def test_one_shot_replay_cli(monkeypatch, capsys):
 
 
 def test_interactive_controls_and_history_reset(monkeypatch, capsys):
-    monkeypatch.setattr("race_engineer.application.conversation_cli.LocalQwenPlanner", Planner)
+    monkeypatch.setattr(
+        "race_engineer.application.conversation_cli.conversation_planner", Planner
+    )
     lines = iter(
         ["", "/next", "Position?", "/frame 0", "Position?", "/next -1", "/reset", "/state", "/quit"]
     )
@@ -58,7 +62,7 @@ def test_model_failure_is_reported_without_traceback(monkeypatch, capsys):
             raise ConversationModelError("model_unreachable")
 
     monkeypatch.setattr(
-        "race_engineer.application.conversation_cli.LocalQwenPlanner", FailingPlanner
+        "race_engineer.application.conversation_cli.conversation_planner", FailingPlanner
     )
     code = asyncio.run(
         chat_replay(

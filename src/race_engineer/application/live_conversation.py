@@ -9,8 +9,8 @@ from pathlib import Path
 
 from race_engineer.application.control import LiveControl
 from race_engineer.config import AppConfig, RadioTtsConfig, SttConfig, load_config
+from race_engineer.conversation.factory import conversation_planner
 from race_engineer.conversation.live import LiveRaceState, LiveTelemetryUnavailable
-from race_engineer.conversation.local_model import LocalQwenPlanner
 from race_engineer.conversation.session import ConversationSession
 from race_engineer.core.contracts import PlaybackResult, RaceContext, SpeechIntent, Utterance
 from race_engineer.core.conversation import ConversationReply, RadioLanguage
@@ -145,7 +145,7 @@ async def live_dialogue(
     from race_engineer.core.speech_output import SpeechOutputError
 
     session = ConversationSession(
-        LocalQwenPlanner(config.conversation),
+        conversation_planner(config.conversation),
         state.snapshot,
         config.conversation,
         generation=lambda: state.epoch,

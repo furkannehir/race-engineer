@@ -104,9 +104,9 @@ no cloud fallback, API key, automatic download, or hosted SDK dependency. See th
 [llama.cpp server documentation](https://github.com/ggml-org/llama.cpp/tree/master/tools/server).
 
 The initial smoke-test setup uses a CPU runtime with eight threads, an 8192-token context,
-and a Q4_K_M GGUF. This is an initial integration baseline, not a GPU or in-race performance
-recommendation. The weights are an Unsloth conversion of the selected Qwen model, not a
-different conversational model. See the
+and a Q4_K_M GGUF. CPU remains the configured compatibility baseline while accelerated
+runtimes are evaluated; this is not an in-race performance recommendation. The weights are
+an Unsloth conversion of the selected Qwen model, not a different conversational model. See the
 [original model card](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507) and the
 [GGUF publisher](https://huggingface.co/unsloth/Qwen3-4B-Instruct-2507-GGUF).
 
@@ -129,8 +129,21 @@ transcripts, or answers; terminal replies are intentionally visible. External ru
 logging settings are separate. Conversation history is not saved to disk.
 
 The `[conversation]` TOML section controls the local server port, model alias, timeout,
-bounded history, freshness limit, and default language. The server alias must be
-`Qwen3-4B-Instruct-2507`; the launch script sets it. The port defaults to 8087 on both sides.
+bounded history, freshness limit, and default language. `[conversation.runtime]` controls
+the machine-local executable/model paths, CPU thread count, context size, parallel slots,
+startup/probe/shutdown limits, compute mode, device, and offload. The same launch service is
+used by the panel and `scripts/start_conversation_model.py`; the script reads
+`config/default.toml` unless `--config` selects another file. Its legacy `--server`,
+`--model`, `--port`, and `--threads` arguments remain bounded one-run overrides.
+
+`mode = "cpu"` is the current default and uses the pinned CPU-only binary with zero GPU
+layers. `gpu` and `auto` require both `accelerated_executable_path` and
+`accelerated_backend`. The runtime runs a bounded `--list-devices` probe before attempting
+acceleration. With `fallback_to_cpu = true`, a missing/unusable accelerated runtime or one
+failed startup is cleaned up and retried once on CPU. An already-running matching server is
+reused and reported as unmanaged because the application cannot verify or change its
+hardware settings. No accelerated binaries are installed by this slice; CUDA/Vulkan setup,
+panel controls, and hardware performance claims belong to CE-03.
 
 ## Verification
 

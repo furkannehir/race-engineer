@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 
 from race_engineer.config import load_config
-from race_engineer.conversation.local_model import LocalQwenPlanner
+from race_engineer.conversation.factory import conversation_planner
 from race_engineer.conversation.replay import ReplayRaceState
 from race_engineer.conversation.session import ConversationSession
 from race_engineer.fixtures import load_fixture
@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 async def evaluate(config_path: Path, cases_path: Path) -> int:
     config = load_config(config_path)
     cases = json.loads(cases_path.read_text(encoding="utf-8"))
-    planner = LocalQwenPlanner(config.conversation)
+    planner = conversation_planner(config.conversation)
     results = []
     for case in cases:
         state = ReplayRaceState(load_fixture(ROOT / "fixtures/synthetic/conversation"))

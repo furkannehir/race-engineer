@@ -201,7 +201,23 @@ See [live-conversation.md](live-conversation.md) for operation and validation li
 Critical calls remain deterministic; model inference does not run in the telemetry task.
 The remote ranking proposal below is not part of this local conversational prototype.
 
+CE-01 separates the planner model identity from llama.cpp process configuration. A shared
+launcher now owns model/runtime paths, context, threads, optional device/offload settings,
+bounded capability probing, process ownership, and a single CPU fallback. The panel and
+standalone launcher use that service, while conversation entry points use a planner factory.
+CPU remains the configured and installed baseline. Accelerated runtimes, Automatic mode,
+and their UI are configuration boundaries pending CE-03 installation and hardware evidence;
+an externally managed loopback server carries no verified compute-mode claim. See the
+[context-engine plan](context-engine-implementation-plan.md).
+
 ## Post-M3 improvement: Jev-assisted policy ranking
+
+Status update, 2026-09-22: the following is the historical optional remote proposal.
+The [local context engine and portable inference plan](context-engine-implementation-plan.md)
+now defines the next increment: CPU-capable bilingual judgment, optional CUDA/Vulkan,
+grounded conversational routing, and a local ranker in shadow mode. It supersedes hosted
+Jev as the next implementation task. These changes are planned, not current runtime
+capabilities; the remote option remains deferred and requires separate explicit opt-in.
 
 After the M3 speech path is complete, evaluate Jev as an optional ranking adapter for
 ambiguous, noncritical communication decisions. Jev may score whether a candidate is worth

@@ -5,7 +5,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from race_engineer.config import RadioTtsConfig, SttConfig, load_config
-from race_engineer.conversation.local_model import LocalQwenPlanner
+from race_engineer.conversation.factory import conversation_planner
 from race_engineer.conversation.replay import ReplayRaceState
 from race_engineer.conversation.session import ConversationSession
 from race_engineer.core.conversation import ConversationReply, RadioLanguage
@@ -81,7 +81,7 @@ async def voice_replay(
     state = ReplayRaceState(load_fixture(directory), config.policy.context)
     state.seek(frame_index)
     session = ConversationSession(
-        LocalQwenPlanner(config.conversation), state.snapshot, config.conversation
+        conversation_planner(config.conversation), state.snapshot, config.conversation
     )
     recognizer = QwenSpeechRecognizer(stt)
     speaker: ConversationSpeaker | None = (

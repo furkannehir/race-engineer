@@ -200,12 +200,12 @@ def test_stop_while_starting_waits_for_cleanup():
 
 
 def test_existing_server_is_reused_and_never_terminated(monkeypatch):
-    monkeypatch.setattr("race_engineer.ui.runtime.model_ready", lambda *_: True)
+    monkeypatch.setattr("race_engineer.conversation.runtime.model_ready", lambda *_: True)
 
     async def forbidden(*args, **kwargs):
         raise AssertionError("must not spawn when a matching model is already running")
 
-    monkeypatch.setattr("race_engineer.ui.runtime.start_owned_process", forbidden)
+    monkeypatch.setattr("race_engineer.conversation.runtime.start_owned_process", forbidden)
 
     async def run():
         server = ConversationServer(ROOT, AppConfig(), LiveControl())
@@ -233,7 +233,7 @@ def test_owned_server_stopped_after_cancel_during_startup(tmp_path, monkeypatch)
         async def wait(self):
             return self.returncode
 
-    monkeypatch.setattr("race_engineer.ui.runtime.model_ready", lambda *_: False)
+    monkeypatch.setattr("race_engineer.conversation.runtime.model_ready", lambda *_: False)
 
     async def run():
         control = LiveControl()
@@ -243,7 +243,7 @@ def test_owned_server_stopped_after_cancel_during_startup(tmp_path, monkeypatch)
             control.stop.set()
             return Process()
 
-        monkeypatch.setattr("race_engineer.ui.runtime.start_owned_process", spawn)
+        monkeypatch.setattr("race_engineer.conversation.runtime.start_owned_process", spawn)
         await run_until_stopped(
             run_engineer(
                 tmp_path,
@@ -307,7 +307,7 @@ def test_live_control_stops_all_components_and_passes_config(monkeypatch):
 
 def test_engineer_stop_does_not_cancel_live_cleanup_a_second_time(monkeypatch):
     events = []
-    monkeypatch.setattr("race_engineer.ui.runtime.model_ready", lambda *_: True)
+    monkeypatch.setattr("race_engineer.conversation.runtime.model_ready", lambda *_: True)
 
     async def live(*args, **kwargs):
         assert kwargs["persist_history"] is True

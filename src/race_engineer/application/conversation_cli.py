@@ -4,7 +4,7 @@ import asyncio
 from pathlib import Path
 
 from race_engineer.config import load_config
-from race_engineer.conversation.local_model import LocalQwenPlanner
+from race_engineer.conversation.factory import conversation_planner
 from race_engineer.conversation.replay import ReplayRaceState
 from race_engineer.conversation.session import ConversationSession
 from race_engineer.core.conversation import RadioLanguage
@@ -38,7 +38,7 @@ async def chat_replay(
     state = ReplayRaceState(fixture, config.policy.context)
     state.seek(frame_index)
     session = ConversationSession(
-        LocalQwenPlanner(config.conversation), state.snapshot, config.conversation
+        conversation_planner(config.conversation), state.snapshot, config.conversation
     )
     if question is not None:
         reply = await session.ask(question, reply_language=reply_language)

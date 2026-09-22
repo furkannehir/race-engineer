@@ -1,109 +1,28 @@
 """Qt-free runtime for the panel, using the existing live radio pipeline."""
 
 import asyncio
-import http.client
-import json
 import math
-import os
 import struct
-import subprocess
-import time
 from collections.abc import Awaitable
-from contextlib import suppress
 from pathlib import Path
 from typing import Any
 
 from race_engineer.application.control import LiveControl
 from race_engineer.application.live_conversation import voice_iracing
 from race_engineer.config import AppConfig
+from race_engineer.conversation.runtime import ConversationServer as LocalConversationServer
 from race_engineer.core.conversation import ConversationReply, RadioLanguage
 from race_engineer.memory import CommunicationPreferences
-from race_engineer.processes import start_owned_process
 from race_engineer.stt.capture import _sounddevice
 from race_engineer.tts.piper import PiperConversationSpeaker
 from race_engineer.ui.settings import PanelSettings
 
 
-def model_ready(port: int, expected_model: str) -> bool:
-    """Literal loopback only, no redirects, proxy, or remote requests."""
-    connection = http.client.HTTPConnection("127.0.0.1", port, timeout=1)
-    try:
-        connection.request("GET", "/v1/models")
-        response = connection.getresponse()
-        if response.status != 200:
-            return False
-        payload = json.loads(response.read(65_536))
-        return any(item.get("id") == expected_model for item in payload.get("data", []))
-    except (OSError, ValueError, http.client.HTTPException, AttributeError, TypeError):
-        return False
-    finally:
-        connection.close()
-
-
-class ConversationServer:
-    """Reuses an existing model server; only terminates a child it created."""
+class ConversationServer(LocalConversationServer):
+    """Panel-compatible wrapper around the shared local server lifecycle."""
 
     def __init__(self, root: Path, config: AppConfig, control: LiveControl) -> None:
-        self.root, self.config, self.control = root, config, control
-        self.process: asyncio.subprocess.Process | None = None
-
-    async def start(self) -> None:
-        port, model = self.config.conversation.port, self.config.conversation.model
-        if await asyncio.to_thread(model_ready, port, model):
-            return
-        assets = self.root / "data/conversation-prototype"
-        executable = assets / "llama-b10964-cpu/llama-server.exe"
-        weights = assets / "Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
-        if not executable.is_file() or not weights.is_file():
-            raise RuntimeError("Local conversation model missing. See docs/conversation.md.")
-        self.control.emit("phase", "loading_model")
-        self.process = await start_owned_process(
-            str(executable),
-            "--model",
-            str(weights),
-            "--alias",
-            model,
-            "--host",
-            "127.0.0.1",
-            "--port",
-            str(port),
-            "--cors-origins",
-            f"http://127.0.0.1:{port}",
-            "--ctx-size",
-            "8192",
-            "--parallel",
-            "1",
-            "--threads",
-            "8",
-            "--n-gpu-layers",
-            "0",
-            stdout=asyncio.subprocess.DEVNULL,
-            stderr=asyncio.subprocess.DEVNULL,
-            creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
-        )
-        deadline = time.monotonic() + 120
-        while time.monotonic() < deadline:
-            if self.process.returncode is not None:
-                raise RuntimeError(
-                    "Conversation model could not start. Check port and model files."
-                )
-            if await asyncio.to_thread(model_ready, port, model):
-                return
-            await asyncio.sleep(0.25)
-        raise RuntimeError("Local conversation model startup timed out.")
-
-    async def aclose(self) -> None:
-        process, self.process = self.process, None
-        if process is not None:
-            if process.returncode is None:
-                with suppress(ProcessLookupError):
-                    process.terminate()
-            try:
-                await asyncio.wait_for(process.wait(), 5)
-            except TimeoutError:
-                with suppress(ProcessLookupError):
-                    process.kill()
-                await process.wait()
+        super().__init__(root, config.conversation, notify=control.emit)
 
 
 async def run_engineer(

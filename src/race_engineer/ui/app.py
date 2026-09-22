@@ -148,6 +148,16 @@ def _friendly_error(error: Exception) -> str:
         "driver_memory_write_failed": "Driver preferences could not be saved.",
         "driver_memory_schema_too_new": "Driver profile storage is from a newer version.",
         "driver_memory_wrong_database": "The configured driver database is not compatible.",
+        "cpu_runtime_missing": "The local conversation runtime or model is missing.",
+        "accelerated_runtime_missing": "The configured accelerated runtime is missing.",
+        "accelerated_runtime_not_configured": "No accelerated conversation runtime is configured.",
+        "runtime_probe_timeout": "The accelerated runtime device check timed out.",
+        "runtime_probe_failed": "The accelerated runtime device check failed.",
+        "no_gpu_device": "The accelerated runtime did not report a usable GPU.",
+        "configured_device_unavailable": "The selected GPU device is unavailable.",
+        "model_weights_missing": "The configured conversation model file is missing.",
+        "model_startup_failed": "The local conversation model could not start.",
+        "model_startup_timeout": "The local conversation model took too long to start.",
     }
     return messages.get(str(error), str(error) or type(error).__name__)
 

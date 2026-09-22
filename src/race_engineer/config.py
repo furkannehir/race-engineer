@@ -89,15 +89,60 @@ class TtsConfig(ConfigModel):
     queue_capacity: int = Field(default=8, ge=1, le=100)
 
 
+class ConversationRuntimeConfig(ConfigModel):
+    """Machine-local llama.cpp launch policy; never part of a driver profile."""
+
+    mode: Literal["cpu", "gpu", "auto"] = "cpu"
+    cpu_executable_path: Path = Path(
+        "data/conversation-prototype/llama-b10964-cpu/llama-server.exe"
+    )
+    accelerated_executable_path: Path | None = None
+    accelerated_backend: Literal["cuda", "vulkan", "hip", "metal", "sycl"] | None = None
+    device: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=100,
+        pattern=r"^[A-Za-z0-9_.:-]+$",
+    )
+    model_path: Path = Path(
+        "data/conversation-prototype/Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
+    )
+    threads: int = Field(default=8, ge=1, le=64)
+    context_size: int = Field(default=8192, ge=512, le=131_072)
+    parallel: int = Field(default=1, ge=1, le=16)
+    gpu_layers: int = Field(default=-1, ge=-1, le=10_000)
+    fallback_to_cpu: bool = True
+    probe_timeout_s: float = Field(default=5, gt=0, le=30, allow_inf_nan=False)
+    startup_timeout_s: float = Field(default=120, gt=0, le=600, allow_inf_nan=False)
+    shutdown_timeout_s: float = Field(default=5, gt=0, le=30, allow_inf_nan=False)
+
+    @model_validator(mode="after")
+    def validate_accelerated_runtime(self) -> "ConversationRuntimeConfig":
+        path_fields = (self.accelerated_executable_path, self.accelerated_backend)
+        if (path_fields[0] is None) != (path_fields[1] is None):
+            raise ValueError(
+                "accelerated_executable_path and accelerated_backend must be set together"
+            )
+        if self.device is not None and self.accelerated_executable_path is None:
+            raise ValueError("device requires an accelerated runtime")
+        return self
+
+
 class ConversationConfig(ConfigModel):
     adapter: Literal["llama-cpp"] = "llama-cpp"
-    model: Literal["Qwen3-4B-Instruct-2507"] = "Qwen3-4B-Instruct-2507"
+    model: str = Field(
+        default="Qwen3-4B-Instruct-2507",
+        min_length=1,
+        max_length=200,
+        pattern=r"^[A-Za-z0-9][A-Za-z0-9_.:/+-]*$",
+    )
     # The adapter connects only to literal 127.0.0.1, never a remote host or proxy.
     port: int = Field(default=8087, ge=1, le=65535)
     timeout_s: float = Field(default=30.0, gt=0, le=120, allow_inf_nan=False)
     history_turns: int = Field(default=6, ge=0, le=12)
     max_snapshot_age_s: float = Field(default=3.0, gt=0, le=30, allow_inf_nan=False)
     default_language: Literal["en", "tr"] = "en"
+    runtime: ConversationRuntimeConfig = ConversationRuntimeConfig()
 
 
 class PttBindingConfig(ConfigModel):
