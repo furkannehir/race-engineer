@@ -1,6 +1,6 @@
 # Working roadmap
 
-Updated 2026-09-22. This is the current progress/backlog companion to the original
+Updated 2026-09-24. This is the current progress/backlog companion to the original
 [implementation plan](personalized-ai-race-engineer-implementation-plan.docx), not a claim
 that every original milestone exit criterion has been formally validated.
 
@@ -16,8 +16,8 @@ frame-time, or endurance results accompanying the feedback. Existing defects rem
 The next implementation increment is the
 [local context engine and portable inference plan](context-engine-implementation-plan.md):
 smaller bilingual judges, optional CPU/GPU execution including AMD/Vulkan, measured resource
-budgets, and independent promotion gates for conversation and proactive ranking. All CE
-CE-01 configuration/runtime foundations are implemented; CE-02 evaluation is next. This
+budgets, and independent promotion gates for conversation and proactive ranking. CE-01
+runtime foundations and the CE-02 bilingual typed CPU baseline are implemented. This
 updates the next-task order without closing pending live validation.
 
 | Milestone | Current position | Remaining/deferred work |
@@ -25,7 +25,7 @@ updates the next-task order without closing pending live validation.
 | M0: Foundation | Contracts, configuration, logging, fixtures, and tests implemented | Maintain compatibility as new domains are added |
 | M1: iRacing telemetry | Live reading, normalization, recording, reconnect handling, and the IR-001 source-level fix implemented | Genuine-blue live validation; broader scenario validation |
 | M2: Strict policy | Core policy, SQLite-backed preferences, and durable content-free decision/outcome history implemented | Broader scenario and real-race validation remain |
-| M3: Speech / conversational increment | Automatic calls and local English/Turkish live voice conversation plus CE-01 runtime foundation implemented; driver accepts the current prototype | CE-02/04/05 evaluation and planner/context work; speech quality and extended live validation |
+| M3: Speech / conversational increment | Automatic calls and local English/Turkish live voice conversation plus CE-01 runtime and CE-02 evaluation foundation implemented; driver accepts the current prototype | CE-04/05 planner/context work; speech quality and extended live validation |
 | M4: Adaptive personalization | SQLite profile/preferences plus observational policy-decision and radio-outcome history implemented; no inferred learning yet | CE-06/07 feedback definitions, local shadow ranker, small-model evaluation; no hosted Jev in current scope |
 | M5: Driver controls / UI | Basic PySide6 radio desk implemented early: lifecycle, audio checks, press-to-bind keyboard/mouse/wheel PTT, mute, tray and driver preferences | CE-03/08 CPU/GPU controls and hardware validation; real-race shakedown, later voice preference commands/session review |
 | M6: Second simulator | Not started | Another adapter and cross-simulator contract validation |
@@ -74,14 +74,21 @@ should share the validated service later. CONV-004 is scheduled in CE-05, not ye
 
 1. **Done — CE-01:** configurable planners, shared runtime launch, and bounded backend
    discovery; CPU defaults preserved.
-2. **Next — CE-02:** bilingual quality suite and CPU/stage-latency baseline, with promotion
-   targets.
-3. CE-03 and CE-04: optional CUDA/Vulkan controls and a small local NLI judge, each measured
-   against the baseline. AMD support requires an actual AMD test.
+2. **Done — CE-02 typed baseline:** versioned bilingual suites, frozen promotion targets,
+   content-free reports, and the owned-runtime Qwen CPU baseline are recorded. Audio-stage
+   timing remains pending deliberately supplied test samples.
+3. **Next — CE-04b:** implement the session/state, stateless context assembler, versioned
+   SemanticJudge contracts and deterministic controller from
+   [architecture revision 2](ce04-architecture.md), using scripted judges first. Complete
+   [behavior scenario review](conversational-core-design.md) before freezing CE-04c dialogue
+   evaluation; compare Laya/MiniLM/v2 Qwen in CE-04d and decide routing in CE-04e. Tone:
+   calm teammate. CE-04 runtime work is not yet implemented.
 4. CE-05: grounded hybrid conversation and bounded bilingual acknowledgments.
 5. CE-06: labeled proactive usefulness evaluation in shadow mode.
-6. CE-07: train/evaluate smaller classifiers or alternatives if data justifies them.
-7. CE-08: representative hardware and race validation, conservative Automatic mode,
+6. CE-07: optionally train/evaluate smaller classifiers or alternatives if data justifies it.
+7. CE-03: optional CUDA/Vulkan controls and stable combined-workload benchmarks. AMD
+   support still requires an actual AMD test.
+8. CE-08: representative hardware and race validation, conservative Automatic mode,
    independent promotion decisions, and open-source distribution readiness.
 
 ## Constraints carried forward
@@ -89,11 +96,15 @@ should share the validated service later. CONV-004 is scheduled in CE-05, not ye
 - Keep speech recognition, conversation, synthesis, and personalization local by default.
 - The original plan's Jev evaluation remains optional/deferred. The later entirely-local
   decision does not authorize hosted ranking, data uploads, or remote shadow requests.
-  Any such evaluation needs a separate explicit opt-in.
+  Any such evaluation needs a separate explicit opt-in. Laya's local Jev-compatible API
+  does not revive or authorize the hosted Jev path.
 - Preserve critical deterministic calls and factual grounding; quality/personality upgrades
   must not weaken them.
 - Keep STT-001 and TTS-001 as separate measured improvements. CONV-004 has a planned CE-05
-  slice; none is resolved merely by adopting the new plan.
+  slice; none is resolved merely by adopting the new plan. FreyaTTS-small is one local
+  Turkish TTS-001 evaluation option among alternatives; Piper remains selected until a
+  candidate earns replacement through offline Windows/racing-language quality and resource
+  comparisons.
 - CPU remains a required execution path; acceleration is optional and includes an AMD
   validation target. Automatic selection is not a current capability or a proven default.
 - Do not treat the driver's prototype acceptance as resolution of the blue-flag defect or

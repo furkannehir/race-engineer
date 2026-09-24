@@ -107,6 +107,18 @@ class ConversationRuntimeConfig(ConfigModel):
     model_path: Path = Path(
         "data/conversation-prototype/Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
     )
+    runtime_revision: str = Field(
+        default="b10964", min_length=1, max_length=100, pattern=r"^[A-Za-z0-9_.+-]+$"
+    )
+    model_revision: str = Field(
+        default="a06e946bb6b655725eafa393f4a9745d460374c9",
+        min_length=1,
+        max_length=100,
+        pattern=r"^[A-Za-z0-9_.+-]+$",
+    )
+    quantization: str = Field(
+        default="Q4_K_M", min_length=1, max_length=50, pattern=r"^[A-Za-z0-9_.+-]+$"
+    )
     threads: int = Field(default=8, ge=1, le=64)
     context_size: int = Field(default=8192, ge=512, le=131_072)
     parallel: int = Field(default=1, ge=1, le=16)

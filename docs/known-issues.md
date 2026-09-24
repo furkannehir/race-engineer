@@ -39,6 +39,44 @@ driver listening feedback, synthesis latency, resource impact during iRacing, an
 voice distribution terms. Preserve replaceable adapters, language routing, cancellation,
 and the live radio scheduler. Do not select on naturalness alone.
 
+**Candidate review, 2026-09-24:**
+[FreyaTTS-small](https://github.com/freyavoiceai/FreyaTTS) is one Turkish-specific option
+for a later comparison, not a preferred or selected replacement. Its published model is a
+183M-parameter, character-level Turkish synthesizer with a deterministic default voice,
+48 kHz mono output, and Apache-2.0 code and weights. The authors report 8.0% WER / 3.0%
+CER on their 495-sentence Turkish evaluation set, RTX 4090 RTF 0.10-0.11 with roughly
+1.5 GB VRAM, and Apple M3 CPU RTF 0.70. Their seven-rater study favors Freya's naturalness,
+although the top MOS confidence intervals overlap and Piper achieves lower WER. These are
+upstream measurements, not Race Engineer or Windows/iRacing results.
+
+Freya is Turkish-only and depends on PyTorch plus the VoxCPM2 AudioVAE. Its current local
+model path still fetches that VAE through Hugging Face, and its dependency versions are
+not pinned. Integration must therefore use separately pinned, checksum-verified local
+model/VAE assets in an optional isolated worker with network access disabled. Keep Piper
+for English and as the lightweight fallback; route by validated reply language behind the
+existing `ConversationSpeaker` protocol. Do not add Freya/PyTorch to the default install.
+
+Before promotion:
+
+- audit and retain Freya, AudioVAE, package, dataset, and voice/model distribution terms;
+- compare Piper and Freya with blind driver listening on short race calls, acknowledgments,
+  Turkish characters, driver/track terms, positions, lap numbers, fuel, and decimal gaps;
+- verify comma-decimal and unit normalization explicitly: Freya's current digit expansion
+  handles integer/dot runs but does not define Race Engineer's Turkish `2,4 saniye` form;
+- pin the canonical voice seed and treat failed/collapsed synthesis as an error or Piper
+  fallback instead of silently switching to a different speaker seed;
+- measure cold start, synthesis and release-to-first-audio p50/p95, real-time factor, peak
+  RAM/VRAM, cancellation, and combined load with iRacing, ASR, and conversation inference;
+- test Windows CPU and NVIDIA CUDA locally. Upstream publishes no Windows AMD GPU path, so
+  retain CPU fallback and make no AMD acceleration claim without a separately validated
+  runtime; and
+- require fully offline startup after explicit setup, bounded worker failure, no hidden
+  downloads, and no regression to radio priority, expiry, or freshness checks.
+
+Upstream references: [model card](https://huggingface.co/freyavoice/Freya-TTS),
+[technical report](https://arxiv.org/abs/2607.09530), and
+[evaluation set](https://huggingface.co/datasets/freyavoice/freya-tr-eval).
+
 ## CONV-004: Add contextual race-engineer acknowledgments and reassurance
 
 **Status:** Deferred feature request - not implemented

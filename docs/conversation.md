@@ -10,6 +10,12 @@ write unrestricted answers: JSON-schema validity alone would not prove those ans
 factually correct. The supported information is limited, but the input phrasing is not.
 Semantic interpretation can still be wrong and needs real-model evaluation.
 
+The planned successor is [CE-04 architecture revision 2](ce04-architecture.md): explicit
+session-owned dialogue memory, immutable context assembly, and a replaceable SemanticJudge
+with deterministic response control. This page continues to describe the current v1
+prototype; see the [delivery plan](context-engine-implementation-plan.md) for implementation
+order and promotion gates.
+
 ## Run it
 
 The runtime and model are separate from the Python package. On the initial development
@@ -151,23 +157,26 @@ Unit tests use scripted planners and mocked HTTP responses. They test grounding,
 freshness, bilingual rendering, session reset, error handling, and CLI behaviour; they do
 not establish Qwen's ability to interpret natural language.
 
-With the real local server running, execute the separate, synthetic model evaluation:
+Use the versioned, content-free [conversation evaluation protocol](conversation-evaluation.md)
+for real-model quality and performance runs. The evaluator can own the configured server:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts/evaluate_conversation.py
+.\.venv\Scripts\python.exe scripts/evaluate_conversation.py `
+  --manage-server `
+  --dataset fixtures\conversation\locked.json `
+  --output data\evaluations\qwen-cpu-locked.json `
+  --quiet
 ```
 
-It checks English/Turkish phrasing, language switching, follow-ups, compound questions,
-clarification, unavailable capabilities, and a prompt-injection attempt. Exit code 1 means
-at least one case failed. Per-turn results include latency and the selected queries. This
-small suite is an integration check, not proof of general language accuracy or a racing
-latency benchmark. The evaluation intentionally prints synthetic replies for inspection.
+Exit code 1 means at least one expectation failed; the report is still produced. It records
+plans, reply statuses, timings, runtime/hardware metadata, and hashed question IDs, but no
+question, prompt, transcript, reply text, or microphone audio.
 
 Additional paraphrases, first evaluated after the prompt was tuned on the initial set:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts/evaluate_conversation.py `
-  --cases fixtures/conversation/holdout.json
+  --dataset fixtures/conversation/holdout.json
 ```
 
 ### Initial result, 2026-09-20

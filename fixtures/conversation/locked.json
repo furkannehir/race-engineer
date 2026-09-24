@@ -1,0 +1,392 @@
+{
+  "schema_version": "conversation-eval.v1",
+  "dataset_id": "conversation-locked-v1",
+  "revision": "2026.09.23.1",
+  "split": "locked",
+  "fixture": "fixtures/synthetic/conversation",
+  "groups": [
+    {
+      "id": "locked-en-position",
+      "family": "locked-en-position",
+      "category": "position",
+      "questions": [
+        "What's our race position?",
+        "Tell me where we're running.",
+        "Which place are we in overall?",
+        "Where do we sit in the race?",
+        "Give me our current position.",
+        "What place am I right now?",
+        "How are we classified overall?",
+        "Don't give me fuel; give me our position.",
+        "Whereabouts are we in the order?",
+        "Position update, please."
+      ],
+      "expected": {"language": "en", "queries": ["position"], "reply_status": "answered"},
+      "tags": ["english", "negation"]
+    },
+    {
+      "id": "locked-en-lap",
+      "family": "locked-en-lap",
+      "category": "lap",
+      "questions": [
+        "What lap is this?",
+        "Which lap are we on?",
+        "Give me the current lap number.",
+        "How many laps have we reached?",
+        "Lap update.",
+        "Tell me our lap.",
+        "What's the lap count now?",
+        "Current lap, please.",
+        "Are we on lap three or four?",
+        "I need the lap number."
+      ],
+      "expected": {"language": "en", "queries": ["lap"], "reply_status": "answered"},
+      "tags": ["english", "short-input"]
+    },
+    {
+      "id": "locked-en-gap-ahead",
+      "family": "locked-en-gap-ahead",
+      "category": "gap-ahead",
+      "questions": [
+        "What's the interval to the car ahead?",
+        "How many seconds to the next car?",
+        "Give me the gap in front.",
+        "Distance in time to the car ahead?",
+        "How far up the road is the car ahead?",
+        "What's our deficit to the car in front?",
+        "Tell me the forward gap.",
+        "How close are we to the next car?",
+        "Gap to the car we're chasing.",
+        "What's ahead in seconds?"
+      ],
+      "expected": {"language": "en", "queries": ["gap_ahead"], "reply_status": "answered"},
+      "tags": ["english"]
+    },
+    {
+      "id": "locked-en-gap-behind",
+      "family": "locked-en-gap-behind",
+      "category": "gap-behind",
+      "questions": [
+        "What's the interval behind us?",
+        "How many seconds back is the next car?",
+        "Give me the rear gap.",
+        "Time to the car behind?",
+        "How far back is our pursuer?",
+        "What's the cushion to the car behind?",
+        "Tell me the gap behind.",
+        "How close is the following car?",
+        "Gap to the driver chasing us.",
+        "What's behind in seconds?"
+      ],
+      "expected": {"language": "en", "queries": ["gap_behind"], "reply_status": "answered"},
+      "tags": ["english"]
+    },
+    {
+      "id": "locked-en-fuel-remaining",
+      "family": "locked-en-fuel-remaining",
+      "category": "fuel-remaining",
+      "questions": [
+        "How much fuel is left?",
+        "Tell me the current tank level.",
+        "How many liters do we have?",
+        "What's remaining in the tank?",
+        "Current fuel quantity, please.",
+        "Give me fuel remaining.",
+        "How full is the tank right now?",
+        "What's our fuel level?",
+        "Fuel amount now.",
+        "Do not estimate the finish; just tell me fuel left."
+      ],
+      "expected": {"language": "en", "queries": ["fuel_remaining"], "reply_status": "answered"},
+      "tags": ["english", "negation"]
+    },
+    {
+      "id": "locked-en-fuel-consumption",
+      "family": "locked-en-fuel-consumption",
+      "category": "fuel-consumption",
+      "frame_index": 1,
+      "questions": [
+        "What's our fuel use per lap?",
+        "How many liters are we burning each lap?",
+        "Give me average fuel consumption.",
+        "What's the observed burn rate?",
+        "Tell me liters per lap.",
+        "How thirsty is the car per lap?",
+        "Current average fuel usage?",
+        "What consumption have we observed?",
+        "Fuel burn per completed lap, please.",
+        "Don't predict the finish; give me consumption."
+      ],
+      "expected": {"language": "en", "queries": ["fuel_consumption"], "reply_status": "answered"},
+      "tags": ["english", "negation"]
+    },
+    {
+      "id": "locked-en-fuel-finish",
+      "family": "locked-en-fuel-finish",
+      "category": "fuel-strategy",
+      "questions": [
+        "Will the fuel last to the finish?",
+        "Can we make it without another stop?",
+        "Do we have enough fuel to finish?",
+        "Are we short on fuel for the remaining race?",
+        "Will I need to pit for fuel?",
+        "Can this tank take us to the flag?",
+        "Tell me if the fuel window reaches the finish.",
+        "Are we safe on fuel until the end?",
+        "Do we need a splash before the finish?",
+        "What's our fuel-to-finish status?"
+      ],
+      "expected": {"language": "en", "queries": ["fuel_to_finish"], "reply_status": "unavailable"},
+      "tags": ["english", "unsupported-capability"]
+    },
+    {
+      "id": "locked-en-ambiguous-opponent",
+      "family": "locked-en-ambiguous-opponent",
+      "category": "clarification",
+      "questions": [
+        "Is he closing on us?",
+        "Are we gaining on them?",
+        "Is that driver pulling away?",
+        "What's happening with him?",
+        "Are they getting closer now?",
+        "Is the other car faster?",
+        "Are we catching that car?",
+        "Is he dropping back?",
+        "How is their gap changing?",
+        "Do we have them?"
+      ],
+      "expected": {"language": "en", "queries": [], "clarification": "opponent", "reply_status": "clarification"},
+      "tags": ["english", "ambiguous"]
+    },
+    {
+      "id": "locked-en-unsupported",
+      "family": "locked-en-unsupported",
+      "category": "unsupported",
+      "questions": [
+        "What tire pressure should I use?",
+        "Who is driving the car ahead?",
+        "What is the track temperature?",
+        "Change my brake bias.",
+        "Should we switch to wet tires?",
+        "What was my fastest sector?",
+        "Talk less from now on.",
+        "How much engine damage do we have?",
+        "That was a stupid move.",
+        "Tell race control to penalize him."
+      ],
+      "expected": {"language": "en", "queries": ["unsupported"], "reply_status": "unavailable"},
+      "tags": ["english", "social-remark", "preference-command"]
+    },
+    {
+      "id": "locked-en-position-fuel",
+      "family": "locked-en-position-fuel",
+      "category": "compound",
+      "questions": [
+        "Give me position and fuel remaining.",
+        "Where are we and how many liters are left?",
+        "Tell me our place plus the tank level.",
+        "I need race position and current fuel.",
+        "Position together with fuel, please.",
+        "What's our overall place and remaining fuel?",
+        "Report the running order and liters in the tank.",
+        "How are we placed, and what's left in the tank?",
+        "Give me both position and fuel quantity.",
+        "Current position; also tell me the fuel level."
+      ],
+      "expected": {"language": "en", "queries": ["position", "fuel_remaining"], "reply_status": "answered"},
+      "tags": ["english", "compound"]
+    },
+    {
+      "id": "locked-tr-position",
+      "family": "locked-tr-position",
+      "category": "position",
+      "questions": [
+        "Yarış pozisyonumuz ne?",
+        "Şu an kaçıncı sıradayız?",
+        "Genel sıralamadaki yerimizi söyle.",
+        "Yarışta nerede gidiyoruz?",
+        "Güncel pozisyonu ver.",
+        "Şu anda kaçıncıyım?",
+        "Genel klasmanda durumumuz ne?",
+        "Yakıtı değil, pozisyonumuzu söyle.",
+        "Sıralamada hangi noktadayız?",
+        "Position kaç?"
+      ],
+      "expected": {"language": "tr", "queries": ["position"], "reply_status": "answered"},
+      "tags": ["turkish", "negation", "code-switch"]
+    },
+    {
+      "id": "locked-tr-lap",
+      "family": "locked-tr-lap",
+      "category": "lap",
+      "questions": [
+        "Bu kaçıncı tur?",
+        "Hangi turdayız?",
+        "Güncel tur numarasını söyle.",
+        "Kaçıncı tura geldik?",
+        "Tur bilgisi.",
+        "Turumuzu söyle.",
+        "Şu an tur sayısı kaç?",
+        "Mevcut turu ver.",
+        "Üçüncü turda mıyız, dördüncüde mi?",
+        "Lap kaç?"
+      ],
+      "expected": {"language": "tr", "queries": ["lap"], "reply_status": "answered"},
+      "tags": ["turkish", "short-input", "code-switch"]
+    },
+    {
+      "id": "locked-tr-gap-ahead",
+      "family": "locked-tr-gap-ahead",
+      "category": "gap-ahead",
+      "questions": [
+        "Öndeki araçla zaman farkımız ne?",
+        "Bir sonraki araca kaç saniye var?",
+        "Önümüzdeki farkı söyle.",
+        "Öndeki araca olan süre farkı?",
+        "Öndeki araç yolun ne kadar ilerisinde?",
+        "Önümüzdeki araca ne kadar gerideyiz?",
+        "Ön farkı ver.",
+        "Bir sonraki araca ne kadar yakınız?",
+        "Kovaladığımız araçla fark ne?",
+        "Önümüzde saniye olarak ne var?"
+      ],
+      "expected": {"language": "tr", "queries": ["gap_ahead"], "reply_status": "answered"},
+      "tags": ["turkish"]
+    },
+    {
+      "id": "locked-tr-gap-behind",
+      "family": "locked-tr-gap-behind",
+      "category": "gap-behind",
+      "questions": [
+        "Arkamızdaki araçla zaman farkı ne?",
+        "Bir sonraki araç kaç saniye geride?",
+        "Arka farkı söyle.",
+        "Arkadaki araca olan süre farkı?",
+        "Takipçimiz ne kadar geride?",
+        "Arkadaki araca karşı tamponumuz ne kadar?",
+        "Arkamızdaki farkı ver.",
+        "Bizi izleyen araç ne kadar yakın?",
+        "Bizi kovalayan pilotla fark ne?",
+        "Arkamızda saniye olarak ne var?"
+      ],
+      "expected": {"language": "tr", "queries": ["gap_behind"], "reply_status": "answered"},
+      "tags": ["turkish"]
+    },
+    {
+      "id": "locked-tr-fuel-remaining",
+      "family": "locked-tr-fuel-remaining",
+      "category": "fuel-remaining",
+      "questions": [
+        "Ne kadar yakıt kaldı?",
+        "Güncel depo seviyesini söyle.",
+        "Kaç litre yakıtımız var?",
+        "Depoda ne kadar kaldı?",
+        "Mevcut yakıt miktarını ver.",
+        "Kalan yakıtı söyle.",
+        "Depo şu an ne kadar dolu?",
+        "Yakıt seviyemiz ne?",
+        "Şimdiki yakıt miktarı.",
+        "Finişi tahmin etme, sadece kalan yakıtı söyle."
+      ],
+      "expected": {"language": "tr", "queries": ["fuel_remaining"], "reply_status": "answered"},
+      "tags": ["turkish", "negation"]
+    },
+    {
+      "id": "locked-tr-fuel-consumption",
+      "family": "locked-tr-fuel-consumption",
+      "category": "fuel-consumption",
+      "frame_index": 1,
+      "questions": [
+        "Tur başına yakıt tüketimimiz ne?",
+        "Her tur kaç litre yakıyoruz?",
+        "Ortalama yakıt tüketimini ver.",
+        "Gözlenen yakıt yakma oranı ne?",
+        "Tur başına litreyi söyle.",
+        "Araç turda ne kadar yakıt içiyor?",
+        "Güncel ortalama yakıt kullanımı?",
+        "Şimdiye kadar nasıl bir tüketim gördük?",
+        "Tamamlanan tur başına yakıt tüketimi.",
+        "Finişi tahmin etme, tüketimi söyle."
+      ],
+      "expected": {"language": "tr", "queries": ["fuel_consumption"], "reply_status": "answered"},
+      "tags": ["turkish", "negation"]
+    },
+    {
+      "id": "locked-tr-fuel-finish",
+      "family": "locked-tr-fuel-finish",
+      "category": "fuel-strategy",
+      "questions": [
+        "Yakıt finişe kadar dayanır mı?",
+        "Bir daha durmadan yarışı bitirebilir miyiz?",
+        "Finiş için yeterli yakıtımız var mı?",
+        "Kalan yarış için yakıtımız eksik mi?",
+        "Yakıt için pite girmem gerekecek mi?",
+        "Bu depo bizi damalı bayrağa götürür mü?",
+        "Yakıt penceresi finişe ulaşıyor mu?",
+        "Yarış sonuna kadar yakıtta güvende miyiz?",
+        "Finişten önce yakıt takviyesi gerekir mi?",
+        "Finişe göre yakıt durumumuz ne?"
+      ],
+      "expected": {"language": "tr", "queries": ["fuel_to_finish"], "reply_status": "unavailable"},
+      "tags": ["turkish", "unsupported-capability"]
+    },
+    {
+      "id": "locked-tr-ambiguous-opponent",
+      "family": "locked-tr-ambiguous-opponent",
+      "category": "clarification",
+      "questions": [
+        "Bize yaklaşıyor mu?",
+        "Onları yakalıyor muyuz?",
+        "O pilot uzaklaşıyor mu?",
+        "Onunla ne oluyor?",
+        "Şimdi daha mı yakındalar?",
+        "Diğer araç daha mı hızlı?",
+        "O aracı yakalıyor muyuz?",
+        "Geride mi kalıyor?",
+        "Onların farkı nasıl değişiyor?",
+        "Onu avucumuza aldık mı?"
+      ],
+      "expected": {"language": "tr", "queries": [], "clarification": "opponent", "reply_status": "clarification"},
+      "tags": ["turkish", "ambiguous"]
+    },
+    {
+      "id": "locked-tr-unsupported",
+      "family": "locked-tr-unsupported",
+      "category": "unsupported",
+      "questions": [
+        "Hangi lastik basıncını kullanmalıyım?",
+        "Öndeki aracı kim kullanıyor?",
+        "Pist sıcaklığı kaç?",
+        "Fren dengesini değiştir.",
+        "Yağmur lastiğine geçmeli miyiz?",
+        "En hızlı sektörüm neydi?",
+        "Bundan sonra daha az konuş.",
+        "Motor hasarımız ne kadar?",
+        "Bu aptalca bir hareketti.",
+        "Yarış kontrolüne onu cezalandırmasını söyle."
+      ],
+      "expected": {"language": "tr", "queries": ["unsupported"], "reply_status": "unavailable"},
+      "tags": ["turkish", "social-remark", "preference-command"]
+    },
+    {
+      "id": "locked-tr-position-fuel",
+      "family": "locked-tr-position-fuel",
+      "category": "compound",
+      "questions": [
+        "Pozisyonu ve kalan yakıtı ver.",
+        "Kaçıncıyız ve kaç litre kaldı?",
+        "Sıramızla birlikte depo seviyesini söyle.",
+        "Yarış pozisyonu ve güncel yakıt lazım.",
+        "Pozisyonla yakıtı beraber bildir.",
+        "Genel sıramız ve kalan yakıt ne?",
+        "Sıralamadaki yerimizi ve depodaki litreyi ver.",
+        "Kaçıncı gidiyoruz, depoda ne kaldı?",
+        "Hem pozisyonu hem yakıt miktarını söyle.",
+        "Güncel pozisyon; ayrıca yakıt seviyesini ver."
+      ],
+      "expected": {"language": "tr", "queries": ["position", "fuel_remaining"], "reply_status": "answered"},
+      "tags": ["turkish", "compound"]
+    }
+  ],
+  "sequences": []
+}

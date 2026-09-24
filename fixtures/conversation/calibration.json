@@ -1,0 +1,106 @@
+{
+  "schema_version": "conversation-eval.v1",
+  "dataset_id": "conversation-calibration-v1",
+  "revision": "2026.09.23.1",
+  "split": "calibration",
+  "fixture": "fixtures/synthetic/conversation",
+  "groups": [
+    {
+      "id": "cal-en-position-short",
+      "family": "cal-en-position-short",
+      "category": "position",
+      "questions": ["Position", "Position?", "Our place?", "Race position", "Where are we placed?"],
+      "expected": {"language": "en", "queries": ["position"], "reply_status": "answered"},
+      "tags": ["english", "short-input"]
+    },
+    {
+      "id": "cal-en-gap-ahead",
+      "family": "cal-en-gap-ahead",
+      "category": "gap-ahead",
+      "questions": ["Gap ahead", "What's the gap in front?", "How far is the next car?", "Time to the car ahead?", "Give me the interval ahead."],
+      "expected": {"language": "en", "queries": ["gap_ahead"], "reply_status": "answered"},
+      "tags": ["english"]
+    },
+    {
+      "id": "cal-en-fuel",
+      "family": "cal-en-fuel",
+      "category": "fuel-remaining",
+      "questions": ["Fuel", "Fuel level?", "What's left in the tank?", "How many litres remain?", "Tell me our current fuel."],
+      "expected": {"language": "en", "queries": ["fuel_remaining"], "reply_status": "answered"},
+      "tags": ["english", "short-input"]
+    },
+    {
+      "id": "cal-en-ambiguous-opponent",
+      "family": "cal-en-ambiguous-opponent",
+      "category": "clarification",
+      "questions": ["Is he gaining?", "Are they getting away?", "Is that car closing?", "What's his trend?", "Are we catching them?"],
+      "expected": {"language": "en", "queries": [], "clarification": "opponent", "reply_status": "clarification"},
+      "tags": ["english", "ambiguous"]
+    },
+    {
+      "id": "cal-en-social",
+      "family": "cal-en-social",
+      "category": "social-remark",
+      "questions": ["That was dirty.", "What an idiot.", "He pushed me off!", "I'm so angry right now.", "That move was ridiculous."],
+      "expected": {"language": "en", "queries": ["unsupported"], "reply_status": "unavailable"},
+      "tags": ["english", "emotional", "future-conv-004"]
+    },
+    {
+      "id": "cal-en-compound",
+      "family": "cal-en-compound",
+      "category": "compound",
+      "questions": ["Position and fuel, please.", "Where are we and how much fuel remains?", "Tell me our place and fuel level.", "Race position plus liters in the tank.", "Give me position and remaining fuel."],
+      "expected": {"language": "en", "queries": ["position", "fuel_remaining"], "reply_status": "answered"},
+      "tags": ["english", "calibration-mixed-expectations"]
+    },
+    {
+      "id": "cal-tr-position-short",
+      "family": "cal-tr-position-short",
+      "category": "position",
+      "questions": ["Pozisyon", "Pozisyon?", "Kaçıncıyız?", "Sıramız ne?", "Yarışta neredeyiz?"],
+      "expected": {"language": "tr", "queries": ["position"], "reply_status": "answered"},
+      "tags": ["turkish", "short-input"]
+    },
+    {
+      "id": "cal-tr-gap-ahead",
+      "family": "cal-tr-gap-ahead",
+      "category": "gap-ahead",
+      "questions": ["Ön fark", "Öndekiyle fark?", "Öndeki araç ne kadar uzakta?", "Önümüzdeki araca kaç saniye var?", "Öndeki intervali söyle."],
+      "expected": {"language": "tr", "queries": ["gap_ahead"], "reply_status": "answered"},
+      "tags": ["turkish"]
+    },
+    {
+      "id": "cal-tr-fuel",
+      "family": "cal-tr-fuel",
+      "category": "fuel-remaining",
+      "questions": ["Yakıt", "Yakıt seviyesi?", "Depoda ne kaldı?", "Kaç litre yakıtımız var?", "Güncel yakıtı söyle."],
+      "expected": {"language": "tr", "queries": ["fuel_remaining"], "reply_status": "answered"},
+      "tags": ["turkish", "short-input"]
+    },
+    {
+      "id": "cal-tr-ambiguous-opponent",
+      "family": "cal-tr-ambiguous-opponent",
+      "category": "clarification",
+      "questions": ["Yaklaşıyor mu?", "Uzaklaşıyor mu?", "O araç bizi yakalıyor mu?", "Onun temposu nasıl?", "Onu yakalıyor muyuz?"],
+      "expected": {"language": "tr", "queries": [], "clarification": "opponent", "reply_status": "clarification"},
+      "tags": ["turkish", "ambiguous"]
+    },
+    {
+      "id": "cal-tr-social",
+      "family": "cal-tr-social",
+      "category": "social-remark",
+      "questions": ["Bu çok kirliydi.", "Ne biçim pilot bu.", "Beni pistten attı!", "Şu an çok sinirliyim.", "O hareket saçmalıktı."],
+      "expected": {"language": "tr", "queries": ["unsupported"], "reply_status": "unavailable"},
+      "tags": ["turkish", "emotional", "future-conv-004"]
+    },
+    {
+      "id": "cal-tr-compound",
+      "family": "cal-tr-compound",
+      "category": "compound",
+      "questions": ["Pozisyon ve yakıtı söyle.", "Kaçıncıyız ve ne kadar yakıt kaldı?", "Sıramızla yakıt seviyesini ver.", "Yarış pozisyonu ve depodaki litre?", "Pozisyon ve kalan yakıtı bildir."],
+      "expected": {"language": "tr", "queries": ["position", "fuel_remaining"], "reply_status": "answered"},
+      "tags": ["turkish", "calibration-mixed-expectations"]
+    }
+  ],
+  "sequences": []
+}

@@ -1,6 +1,7 @@
 # Local context engine and portable inference implementation plan
 
-Updated 2026-09-22. Status: CE-01 implemented; CE-02 is next. Later slices remain planned.
+Updated 2026-09-24. Status: CE-01 and the CE-02 typed baseline are implemented; CE-04 is next.
+CE-04 architecture revision 2 is documented; its first implementation slice is CE-04b.
 
 This is the next implementation increment after the accepted live prototype. It combines
 the smaller local context-judge evaluation with optional CPU/GPU execution and resource
@@ -33,10 +34,22 @@ end-to-end speech result. Preserve the failing CONV-001 through CONV-003 cases.
 
 - English and Turkish, free phrasing, and local inference remain requirements. Internal
   intent labels describe supported meanings; they are not a spoken command vocabulary.
+- The first conversational tone is the driver-selected calm teammate: acknowledge briefly,
+  then help. Define continuity, correction, clarification, and delivery-aware behavior in
+  the [conversational-core design](conversational-core-design.md) before choosing a judge.
 - Retain Qwen as the baseline and optional interpretation fallback while alternatives are
-  evaluated. Selecting MiniLM for an experiment does not select it as the production model.
-- Reuse `ConversationPlanner` and `DefaultRaceContextBuilder`. The context engine shares
-  typed context and orchestration; it does not require one neural model for every task.
+  evaluated. Selecting MiniLM or Laya for an experiment does not select either as the
+  production model.
+- Follow [architecture revision 2](ce04-architecture.md): `DialogueSession` owns transient
+  `DialogueState`; `ConversationContextAssembler` builds immutable per-turn context;
+  `SemanticJudge` proposes meaning; `DialogueController` validates proposals and returns
+  state transitions for the session to commit. The controller is ordinary application code.
+- Retain `ConversationPlanner` for the current v1 path and introduce the versioned
+  `SemanticJudge` interface for CE-04. Reuse `DefaultRaceContextBuilder` calculations and
+  existing fact/radio boundaries; adapters remain independent of the domain contracts.
+- Select one primary semantic judge after evaluation. Laya and MiniLM are alternatives,
+  with Qwen as the comparison baseline and possible single fallback. Retaining Qwen as
+  primary is a valid outcome. CE-06 usefulness ranking is a separately evaluated role.
 - Facts and derived quantities come from deterministic, capability-aware code. A judge
   selects a query, response act, or candidate; it cannot supply race numbers or invent
   telemetry. New information still needs a validated fact provider.
@@ -51,14 +64,17 @@ end-to-end speech result. Preserve the failing CONV-001 through CONV-003 cases.
 
 | Route | Intended responsibility | First implementation |
 | --- | --- | --- |
-| Driver question or remark | Resolve topics, references, supported queries, and response acts | Small multilingual NLI judge evaluated against Qwen |
+| Driver question or remark | SemanticJudge resolves topics, per-part references, supported queries, and response acts | Laya and MiniLM as alternative candidates evaluated against v2 Qwen |
 | Ambiguous or complex request | Recover a valid query plan within the remaining deadline | Optional Qwen call, then clarification/unavailable if unresolved |
 | Proactive noncritical candidate | Estimate usefulness from derived numeric/categorical features | Deterministic baseline, then calibrated logistic regression in shadow mode |
 | Facts and speech | Retrieve fresh facts, render short bilingual text, schedule playback | Existing deterministic renderer and radio, extended with bounded acknowledgments |
 
-Common turns should complete with one small-model evaluation and deterministic rendering.
-The larger model runs only when needed. Its output remains a validated plan; unrestricted
-model-generated wording is outside this increment.
+With a promoted small primary, common turns should complete with one bounded judge request
+and deterministic composition. Account for every internal hypothesis/batch/pass. Optional
+Qwen fallback runs at most once for unresolved interpretation within the turn deadline;
+missing telemetry and genuine reference ambiguity go directly to an appropriate limitation
+or clarification. Every model returns a validated proposal; unrestricted generated wording
+is outside this increment.
 
 ## Hardware policy
 
@@ -106,22 +122,26 @@ ONNX, DirectML, or ROCm are candidates, not established drop-in Qwen3-ASR backen
 ## Delivery sequence
 
 Deliver each slice as a reviewable change with its own evidence. No model downloads, race
-recording, or engine switches occur merely by accepting this plan.
+recording, or engine switches occur merely by accepting this plan. Slice identifiers stay
+stable for history; the rows below are in the current execution order.
 
 | Slice | Status | Deliverable | Dependency / completion gate |
 | --- | --- | --- | --- |
 | CE-01 | Implemented | Model-neutral planner configuration and shared runtime launcher | Existing CPU behavior preserved; backend discovery and fallback tested |
-| CE-02 | Next | Bilingual evaluation and performance baseline | CE-01; reproducible CPU report and frozen promotion criteria |
-| CE-03 | Planned | Optional CUDA/Vulkan execution and compute controls | CE-02; real NVIDIA and AMD reports before claiming support |
-| CE-04 | Planned | Compact context and MiniLM evaluation adapter | CE-02; bilingual quality, abstention, and latency report |
+| CE-02 | Implemented (typed baseline) | Bilingual evaluation and performance baseline | Reproducible Qwen CPU report and frozen promotion criteria recorded; speech stages await supplied audio |
+| CE-04 | Next; architecture revision 2 documented | Session/state, context assembler, SemanticJudge adapters and dialogue evaluation | CE-02; CE-04b fake-driven foundation, reviewed scenarios, v2 bilingual quality/resource report |
 | CE-05 | Planned | Hybrid conversational routing and bounded social replies | CE-04; grounded outputs, bounded fallback, radio regression gates |
 | CE-06 | Planned | Proactive usefulness baseline and shadow evaluation | CE-02 and CE-04 context; labels defined, audible behavior unchanged |
 | CE-07 | Planned | Trained small judges and targeted alternatives | CE-04/06 labeled datasets; held-out improvement demonstrated |
+| CE-03 | Deferred before CE-08 | Optional CUDA/Vulkan execution and compute controls | Stable CE-05/06 workload; real NVIDIA and AMD reports before claiming support |
 | CE-08 | Planned | Promotion, conservative Automatic mode, and release evidence | CE-03/05/06; CE-07 only for models being promoted |
 
-CE-03 and CE-04 can proceed independently after the baseline. Missing AMD access blocks
-an AMD support claim, not CPU development. CE-07 is optional: it must demonstrate value
-before becoming a dependency of a usable release.
+CE-04 proceeds next. CE-03 remains technically independent but is deliberately scheduled
+after CE-06 and any selected CE-07 work, immediately before CE-08, so acceleration is
+measured against the stable combined workload intended for release. Pull it forward only
+if CPU performance blocks CE-04/05/06 development. Missing AMD access blocks an AMD support
+claim, not CPU work. CE-07 is optional: it must demonstrate value before becoming a release
+dependency.
 
 ### CE-01: Configurable planners and runtime foundation
 
@@ -168,50 +188,67 @@ Exit: reproducible baseline plus frozen datasets, workload definitions, and thre
 Use small deterministic fakes in normal CI; large model/hardware evaluations are explicit
 local suites, with no model download or microphone activation in ordinary tests.
 
-### CE-03: Optional acceleration and user controls
+### CE-04: Dialogue foundation, shared context and semantic judge evaluation
 
-- Provide pinned, checksum-verified optional llama.cpp CPU, CUDA, and Vulkan runtime
-  setup, with dependency/license notices. Installation is an explicit setup action.
-- Benchmark zero, partial, and full offload with the same weights, prompt, and context
-  budget. Test schema-constrained replies on each backend rather than assuming parity.
-- Add the panel's CPU/GPU/Automatic selection, effective backend/device, and fallback
-  status. Apply changes on the next start and expose advanced limits in configuration.
-  Until promotion, CPU remains default and Automatic is labeled experimental.
-- Test unsupported drivers/devices, insufficient memory, GPU-worker failure, bounded CPU
-  recovery, external-server ownership, and missing optional packages.
-- Keep ASR, MiniLM, and Piper on CPU initially unless a separate experiment shows a benefit.
-  Measure the combined worker load rather than optimizing the conversational server alone.
-
-Exit: CPU requires no CUDA/ROCm installation. A tested NVIDIA/CUDA path and an actual
-AMD/Vulkan run have equivalent functional coverage and visible fallback. Without AMD
-hardware evidence, retain that route as experimental and request community validation.
-
-### CE-04: Shared context and a small local judge
-
+- Follow the [behavior design](conversational-core-design.md) and
+  [architecture revision 2](ce04-architecture.md). CE-04a records behavior/ownership;
+  CE-04b builds versioned contracts, session/state, context assembly, and the controller
+  using a scripted SemanticJudge. CE-04c freezes the reviewed dialogue evaluation and
+  split audit; CE-04d compares adapters; CE-04e selects routing from measured evidence.
+- Make `DialogueSession` the only writer of conversational state. Validate turn/session/
+  generation and relevant state revision on every proposed transition and delivery event.
+  Keep `ConversationContextAssembler` stateless and independent of model dependencies.
+- Keep received driver requests, proposed replies, and delivery outcomes distinct. Define
+  pending clarification, topic/reference expiry, correction, opponent identity, and session
+  reset behavior. A planned reply is not evidence that the driver heard its contents.
 - Define a compact versioned context view: current capabilities, relevant recent events,
   validated derived features, freshness/session identifiers, bounded dialogue topic and
   opponent reference, explicit language preference, and recent radio categories.
 - Reuse existing context calculations. Add gap trends or other derived facts only with
   valid timestamps, consistent opponent identity, reset/missing-data semantics, and replay
   fixtures. Unsupported calculations remain explicitly unavailable.
-- Define a typed judge result: factual query set, conversational acts, clarification or
-  abstention, reason code, and model/calibration version. Allow mixed requests and preserve
+- Define a typed semantic proposal: factual request parts, per-part references,
+  conversational acts, clarification or abstention, reason code, and model/calibration
+  version. Allow mixed requests and preserve
   unsupported parts. Changing serialized conversation semantics requires a new schema
   version and migration or explicit rejection tests.
 - Evaluate `MoritzLaurer/multilingual-MiniLMv2-L6-mnli-xnli` on CPU first. Use bounded
   hypotheses for topics/acts and batched evaluation; account for work per hypothesis and
   context length. Confirm the model's token limit without silently losing the current turn.
+- Evaluate `convaiinnovations/laya-multilingual` as a separate typed-decision candidate.
+  Experiment with bounded per-label two-option `choice` questions for queries and acts;
+  measure all passes/batches and validate joint consistency. Do not assume a single-choice
+  result represents compound requests or that independent binary decisions form a coherent
+  plan. Compare one multilingual resident model with Laya's higher-memory routed
+  English-plus-multilingual mode.
+- Treat Laya's upstream results as screening evidence only. Its multilingual checkpoint is
+  322M parameters, publishes moderate Turkish MASSIVE intent accuracy, ships uncalibrated,
+  and reports weak zero-shot typed-decision results. Pin local checkpoint/package revisions,
+  disable runtime downloads, measure CPU memory/latency, and defer domain fine-tuning to
+  CE-07 unless its zero-shot/calibrated result already earns promotion.
 - Calibrate acceptance on separate bilingual data. NLI scores, embedding similarity, and
-  self-reported model confidence are not calibrated probabilities. Unknown references,
-  low evidence, and unsupported language/context must permit abstention.
+  model-reported probabilities are not trusted calibration. Unknown references, low
+  evidence, and unsupported language/context must permit abstention.
+- Validate schema, reference consistency, and complete mixed-request semantics through the
+  same controller for every adapter. Valid requests can mention both ahead and behind;
+  contradictory bindings within a request part require abstention or clarification.
+- Use a bounded persistent local worker for selected small-model inference and the existing
+  loopback server for Qwen. Measure startup/residency with ASR/TTS; normal fake tests must
+  import no optional model packages. Keep all inference off the telemetry task.
+- Add a separately versioned multi-turn evaluation with explicit answerability, partial
+  replies, corrections, delivery outcomes, and equivalent acceptable interpretations.
+  Audit split leakage and metric denominators as detailed in the design; retain the CE-02
+  v1 report unchanged. Compare full-context candidates fairly, including a validated v2
+  Qwen adapter rather than assuming the current factual-only fallback handles new acts.
 
-The initial choice is an experiment with a small multilingual NLI model, not an assumption
-of race-domain accuracy. Its published card includes cross-language evaluation.
+Both initial choices are experiments rather than assumptions of race-domain accuracy.
 [MiniLM model card](https://huggingface.co/MoritzLaurer/multilingual-MiniLMv2-L6-mnli-xnli)
+and [Laya multilingual model card](https://huggingface.co/convaiinnovations/laya-multilingual).
 
-Exit: comparison with Qwen for each language and difficult-input category, including
-accuracy-versus-coverage, total judge latency, calibration, and multi-turn limitations.
-No live replacement is implied by merely obtaining faster inference.
+Exit: MiniLM and Laya comparisons with Qwen for each language and difficult-input category,
+including accuracy-versus-coverage, total judge latency, resident memory, calibration, and
+multi-turn limitations. A candidate may be rejected without blocking the other. No live
+replacement is implied by merely obtaining faster inference.
 
 ### CE-05: Hybrid driver conversation
 
@@ -223,9 +260,17 @@ No live replacement is implied by merely obtaining faster inference.
   memory if Qwen remains loaded. Lightweight operation remains usable without Qwen, with
   clarification for cases outside the judge's reliable coverage.
 - Add bounded bilingual acknowledgment/refocus acts for CONV-004, including mixtures of
-  emotion and factual questions. Neutral examples include "Copy. Focus on your race."
+  emotion and factual questions, following the calm-teammate behavior scenarios. Use brief
+  acknowledgment and relevant help; avoid repetitive or unsolicited admonishment.
   Claims such as "We saw the contact" require actual supporting evidence; driver reports
   do not become independently verified events.
+- Integrate delivery-aware dialogue state, partial answers with targeted clarification,
+  correction, and explicit no-reply acts. Validate these through complete replay dialogues
+  and bilingual listening review before live promotion.
+- Extend reply refresh to preserve approved social/clarifying acts and per-part opponent
+  references while retrieving new facts. Current factual-only refresh cannot carry these
+  semantics. Feed idempotent, ID-tagged radio outcomes back to the owning session and
+  distinguish displayed text from completed speech.
 - Preserve explicit language preferences, critical interruption, speech expiry, bounded
   dialogue memory, and fact refresh after inference and before playback. Cancel unfinished
   inference when possible and always ignore late results. Avoid duplicate model stages
@@ -270,6 +315,9 @@ requires independent labels, not simply agreement with the strict policy.
   uploads; no assumption that operational SQLite history contains this training data.
 - Preserve one encoded input with small task heads where useful. Evaluate ONNX/INT8 export
   for both quality and CPU latency, including a fresh calibration check after quantization.
+- If Laya demonstrates useful bilingual signal but misses CE-04 gates, evaluate a
+  race-domain decision-head fine-tune and recalibration here. Do not train against locked
+  cases or promote it merely because its API already resembles the desired judge output.
 - Keep mDeBERTa as an optional NLI quality comparison, FunctionGemma as a possible trained
   query router, and EuroMoE as a possible generative comparison. These are research options,
   not required installations. Require English/Turkish evidence and license review for each.
@@ -280,7 +328,26 @@ sentence-transformer classification. Neither is a drop-in conversational model.
 and [SetFit implementation](https://github.com/huggingface/setfit).
 
 Exit: promote only an alternative that improves the measured quality/resource trade-off
-on the intended hardware. Retaining MiniLM or Qwen is a valid outcome.
+on the intended hardware. Retaining MiniLM, Laya, or Qwen is a valid outcome.
+
+### CE-03: Optional acceleration and user controls
+
+- Provide pinned, checksum-verified optional llama.cpp CPU, CUDA, and Vulkan runtime
+  setup, with dependency/license notices. Installation is an explicit setup action.
+- Benchmark zero, partial, and full offload with the same weights, prompt, and context
+  budget. Test schema-constrained replies on each backend rather than assuming parity.
+- Add the panel's CPU/GPU/Automatic selection, effective backend/device, and fallback
+  status. Apply changes on the next start and expose advanced limits in configuration.
+  Until promotion, CPU remains default and Automatic is labeled experimental.
+- Test unsupported drivers/devices, insufficient memory, GPU-worker failure, bounded CPU
+  recovery, external-server ownership, and missing optional packages.
+- Keep ASR, the promoted judge, and Piper on CPU initially unless a separate experiment
+  shows a benefit. Measure the combined CE-05/06 worker load rather than optimizing the
+  conversational server alone.
+
+Exit: CPU requires no CUDA/ROCm installation. A tested NVIDIA/CUDA path and an actual
+AMD/Vulkan run have equivalent functional coverage and visible fallback. Without AMD
+hardware evidence, retain that route as experimental and request community validation.
 
 ### CE-08: Race validation, promotion, and open-source readiness
 
@@ -334,13 +401,24 @@ latency and model residency are included in the evaluation, not hidden by warm b
 
 CE-01 is implemented in `config.py`, conversation adapter/factory composition, the shared
 server-launch service, `ui/runtime.py`, and `scripts/start_conversation_model.py`, with
-targeted config/lifecycle tests. The shipped execution remains Qwen on CPU. Start CE-02
-next so model and hardware comparisons are reproducible before any automatic selection or
-default replacement.
+targeted config/lifecycle tests. The shipped execution remains Qwen on CPU. CE-02's
+versioned bilingual datasets, content-free report schema, and frozen promotion protocol
+are implemented. The owned-runtime CPU baseline recorded 164/200 exact turns, 1.28-second
+warm planning p95, and about 5.27 GiB peak working set. CE-04 compact context/judge
+work proceeds next using the [revised architecture](ce04-architecture.md) and
+[delivery sub-slices](conversational-core-design.md#reviewable-delivery-slices).
+Implement CE-04b contracts, session/state, assembler and controller with a scripted judge;
+review scenario expectations before freezing CE-04c, then compare Laya/MiniLM/v2 Qwen.
+The v1 report does not establish multi-turn interaction quality;
+the new suite must address its split and coverage-definition limitations. CE-03 acceleration
+is deliberately deferred until immediately before CE-08; none is an automatic default
+replacement.
 
 Decide from evidence later: the production judge and calibration thresholds, model
 residency, CPU/offload presets, exact minimum hardware, ASR acceleration/replacement, and
 whether a trained ranker improves calls. Keep TTS-001 voice replacement and STT-001 capture/
 recognition improvements separate unless timing/quality evidence makes them a prerequisite.
-CONV-004 is explicitly scheduled in CE-05. Real-race history/panel checks and genuine-blue
-IR-001 validation remain open and can run alongside these slices. M6 remains deferred.
+TTS-001 now tracks FreyaTTS-small as a Turkish-only evaluation candidate while retaining
+Piper for English/fallback; no dependency or runtime change is selected. CONV-004 is
+explicitly scheduled in CE-05. Real-race history/panel checks and genuine-blue IR-001
+validation remain open and can run alongside these slices. M6 remains deferred.

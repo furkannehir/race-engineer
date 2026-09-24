@@ -210,6 +210,22 @@ and their UI are configuration boundaries pending CE-03 installation and hardwar
 an externally managed loopback server carries no verified compute-mode claim. See the
 [context-engine plan](context-engine-implementation-plan.md).
 
+## Planned CE-04 conversation architecture
+
+[Architecture revision 2](ce04-architecture.md) defines the next conversation boundary:
+`DialogueSession` owns transient structured chat state and lifecycle;
+`ConversationContextAssembler` prepares immutable per-turn input; `SemanticJudge` proposes
+meaning through a Laya, MiniLM, or Qwen adapter; ordinary controller code validates the
+proposal and the session commits state transitions. Fresh fact resolution, bounded
+composition and radio delivery events complete the turn. These components are planned,
+not the current v1 runtime.
+
+CE-04 evaluates alternative semantic judges. CE-05 integrates qualified routing and
+delivery-aware conversation. CE-06 separately evaluates proactive usefulness in shadow
+mode; selecting a semantic model does not select or validate the proactive ranker. The
+[implementation plan](context-engine-implementation-plan.md) retains CE-03 immediately
+before CE-08 for acceleration and combined-workload validation.
+
 ## Post-M3 improvement: Jev-assisted policy ranking
 
 Status update, 2026-09-22: the following is the historical optional remote proposal.

@@ -1,0 +1,99 @@
+{
+  "schema_version": "conversation-baseline-summary.v1",
+  "evaluator_revision": "ce-02.1",
+  "recorded_at": "2026-09-23",
+  "raw_report": "data/evaluations/qwen-cpu-locked-2026-09-23.json",
+  "raw_report_committed": false,
+  "code": {
+    "git_revision": "922eb1de790df40935ac6edaf2c5c441f00c9d5c",
+    "working_tree_dirty": true,
+    "source_fingerprint_sha256": "672772568939654678b8f8eeb0aa77290855eecae67c9b588db6db218b6b9392",
+    "configuration_sha256": "108eabbcaec171f0936f38cdd7e7f68fb01bad1b2b27b2bec798cf562e3ce2f0"
+  },
+  "dataset": {
+    "dataset_id": "conversation-locked-v1",
+    "revision": "2026.09.23.1",
+    "turns": 200,
+    "languages": {"en": 100, "tr": 100},
+    "file_sha256": "0ccef86a887af8bcd63d9e76da78ce640657a609293d41fa1ed8851eb5faea52",
+    "fixture_sha256": "c804b3bc53dbb603f51ef8296da867bbc54f57e0224a37658f48f6a0179f03e4"
+  },
+  "planner": {
+    "model": "Qwen3-4B-Instruct-2507",
+    "model_revision": "a06e946bb6b655725eafa393f4a9745d460374c9",
+    "quantization": "Q4_K_M"
+  },
+  "runtime": {
+    "revision": "b10964",
+    "reported_version": "0.4.1-dev (build 10964, commit b29c606e2)",
+    "effective_compute": "cpu:cpu",
+    "threads": 8,
+    "context_size": 8192,
+    "gpu_layers": 0,
+    "startup_ms": 3068.652,
+    "fallback_count": 0,
+    "peak_working_set_bytes": 5660618752,
+    "gpu_memory_mib_at_end": 0,
+    "gpu_peak_memory_mib": null
+  },
+  "machine": {
+    "os": "Windows-11",
+    "cpu": "AMD Ryzen 7 9800X3D 8-Core Processor",
+    "logical_cpus": 16,
+    "memory_bytes": 66145669120,
+    "display_adapters": [
+      {"name": "NVIDIA GeForce RTX 5080", "driver_version": "32.0.15.9186"},
+      {"name": "AMD Radeon(TM) Graphics", "driver_version": "32.0.21030.2001"}
+    ]
+  },
+  "result": {
+    "passed": 164,
+    "turns": 200,
+    "exact_turn_accuracy": 0.82,
+    "accepted_plan_accuracy": 0.84127,
+    "supported_coverage": 0.966667,
+    "clarification_accuracy": 0.25,
+    "model_errors": 0,
+    "english": {
+      "passed": 83,
+      "turns": 100,
+      "exact_turn_accuracy": 0.83,
+      "accepted_plan_accuracy": 0.851064,
+      "supported_coverage": 0.966667,
+      "clarification_accuracy": 0.3
+    },
+    "turkish": {
+      "passed": 81,
+      "turns": 100,
+      "exact_turn_accuracy": 0.81,
+      "accepted_plan_accuracy": 0.831579,
+      "supported_coverage": 0.966667,
+      "clarification_accuracy": 0.2
+    },
+    "exact_turn_accuracy_by_category": {
+      "clarification": 0.25,
+      "compound": 0.95,
+      "fuel-consumption": 1.0,
+      "fuel-remaining": 1.0,
+      "fuel-strategy": 0.7,
+      "gap-ahead": 0.65,
+      "gap-behind": 1.0,
+      "lap": 0.9,
+      "position": 1.0,
+      "unsupported": 0.75
+    }
+  },
+  "latency_ms": {
+    "cold_planner": 4519.468,
+    "warm_planner": {"p50": 1023.54, "p95": 1284.601, "max": 1691.173},
+    "application": {"p50": 0.089, "p95": 0.129},
+    "wall": 217250.536
+  },
+  "unmeasured_stages": [
+    "capture_to_release",
+    "asr",
+    "tts_synthesis",
+    "radio_wait",
+    "first_audio"
+  ]
+}

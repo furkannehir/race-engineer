@@ -32,6 +32,8 @@ def test_default_configuration_is_valid() -> None:
     assert config.conversation.runtime.mode == "cpu"
     assert config.conversation.runtime.threads == 8
     assert config.conversation.runtime.accelerated_executable_path is None
+    assert config.conversation.runtime.runtime_revision == "b10964"
+    assert config.conversation.runtime.quantization == "Q4_K_M"
 
 
 def test_environment_overrides_are_explicit() -> None:
