@@ -140,13 +140,73 @@ def _same_lap_gap(
     return opponent_f2 - player_f2
 
 
-def _opponents(sample: IracingRawSample, player_idx: int) -> tuple[OpponentState, ...]:
+def _live_race_positions(
+    sample: IracingRawSample,
+    player_idx: int,
+    pace_car_indices: frozenset[int],
+) -> dict[int, int] | None:
+    """Build a complete current running order from live race progress when trustworthy."""
+
+    if (
+        (sample.session_type or "").casefold() != "race"
+        or sample.session_state != SESSION_RACING
+        or not {"CarIdxLap", "CarIdxLapDistPct", "CarIdxPosition"}.issubset(
+            sample.available_variables
+        )
+    ):
+        return None
+
+    classified = tuple(
+        car_idx
+        for car_idx, official_position in enumerate(sample.car_idx_positions)
+        if official_position > 0 and car_idx not in pace_car_indices
+    )
+    if player_idx not in classified:
+        return None
+
+    progress: dict[int, float] = {}
+    for car_idx in classified:
+        lap = _at(sample.car_idx_laps, car_idx)
+        lap_dist_pct = _at(sample.car_idx_lap_dist_pct, car_idx)
+        if (
+            lap is None
+            or lap < 0
+            or lap_dist_pct is None
+            or not math.isfinite(lap_dist_pct)
+            or not 0 <= lap_dist_pct <= 1
+        ):
+            return None
+        progress[car_idx] = lap + lap_dist_pct
+
+    ordered = sorted(
+        classified,
+        key=lambda car_idx: (
+            -progress[car_idx],
+            sample.car_idx_positions[car_idx],
+            car_idx,
+        ),
+    )
+    return {car_idx: position for position, car_idx in enumerate(ordered, start=1)}
+
+
+def _opponents(
+    sample: IracingRawSample,
+    player_idx: int,
+    live_positions: dict[int, int] | None,
+) -> tuple[OpponentState, ...]:
     drivers = {driver.car_idx: driver for driver in sample.drivers}
     opponents: list[OpponentState] = []
-    for car_idx, position in enumerate(sample.car_idx_positions):
+    for car_idx, official_position in enumerate(sample.car_idx_positions):
         driver = drivers.get(car_idx)
-        if car_idx == player_idx or position <= 0 or (driver is not None and driver.is_pace_car):
+        if (
+            car_idx == player_idx
+            or official_position <= 0
+            or (driver is not None and driver.is_pace_car)
+        ):
             continue
+        position = (
+            live_positions[car_idx] if live_positions is not None else official_position
+        )
         opponents.append(
             OpponentState(
                 driver_id=_driver_id(driver, car_idx),
@@ -185,6 +245,12 @@ def normalize_sample(sample: IracingRawSample) -> TelemetryFrame | None:
     )
     drivers = {driver.car_idx: driver for driver in sample.drivers}
     player_idx = sample.player_car_idx
+    pace_car_indices = frozenset(
+        driver.car_idx for driver in sample.drivers if driver.is_pace_car
+    )
+    live_positions = _live_race_positions(sample, player_idx, pace_car_indices)
+    if live_positions is not None:
+        capabilities = tuple(sorted({*capabilities, "live_position", "position"}))
     flags = _flags(sample)
     session_id = f"iracing:{sample.session_unique_id}:{sample.session_num}"
     return TelemetryFrame(
@@ -197,14 +263,18 @@ def normalize_sample(sample: IracingRawSample) -> TelemetryFrame | None:
         player=PlayerState(
             driver_id=_driver_id(drivers.get(player_idx), player_idx),
             lap_number=_valid_lap(sample.lap),
-            position=_valid_positive_int(sample.player_position),
+            position=(
+                live_positions[player_idx]
+                if live_positions is not None
+                else _valid_positive_int(sample.player_position)
+            ),
             speed_mps=_valid_non_negative(sample.speed_mps),
             fuel_l=_valid_non_negative(sample.fuel_l),
             in_pit_lane=bool(sample.on_pit_road),
             car_ahead_distance_m=_valid_non_negative(sample.car_ahead_distance_m),
             car_behind_distance_m=_valid_non_negative(sample.car_behind_distance_m),
         ),
-        opponents=_opponents(sample, player_idx),
+        opponents=_opponents(sample, player_idx, live_positions),
         flags=flags,
         capabilities=capabilities,
         is_replay=bool(sample.is_replay_playing),

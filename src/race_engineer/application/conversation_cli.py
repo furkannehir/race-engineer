@@ -1,13 +1,19 @@
 """Text-first local conversation over an explicitly paused replay."""
 
 import asyncio
+import json
+from datetime import UTC, datetime
 from pathlib import Path
 
 from race_engineer.config import load_config
-from race_engineer.conversation.factory import conversation_planner
+from race_engineer.conversation.composer import compose
+from race_engineer.conversation.dialogue_session import DialogueSession
+from race_engineer.conversation.factory import conversation_planner, semantic_judge
 from race_engineer.conversation.replay import ReplayRaceState
 from race_engineer.conversation.session import ConversationSession
+from race_engineer.core.contracts import ContractModel
 from race_engineer.core.conversation import RadioLanguage
+from race_engineer.core.dialogue import DeliveryEvent, ResponseDecision
 from race_engineer.fixtures import load_fixture
 from race_engineer.observability import configure_logging
 
@@ -37,37 +43,102 @@ async def chat_replay(
     fixture = load_fixture(directory)
     state = ReplayRaceState(fixture, config.policy.context)
     state.seek(frame_index)
-    session = ConversationSession(
-        conversation_planner(config.conversation), state.snapshot, config.conversation
+    dialogue = (
+        DialogueSession(
+            semantic_judge(config.conversation),
+            state.snapshot,
+            config.conversation.dialogue,
+        )
+        if config.conversation.dialogue.enabled
+        else None
     )
+    legacy = (
+        None
+        if dialogue is not None
+        else ConversationSession(
+            conversation_planner(config.conversation), state.snapshot, config.conversation
+        )
+    )
+
+    async def ask(text: str) -> tuple[ContractModel, str | None]:
+        if dialogue is None:
+            assert legacy is not None
+            reply = await legacy.ask(text, reply_language=reply_language)
+            return reply, reply.text
+        decision = await dialogue.ask(text, reply_language=reply_language, output_mode="text")
+        output = compose(decision)
+        if output is not None and decision.outcome != "discarded":
+            dialogue.record_delivery(
+                DeliveryEvent(
+                    turn_id=decision.turn_id,
+                    response_id=decision.response_id,
+                    session_id=decision.session_id,
+                    generation=decision.generation,
+                    output_mode="text",
+                    status="completed",
+                    occurred_at=datetime.now(UTC),
+                )
+            )
+        return decision, output
+
+    def failed(result: object) -> bool:
+        if isinstance(result, ResponseDecision):
+            return result.reason == "model_error"
+        return getattr(result, "status", None) == "model_error"
+
+    def reset() -> None:
+        if dialogue is not None:
+            dialogue.reset()
+        else:
+            assert legacy is not None
+            legacy.reset()
+
     if question is not None:
-        reply = await session.ask(question, reply_language=reply_language)
+        result, text = await ask(question)
         if json_output:
-            print(reply.model_dump_json(indent=2))
+            if dialogue is None:
+                # Preserve the established replay JSON contract on the default route.
+                print(result.model_dump_json(indent=2))
+            else:
+                print(
+                    json.dumps(
+                        {"result": json.loads(result.model_dump_json()), "text": text},
+                        ensure_ascii=False,
+                        indent=2,
+                    )
+                )
         else:
             print(_state_line(state))
-            print(f"Engineer: {reply.text}")
-            if reply.status == "model_error":
+            print("Engineer: [no reply]" if text is None else f"Engineer: {text}")
+            if failed(result):
                 print("Start the local Qwen server; see docs/conversation.md.")
-        return 1 if reply.status == "model_error" else 0
+        if dialogue is not None:
+            await dialogue.aclose()
+        return 1 if failed(result) else 0
 
     print(_state_line(state))
+    if dialogue is not None:
+        print("CE-05 dialogue preview enabled for this replay.")
     print("Ask freely in English or Turkish. Commands: /next [count], /frame index,")
     print("/state, /reset, /quit. /frame resets conversation history.")
     while True:
         try:
             line = (await asyncio.to_thread(input, "You: ")).strip()
         except EOFError:
+            if dialogue is not None:
+                await dialogue.aclose()
             return 0
         if not line:
             continue
         if line == "/quit":
+            if dialogue is not None:
+                await dialogue.aclose()
             return 0
         try:
             if line == "/state":
                 print(_state_line(state))
             elif line == "/reset":
-                session.reset()
+                reset()
                 print("Conversation history cleared.")
             elif line.startswith("/"):
                 parts = line.split()
@@ -78,14 +149,14 @@ async def chat_replay(
                     state.seek(state.index + count)
                 elif parts[0] == "/frame" and len(parts) == 2:
                     state.seek(int(parts[1]))
-                    session.reset()
+                    reset()
                 else:
                     raise ValueError("unknown replay command")
                 print(_state_line(state))
             else:
-                reply = await session.ask(line, reply_language=reply_language)
-                print(f"Engineer: {reply.text}")
-                if reply.status == "model_error":
+                result, text = await ask(line)
+                print("Engineer: [no reply]" if text is None else f"Engineer: {text}")
+                if failed(result):
                     print("Start the local Qwen server; see docs/conversation.md.")
         except ValueError as error:
             # Do not echo validation errors containing user input into logs.

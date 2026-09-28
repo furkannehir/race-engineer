@@ -1,7 +1,8 @@
 """Read-only fact retrieval and bilingual wording; models cannot supply values."""
 
+from race_engineer.conversation.facts import DEFAULT_FACT_CATALOG
 from race_engineer.core.contracts import RaceContext
-from race_engineer.core.conversation import RaceAnswer, RaceQuery, RadioLanguage
+from race_engineer.core.conversation import FieldRelation, RaceAnswer, RaceQuery, RadioLanguage
 
 _AVAILABLE: dict[RadioLanguage, dict[RaceQuery, str]] = {
     "en": {
@@ -24,6 +25,7 @@ _AVAILABLE: dict[RadioLanguage, dict[RaceQuery, str]] = {
 _MISSING: dict[RadioLanguage, dict[RaceQuery, str]] = {
     "en": {
         RaceQuery.POSITION: "Your current position isn't available.",
+        RaceQuery.FIELD_STATUS: "I can't confirm the complete running order right now.",
         RaceQuery.LAP: "Your current lap isn't available.",
         RaceQuery.GAP_AHEAD: "I don't have a reliable time gap to the car ahead.",
         RaceQuery.GAP_BEHIND: "I don't have a reliable time gap to the car behind.",
@@ -32,6 +34,7 @@ _MISSING: dict[RadioLanguage, dict[RaceQuery, str]] = {
     },
     "tr": {
         RaceQuery.POSITION: "Güncel sıralama bilgisi yok.",
+        RaceQuery.FIELD_STATUS: "Şu anda tam sıralamayı doğrulayamıyorum.",
         RaceQuery.LAP: "Güncel tur bilgisi yok.",
         RaceQuery.GAP_AHEAD: "Öndeki araçla güvenilir bir zaman farkı bilgim yok.",
         RaceQuery.GAP_BEHIND: "Arkadaki araçla güvenilir bir zaman farkı bilgim yok.",
@@ -39,8 +42,11 @@ _MISSING: dict[RadioLanguage, dict[RaceQuery, str]] = {
         RaceQuery.FUEL_CONSUMPTION: "Henüz güvenilir bir yakıt tüketimi tahminim yok.",
     },
 }
+
+
 _UNSUPPORTED: dict[RadioLanguage, dict[RaceQuery, str]] = {
     "en": {
+        RaceQuery.FIELD_STATUS: "I can't compare your position with the field yet.",
         RaceQuery.FUEL_TO_FINISH: (
             "I can't estimate fuel to the finish yet; remaining race distance isn't supported."
         ),
@@ -49,6 +55,7 @@ _UNSUPPORTED: dict[RadioLanguage, dict[RaceQuery, str]] = {
         RaceQuery.UNSUPPORTED: "I can't answer that part or make changes in this prototype yet.",
     },
     "tr": {
+        RaceQuery.FIELD_STATUS: "Sıranı grubun tamamıyla henüz karşılaştıramıyorum.",
         RaceQuery.FUEL_TO_FINISH: (
             "Yakıtın finişe yetip yetmeyeceğini henüz hesaplayamıyorum; "
             "kalan yarış mesafesi desteklenmiyor."
@@ -79,28 +86,16 @@ MESSAGES: dict[RadioLanguage, dict[str, str]] = {
 }
 
 
-def retrieve(context: RaceContext, query: RaceQuery) -> RaceAnswer:
-    player = context.frame.player
-    value: int | float | None
-    match query:
-        case RaceQuery.POSITION:
-            value, unit = player.position, "position"
-        case RaceQuery.LAP:
-            value, unit = player.lap_number, "lap"
-        case RaceQuery.GAP_AHEAD:
-            value, unit = context.gap_ahead_s, "s"
-        case RaceQuery.GAP_BEHIND:
-            value, unit = context.gap_behind_s, "s"
-        case RaceQuery.FUEL_REMAINING:
-            value, unit = player.fuel_l, "l"
-        case RaceQuery.FUEL_CONSUMPTION:
-            value, unit = context.fuel_trend_l_per_lap, "l/lap"
-        case _:
-            return RaceAnswer(query=query, status="unsupported")
-    if value is None or value < 0:
-        return RaceAnswer(query=query, status="missing")
-    return RaceAnswer.model_validate(
-        {"query": query, "status": "available", "value": value, "unit": unit}
+def retrieve(
+    context: RaceContext,
+    query: RaceQuery,
+    *,
+    field_relation: FieldRelation | None = None,
+) -> RaceAnswer:
+    return DEFAULT_FACT_CATALOG.resolve_query(
+        context,
+        query,
+        field_relation=field_relation,
     )
 
 
@@ -110,6 +105,76 @@ def render(answer: RaceAnswer, language: RadioLanguage) -> str:
     if answer.status == "missing":
         return _MISSING[language][answer.query]
     assert answer.value is not None
+    if answer.query is RaceQuery.FIELD_STATUS:
+        assert (
+            isinstance(answer.value, int)
+            and answer.total is not None
+            and answer.field_relation is not None
+        )
+        position, total = answer.value, answer.total
+        relation = answer.field_relation
+        if language == "tr":
+            if total == 1:
+                if relation == "cars_ahead":
+                    return "Önünde araç yok; sınıflandırılmış tek araç sensin."
+                if relation == "cars_behind":
+                    return "Arkanda araç yok; sınıflandırılmış tek araç sensin."
+                if relation == "position_of_total":
+                    return "Sınıflandırılmış 1 araç içinde 1. sıradasın."
+                return "Evet. Sınıflandırılmış tek araç sensin; 1 araç içinde 1. sıradasın."
+            ahead, behind = position - 1, total - position
+            if relation == "first":
+                if position == 1:
+                    return f"Evet. Lideriz; {total} araç içinde 1. sıradayız."
+                return f"Hayır. {total} araç içinde {position}. sıradasın; önünde {ahead} araç var."
+            if relation == "last":
+                if position == total:
+                    return f"Evet. Şu anda sonuncusun; {total} araç içinde {position}. sıradasın."
+                return (
+                    f"Hayır. {total} araç içinde {position}. sıradasın; arkanda {behind} araç var."
+                )
+            if relation == "cars_ahead":
+                if ahead == 0:
+                    return f"Önünde araç yok. Lideriz; {total} araç içinde 1. sıradayız."
+                return f"Önünde {ahead} araç var; {total} araç içinde {position}. sıradasın."
+            if relation == "cars_behind":
+                if behind == 0:
+                    return (
+                        f"Arkanda araç yok. Şu anda sonuncusun; {total} araç içinde "
+                        f"{position}. sıradasın."
+                    )
+                return f"Arkanda {behind} araç var; {total} araç içinde {position}. sıradasın."
+            return f"{total} araç içinde {position}. sıradasın."
+        if total == 1:
+            if relation == "cars_ahead":
+                return "No cars ahead; you're the only classified car."
+            if relation == "cars_behind":
+                return "No cars behind; you're the only classified car."
+            if relation == "position_of_total":
+                return "You're P1 of 1, the only classified car."
+            return "Yes. You're the only classified car, P1 of 1."
+        ahead, behind = position - 1, total - position
+        if relation == "first":
+            if position == 1:
+                return f"Yes. You're leading, P1 of {total}."
+            suffix = "car is" if ahead == 1 else "cars are"
+            return f"No. You're P{position} of {total}; {ahead} {suffix} ahead."
+        if relation == "last":
+            if position == total:
+                return f"Yes. You're currently last, P{position} of {total}."
+            suffix = "car is" if behind == 1 else "cars are"
+            return f"No. You're P{position} of {total}; {behind} {suffix} behind."
+        if relation == "cars_ahead":
+            if ahead == 0:
+                return f"No cars ahead. You're leading, P1 of {total}."
+            noun = "car" if ahead == 1 else "cars"
+            return f"{ahead} {noun} ahead. You're P{position} of {total}."
+        if relation == "cars_behind":
+            if behind == 0:
+                return f"No cars behind. You're currently last, P{position} of {total}."
+            noun = "car" if behind == 1 else "cars"
+            return f"{behind} {noun} behind. You're P{position} of {total}."
+        return f"You're P{position} of {total}."
     value = str(int(answer.value)) if answer.unit in {"position", "lap"} else f"{answer.value:.1f}"
     if language == "tr":
         value = value.replace(".", ",")

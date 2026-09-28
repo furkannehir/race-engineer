@@ -1,6 +1,6 @@
 # Working roadmap
 
-Updated 2026-09-24. This is the current progress/backlog companion to the original
+Updated 2026-09-27. This is the current progress/backlog companion to the original
 [implementation plan](personalized-ai-race-engineer-implementation-plan.docx), not a claim
 that every original milestone exit criterion has been formally validated.
 
@@ -13,12 +13,14 @@ are deferred under [STT-001, TTS-001, and CONV-004](known-issues.md).
 This is qualitative functional acceptance. There are no new measured accuracy, latency,
 frame-time, or endurance results accompanying the feedback. Existing defects remain open.
 
-The next implementation increment is the
+The active implementation increment is the
 [local context engine and portable inference plan](context-engine-implementation-plan.md):
 smaller bilingual judges, optional CPU/GPU execution including AMD/Vulkan, measured resource
 budgets, and independent promotion gates for conversation and proactive ranking. CE-01
-runtime foundations and the CE-02 bilingual typed CPU baseline are implemented. This
-updates the next-task order without closing pending live validation.
+through CE-05's opt-in dialogue preview are implemented. Driver feedback inserted the
+CE-05 recovery stream before CE-06. CE-05R.1 live running-position derivation is implemented
+with deterministic regression coverage and awaits real-race validation. This updates the
+next-task order without closing pending live validation.
 
 | Milestone | Current position | Remaining/deferred work |
 | --- | --- | --- |
@@ -62,13 +64,14 @@ Recommended implementation order:
    reasons, so later feedback and ranker evaluations can be traced to actual behavior.
    Do not start storing microphone audio, prompts, or transcripts by default.
 5. Use that foundation to define feedback signals and evaluate a local ranker in shadow
-   mode before allowing it to influence audible output.
+mode before allowing it to influence audible output.
 
 Step 5 is now scheduled as CE-06 after the runtime/evaluation foundations and shared context
 in the [merged implementation plan](context-engine-implementation-plan.md). Playback
 outcomes are not usefulness labels; feedback semantics and separate shadow observations
 must be defined before training. Natural-language preference commands and the existing UI
-should share the validated service later. CONV-004 is scheduled in CE-05, not yet implemented.
+should share the validated service later. CONV-004 now has an opt-in CE-05 implementation;
+semantic/listening/live validation remains before default activation.
 
 ## Next implementation order
 
@@ -77,18 +80,45 @@ should share the validated service later. CONV-004 is scheduled in CE-05, not ye
 2. **Done — CE-02 typed baseline:** versioned bilingual suites, frozen promotion targets,
    content-free reports, and the owned-runtime Qwen CPU baseline are recorded. Audio-stage
    timing remains pending deliberately supplied test samples.
-3. **Next — CE-04b:** implement the session/state, stateless context assembler, versioned
-   SemanticJudge contracts and deterministic controller from
-   [architecture revision 2](ce04-architecture.md), using scripted judges first. Complete
-   [behavior scenario review](conversational-core-design.md) before freezing CE-04c dialogue
-   evaluation; compare Laya/MiniLM/v2 Qwen in CE-04d and decide routing in CE-04e. Tone:
-   calm teammate. CE-04 runtime work is not yet implemented.
-4. CE-05: grounded hybrid conversation and bounded bilingual acknowledgments.
-5. CE-06: labeled proactive usefulness evaluation in shadow mode.
-6. CE-07: optionally train/evaluate smaller classifiers or alternatives if data justifies it.
-7. CE-03: optional CUDA/Vulkan controls and stable combined-workload benchmarks. AMD
+3. **Done — CE-04b:** versioned SemanticJudge/dialogue contracts, session-owned bounded
+   state, stateless context assembly, deterministic control, and delivery tracking are
+   implemented behind the current live route with scripted/fake-clock coverage.
+4. **CE-04c–e — implemented, initial screening concluded:** versioned bilingual dialogue
+   fixtures/split audit, MiniLM/Laya/Qwen-v2 adapters, offline CPU comparison, and bounded
+   optional router. See [evaluation](dialogue-evaluation.md) and the
+   [routing decision](ce04-routing-decision.md). Retain the current Qwen-v1 live route;
+   no new judge or fallback is promoted. Larger independent qualification remains pending.
+5. **CE-05 — implemented as an opt-in preview:** retained-Qwen compatibility judge,
+   grounded mixed replies, bounded bilingual calm-teammate acts, fresh per-part/opponent
+   refresh and delivery-aware radio integration. CE-05.1 adds grounded overall field-status
+   comparisons (last/place out of field/cars behind). The development config enables the
+   preview deliberately; fresh semantic, listening/radio and real-race evidence remain
+   before promotion as the default route.
+6. **CE-05R.1 — implemented; live validation pending:** use complete per-car live lap
+   progress for current running position, with official-position fallback on incomplete
+   data. Validate starts, overtakes, pits, lapped traffic and retirements in iRacing.
+7. **CE-05R.2 — implemented; targeted model check passed, live validation pending:**
+   preserve first/last, ahead/behind-count and place-out-of-field meaning through grounded
+   comparison and fresh bilingual composition; contradictory yes/no plus P1 output now has
+   regression coverage.
+8. **CE-05R.3 — implementation complete; sample validation pending:** retain a bounded
+   post-release capture tail, emit content-free gate/boundary measurements, and inspect WAVs
+   without loading ASR. Use consented English/Turkish one-word samples to decide whether the
+   remaining failure is capture, gating, language detection, or Qwen3-ASR recognition.
+9. **CE-05R.4 — implemented:** use one deterministic fact-provider catalog for capability
+   projection, semantic-to-fact binding, initial resolution and pre-playback refresh. Current
+   answers are preserved; arbitrary SDK access and model-supplied values remain forbidden.
+10. **CE-05R.5.1–R.5.4 — implemented; R.5.5 validation pending:** compile refreshed
+   decisions into typed fact/social/clarification clauses, render deterministic natural
+   English/Turkish radio variants, validate exact fact provenance and a 48-word bound, and
+   fall back to the previous bounded wording on any failure. Composition remains after
+   pre-playback telemetry refresh and adds no second model call. Complete the independent
+   replay/listening/live acceptance pass in R.5.5.
+11. CE-06: labeled proactive usefulness evaluation in shadow mode.
+12. CE-07: optionally train/evaluate smaller classifiers or alternatives if data justifies it.
+13. CE-03: optional CUDA/Vulkan controls and stable combined-workload benchmarks. AMD
    support still requires an actual AMD test.
-8. CE-08: representative hardware and race validation, conservative Automatic mode,
+14. CE-08: representative hardware and race validation, conservative Automatic mode,
    independent promotion decisions, and open-source distribution readiness.
 
 ## Constraints carried forward
@@ -100,8 +130,8 @@ should share the validated service later. CONV-004 is scheduled in CE-05, not ye
   does not revive or authorize the hosted Jev path.
 - Preserve critical deterministic calls and factual grounding; quality/personality upgrades
   must not weaken them.
-- Keep STT-001 and TTS-001 as separate measured improvements. CONV-004 has a planned CE-05
-  slice; none is resolved merely by adopting the new plan. FreyaTTS-small is one local
+- Keep STT-001 and TTS-001 as separate measured improvements. CONV-004 has an opt-in CE-05
+  implementation but remains open until validation and promotion. FreyaTTS-small is one local
   Turkish TTS-001 evaluation option among alternatives; Piper remains selected until a
   candidate earns replacement through offline Windows/racing-language quality and resource
   comparisons.

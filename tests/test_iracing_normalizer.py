@@ -96,3 +96,68 @@ def test_non_race_blue_does_not_require_a_completed_lap_advantage() -> None:
     frame = normalize_sample(practice)
     assert frame is not None
     assert frame.flags == (RaceFlag.BLUE,)
+
+
+def test_live_progress_updates_running_order_before_official_position() -> None:
+    base = load_raw_samples(FIXTURE_DIRECTORY / "raw_samples.jsonl")[1]
+    live_variables = tuple(
+        sorted({*base.available_variables, "CarIdxLap", "CarIdxLapDistPct"})
+    )
+    before = IracingRawSample.model_validate(
+        {
+            **base.model_dump(),
+            "available_variables": live_variables,
+            "car_idx_laps": [6, 6, -1],
+            "car_idx_lap_dist_pct": [0.46, 0.45, -1.0],
+            # Both official position fields deliberately remain at their timing-line value.
+            "player_position": 1,
+            "car_idx_positions": [1, 2, 0],
+        }
+    )
+    after = IracingRawSample.model_validate(
+        {
+            **before.model_dump(),
+            "observed_at": "2026-08-30T12:00:00.200000Z",
+            "session_tick": before.session_tick + 1 if before.session_tick is not None else 102,
+            "session_time_s": 120.2,
+            "car_idx_lap_dist_pct": [0.44, 0.45, -1.0],
+        }
+    )
+
+    before_frame = normalize_sample(before)
+    after_frame = normalize_sample(after)
+    assert before_frame is not None
+    assert after_frame is not None
+    assert before_frame.player.position == 1
+    assert after_frame.player.position == 2
+    assert after_frame.opponents[0].position == 1
+    assert "live_position" in after_frame.capabilities
+
+    events = IracingEventDeriver().derive(before_frame, after_frame)
+    position_events = tuple(
+        event for event in events if event.event_type is EventType.POSITION_CHANGED
+    )
+    assert len(position_events) == 1
+    assert position_events[0].facts == {"from": 1, "to": 2}
+
+
+def test_live_progress_falls_back_when_complete_running_order_is_unavailable() -> None:
+    base = load_raw_samples(FIXTURE_DIRECTORY / "raw_samples.jsonl")[1]
+    incomplete = IracingRawSample.model_validate(
+        {
+            **base.model_dump(),
+            "available_variables": tuple(
+                sorted({*base.available_variables, "CarIdxLap", "CarIdxLapDistPct"})
+            ),
+            "player_position": 1,
+            "car_idx_positions": [1, 2, 0],
+            "car_idx_laps": [6, 6, -1],
+            "car_idx_lap_dist_pct": [0.44, -1.0, -1.0],
+        }
+    )
+
+    frame = normalize_sample(incomplete)
+    assert frame is not None
+    assert frame.player.position == 1
+    assert frame.opponents[0].position == 2
+    assert "live_position" not in frame.capabilities

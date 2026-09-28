@@ -104,9 +104,7 @@ class ConversationRuntimeConfig(ConfigModel):
         max_length=100,
         pattern=r"^[A-Za-z0-9_.:-]+$",
     )
-    model_path: Path = Path(
-        "data/conversation-prototype/Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
-    )
+    model_path: Path = Path("data/conversation-prototype/Qwen3-4B-Instruct-2507-Q4_K_M.gguf")
     runtime_revision: str = Field(
         default="b10964", min_length=1, max_length=100, pattern=r"^[A-Za-z0-9_.+-]+$"
     )
@@ -140,6 +138,23 @@ class ConversationRuntimeConfig(ConfigModel):
         return self
 
 
+class DialogueConfig(ConfigModel):
+    """CE-04/05 dialogue limits and an explicit live opt-in."""
+
+    enabled: bool = False
+    adapter: Literal["qwen-v1-hybrid"] = "qwen-v1-hybrid"
+    history_turns: int = Field(default=6, ge=1, le=12)
+    history_ttl_s: float = Field(default=120, gt=0, le=600, allow_inf_nan=False)
+    topic_ttl_s: float = Field(default=60, gt=0, le=300, allow_inf_nan=False)
+    reference_ttl_s: float = Field(default=30, gt=0, le=120, allow_inf_nan=False)
+    clarification_ttl_s: float = Field(default=15, gt=0, le=120, allow_inf_nan=False)
+    turn_timeout_s: float = Field(default=30, gt=0, le=120, allow_inf_nan=False)
+    max_snapshot_age_s: float = Field(default=3, gt=0, le=30, allow_inf_nan=False)
+    event_limit: int = Field(default=8, ge=0, le=16)
+    retain_utterances: bool = False
+    default_language: Literal["en", "tr"] = "en"
+
+
 class ConversationConfig(ConfigModel):
     adapter: Literal["llama-cpp"] = "llama-cpp"
     model: str = Field(
@@ -155,6 +170,7 @@ class ConversationConfig(ConfigModel):
     max_snapshot_age_s: float = Field(default=3.0, gt=0, le=30, allow_inf_nan=False)
     default_language: Literal["en", "tr"] = "en"
     runtime: ConversationRuntimeConfig = ConversationRuntimeConfig()
+    dialogue: DialogueConfig = DialogueConfig()
 
 
 class PttBindingConfig(ConfigModel):
@@ -207,6 +223,7 @@ class SttConfig(ConfigModel):
     ptt_binding: PttBindingConfig | None = None
     max_capture_s: float = Field(default=15, ge=1, le=30, allow_inf_nan=False)
     min_capture_s: float = Field(default=0.2, ge=0.05, le=1, allow_inf_nan=False)
+    release_tail_ms: int = Field(default=120, ge=0, le=500)
     silence_threshold_dbfs: float = Field(default=-42, ge=-80, le=-10, allow_inf_nan=False)
 
 

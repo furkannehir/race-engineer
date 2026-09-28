@@ -10,11 +10,13 @@ from race_engineer.conversation.answers import render, retrieve
 from race_engineer.conversation.local_model import ConversationModelError
 from race_engineer.conversation.replay import ReplayRaceState
 from race_engineer.conversation.session import ConversationSession
-from race_engineer.core.conversation import ConversationPlan, RaceQuery
+from race_engineer.core.contracts import OpponentState, PlayerState, RaceContext, TelemetryFrame
+from race_engineer.core.conversation import ConversationPlan, RaceAnswer, RaceQuery
 from race_engineer.fixtures import load_fixture
 
 ROOT = Path(__file__).parents[1]
 FIXTURE = ROOT / "fixtures" / "synthetic" / "conversation"
+FIELD_FIXTURE = ROOT / "fixtures" / "synthetic" / "field_status"
 
 
 def plan(*queries, language="en", clarification="none"):
@@ -228,6 +230,103 @@ def test_all_queries_have_bilingual_renderers_for_available_and_missing_values(s
         for query in RaceQuery:
             for language in ("en", "tr"):
                 assert render(retrieve(state.snapshot().context, query), language)
+
+
+def field_context(position, total, *, positions=None, capabilities=("opponents", "position")):
+    classified = positions if positions is not None else range(1, total + 1)
+    opponents = tuple(
+        OpponentState(driver_id=f"car-{place}", position=place)
+        for place in classified
+        if place != position
+    )
+    frame = TelemetryFrame(
+        source="synthetic",
+        session_id="field-status",
+        sequence=1,
+        observed_at="2026-09-26T12:00:00Z",
+        session_time_s=1,
+        player=PlayerState(driver_id="player", position=position),
+        opponents=opponents,
+        capabilities=capabilities,
+    )
+    return RaceContext(frame=frame)
+
+
+def test_field_status_answers_last_and_not_last_in_both_languages():
+    last = retrieve(field_context(4, 4), RaceQuery.FIELD_STATUS)
+    assert (last.value, last.total, last.unit) == (4, 4, "position")
+    assert render(last, "en") == "Yes. You're currently last, P4 of 4."
+    assert render(last, "tr") == "Evet. Şu anda sonuncusun; 4 araç içinde 4. sıradasın."
+
+    not_last = retrieve(field_context(2, 5), RaceQuery.FIELD_STATUS)
+    assert render(not_last, "en") == "No. You're P2 of 5; 3 cars are behind."
+    assert render(not_last, "tr") == ("Hayır. 5 araç içinde 2. sıradasın; arkanda 3 araç var.")
+
+
+def test_field_status_answers_the_requested_relation_without_contradiction():
+    leading = retrieve(
+        field_context(1, 28), RaceQuery.FIELD_STATUS, field_relation="first"
+    )
+    assert render(leading, "en") == "Yes. You're leading, P1 of 28."
+    assert render(leading, "tr") == "Evet. Lideriz; 28 araç içinde 1. sıradayız."
+
+    not_leading = retrieve(
+        field_context(3, 28), RaceQuery.FIELD_STATUS, field_relation="first"
+    )
+    assert render(not_leading, "en") == "No. You're P3 of 28; 2 cars are ahead."
+    assert "Hayır" in render(not_leading, "tr") and "önünde 2 araç" in render(
+        not_leading, "tr"
+    )
+
+    ahead = retrieve(
+        field_context(3, 28), RaceQuery.FIELD_STATUS, field_relation="cars_ahead"
+    )
+    behind = retrieve(
+        field_context(3, 28), RaceQuery.FIELD_STATUS, field_relation="cars_behind"
+    )
+    total = retrieve(
+        field_context(3, 28), RaceQuery.FIELD_STATUS, field_relation="position_of_total"
+    )
+    assert render(ahead, "en") == "2 cars ahead. You're P3 of 28."
+    assert render(behind, "en") == "25 cars behind. You're P3 of 28."
+    assert render(total, "en") == "You're P3 of 28."
+
+
+@pytest.mark.parametrize(
+    "race_context",
+    [
+        field_context(4, 4, positions=(1, 2, 4)),
+        field_context(4, 4, positions=(1, 2, 2, 3, 4)),
+        field_context(2, 3, capabilities=("position",)),
+    ],
+)
+def test_field_status_refuses_incomplete_or_conflicting_classification(race_context):
+    answer = retrieve(race_context, RaceQuery.FIELD_STATUS)
+    assert answer.status == "missing" and answer.value is None and answer.total is None
+    assert "can't confirm" in render(answer, "en")
+
+
+def test_field_status_answer_contract_keeps_total_scoped_and_consistent():
+    with pytest.raises(ValidationError):
+        RaceAnswer(query="position", status="available", value=2, unit="position", total=4)
+    with pytest.raises(ValidationError):
+        RaceAnswer(query="field_status", status="available", value=5, unit="position", total=4)
+
+
+def test_field_status_replay_moves_from_last_to_not_last():
+    replay = ReplayRaceState(load_fixture(FIELD_FIXTURE))
+    planner = ScriptedPlanner(plan("field_status"), plan("field_status"))
+    session = ConversationSession(planner, replay.snapshot)
+
+    async def run():
+        last = await session.ask("Am I last?")
+        replay.seek(1)
+        passed = await session.ask("And now?")
+        return last, passed
+
+    last, passed = asyncio.run(run())
+    assert last.text == "Yes. You're currently last, P4 of 4."
+    assert passed.text == "No. You're P3 of 4; 1 car is behind."
 
 
 def test_replay_clock_and_frame_validation(state):

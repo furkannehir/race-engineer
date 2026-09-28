@@ -1,0 +1,5912 @@
+{
+  "schema_version": "dialogue-screening.v1",
+  "candidates": [
+    {
+      "candidate": "minilm",
+      "synthetic_control": false,
+      "dataset_revision": "2026-09-24.1",
+      "dataset_sha256": "9f6eebcf5eff263209fc3dcb0e9944c89b24b60480c5f3517f5ec3768d6d9123",
+      "adapter_revision": "ce04-semantic.2",
+      "source_fingerprint": "abe6cbf337feed47a7bc95480a6c3b324fdc50647c793f577216f1bba3c4e578",
+      "runtime": {
+        "ready": "minilm",
+        "versions": {
+          "torch": "2.14.0+cpu",
+          "transformers": "5.17.0",
+          "safetensors": "0.8.0",
+          "huggingface-hub": "1.32.0"
+        },
+        "threads": 8,
+        "device": "cpu",
+        "dtype": "float32",
+        "model": {
+          "repo": "MoritzLaurer/multilingual-MiniLMv2-L6-mnli-xnli",
+          "revision": "0a71e92a985b6e1ad1828cf67ce9c459639c1dca"
+        }
+      },
+      "machine": {
+        "os": "Windows-11",
+        "architecture": "AMD64",
+        "cpu": "AMD Ryzen 7 9800X3D 8-Core Processor",
+        "logical_cpus": 16,
+        "memory_bytes": 66145669120,
+        "gpus": [
+          {
+            "name": "NVIDIA GeForce RTX 5080",
+            "driver_version": "32.0.15.9186"
+          },
+          {
+            "name": "AMD Radeon(TM) Graphics",
+            "driver_version": "32.0.21030.2001"
+          }
+        ]
+      },
+      "startup_ms": 6183.659799979068,
+      "summary": {
+        "overall": {
+          "turns": 70,
+          "judged_turns": 68,
+          "complete_turn_accuracy": {
+            "numerator": 0,
+            "denominator": 68,
+            "rate": 0.0,
+            "wilson95": [
+              0,
+              0.05347133731851496
+            ]
+          },
+          "accepted_plan_accuracy": {
+            "numerator": 0,
+            "denominator": 0,
+            "rate": null,
+            "wilson95": null
+          },
+          "answerable_coverage": {
+            "numerator": 0,
+            "denominator": 46,
+            "rate": 0.0,
+            "wilson95": [
+              0,
+              0.07707356420776004
+            ]
+          },
+          "clarification_accuracy": {
+            "numerator": 0,
+            "denominator": 8,
+            "rate": 0.0,
+            "wilson95": [
+              0,
+              0.3244075683414076
+            ]
+          },
+          "errors": 0,
+          "abstentions": 68,
+          "guard_only_turns": 2,
+          "factual_guard_failures": 0,
+          "warm_total_ms": {
+            "count": 67,
+            "min": 401.533,
+            "mean": 494.565,
+            "p50": 538.199,
+            "p95": 590.41,
+            "max": 600.439
+          },
+          "warm_judge_ms": {
+            "count": 67,
+            "min": 401.143,
+            "mean": 494.176,
+            "p50": 537.761,
+            "p95": 590.012,
+            "max": 600.06
+          }
+        },
+        "languages": {
+          "en": {
+            "turns": 36,
+            "judged_turns": 35,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 35,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.0989009937303319
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 24,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.13797620655132792
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "errors": 0,
+            "abstentions": 35,
+            "guard_only_turns": 1,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 34,
+              "min": 407.433,
+              "mean": 500.55,
+              "p50": 543.13,
+              "p95": 593.123,
+              "max": 600.439
+            },
+            "warm_judge_ms": {
+              "count": 34,
+              "min": 407.054,
+              "mean": 500.155,
+              "p50": 542.739,
+              "p95": 592.685,
+              "max": 600.06
+            }
+          },
+          "tr": {
+            "turns": 34,
+            "judged_turns": 33,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 33,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.10426999901587139
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 22,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.14865487660514556
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "errors": 0,
+            "abstentions": 33,
+            "guard_only_turns": 1,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 33,
+              "min": 401.533,
+              "mean": 488.399,
+              "p50": 520.153,
+              "p95": 589.895,
+              "max": 590.603
+            },
+            "warm_judge_ms": {
+              "count": 33,
+              "min": 401.143,
+              "mean": 488.015,
+              "p50": 519.683,
+              "p95": 589.532,
+              "max": 590.206
+            }
+          }
+        },
+        "categories": {
+          "data-loss": {
+            "turns": 4,
+            "judged_turns": 4,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 0,
+            "abstentions": 4,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 4,
+              "min": 411.847,
+              "mean": 483.617,
+              "p50": 481.701,
+              "p95": 557.913,
+              "max": 559.218
+            },
+            "warm_judge_ms": {
+              "count": 4,
+              "min": 411.49,
+              "mean": 483.224,
+              "p50": 481.274,
+              "p95": 557.545,
+              "max": 558.859
+            }
+          },
+          "expired-clarification": {
+            "turns": 4,
+            "judged_turns": 4,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "errors": 0,
+            "abstentions": 4,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 4,
+              "min": 413.235,
+              "mean": 470.648,
+              "p50": 469.58,
+              "p95": 528.69,
+              "max": 530.196
+            },
+            "warm_judge_ms": {
+              "count": 4,
+              "min": 412.821,
+              "mean": 470.242,
+              "p50": 469.15,
+              "p95": 528.322,
+              "max": 529.847
+            }
+          },
+          "interrupted-radio": {
+            "turns": 4,
+            "judged_turns": 4,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 0,
+            "abstentions": 4,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 4,
+              "min": 406.913,
+              "mean": 477.217,
+              "p50": 476.993,
+              "p95": 547.757,
+              "max": 547.969
+            },
+            "warm_judge_ms": {
+              "count": 4,
+              "min": 406.555,
+              "mean": 476.849,
+              "p50": 476.614,
+              "p95": 547.397,
+              "max": 547.613
+            }
+          },
+          "language-switch": {
+            "turns": 6,
+            "judged_turns": 6,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 6,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.39033429165637346
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 6,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.39033429165637346
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 0,
+            "abstentions": 6,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 6,
+              "min": 413.863,
+              "mean": 519.32,
+              "p50": 543.451,
+              "p95": 597.315,
+              "max": 600.439
+            },
+            "warm_judge_ms": {
+              "count": 6,
+              "min": 413.515,
+              "mean": 518.937,
+              "p50": 543.029,
+              "p95": 596.941,
+              "max": 600.06
+            }
+          },
+          "opponent-slot-change": {
+            "turns": 4,
+            "judged_turns": 4,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "errors": 0,
+            "abstentions": 4,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 4,
+              "min": 408.459,
+              "mean": 479.94,
+              "p50": 476.596,
+              "p95": 555.815,
+              "max": 558.109
+            },
+            "warm_judge_ms": {
+              "count": 4,
+              "min": 408.051,
+              "mean": 479.555,
+              "p50": 476.201,
+              "p95": 555.463,
+              "max": 557.767
+            }
+          },
+          "place-and-chaser": {
+            "turns": 4,
+            "judged_turns": 4,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "errors": 0,
+            "abstentions": 4,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 4,
+              "min": 429.815,
+              "mean": 487.457,
+              "p50": 487.286,
+              "p95": 545.17,
+              "max": 545.442
+            },
+            "warm_judge_ms": {
+              "count": 4,
+              "min": 429.414,
+              "mean": 486.981,
+              "p50": 486.819,
+              "p95": 544.628,
+              "max": 544.87
+            }
+          },
+          "race-frustration": {
+            "turns": 6,
+            "judged_turns": 6,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 6,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.39033429165637346
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 0,
+            "abstentions": 6,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 6,
+              "min": 415.244,
+              "mean": 525.319,
+              "p50": 570.692,
+              "p95": 590.117,
+              "max": 590.586
+            },
+            "warm_judge_ms": {
+              "count": 6,
+              "min": 414.858,
+              "mean": 524.944,
+              "p50": 570.325,
+              "p95": 589.732,
+              "max": 590.204
+            }
+          },
+          "range-versus-quantity": {
+            "turns": 4,
+            "judged_turns": 4,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 0,
+            "abstentions": 4,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 4,
+              "min": 426.23,
+              "mean": 493.373,
+              "p50": 491.667,
+              "p95": 562.83,
+              "max": 563.93
+            },
+            "warm_judge_ms": {
+              "count": 4,
+              "min": 425.841,
+              "mean": 493.004,
+              "p50": 491.308,
+              "p95": 562.462,
+              "max": 563.558
+            }
+          },
+          "reconnect-topic": {
+            "turns": 4,
+            "judged_turns": 4,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "errors": 0,
+            "abstentions": 4,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 4,
+              "min": 402.329,
+              "mean": 414.491,
+              "p50": 417.9,
+              "p95": 419.681,
+              "max": 419.834
+            },
+            "warm_judge_ms": {
+              "count": 4,
+              "min": 401.83,
+              "mean": 414.093,
+              "p50": 417.538,
+              "p95": 419.316,
+              "max": 419.465
+            }
+          },
+          "running-topic": {
+            "turns": 6,
+            "judged_turns": 6,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 6,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.39033429165637346
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 6,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.39033429165637346
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 0,
+            "abstentions": 6,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 6,
+              "min": 408.54,
+              "mean": 514.912,
+              "p50": 548.557,
+              "p95": 585.627,
+              "max": 588.363
+            },
+            "warm_judge_ms": {
+              "count": 6,
+              "min": 408.192,
+              "mean": 514.547,
+              "p50": 548.186,
+              "p95": 585.262,
+              "max": 588.007
+            }
+          },
+          "side-correction": {
+            "turns": 6,
+            "judged_turns": 6,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 6,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.39033429165637346
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 6,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.39033429165637346
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 0,
+            "abstentions": 6,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 6,
+              "min": 414.102,
+              "mean": 515.837,
+              "p50": 544.863,
+              "p95": 587.306,
+              "max": 589.434
+            },
+            "warm_judge_ms": {
+              "count": 6,
+              "min": 413.747,
+              "mean": 515.47,
+              "p50": 544.509,
+              "p95": 586.944,
+              "max": 589.084
+            }
+          },
+          "stale-race-feed": {
+            "turns": 4,
+            "judged_turns": 2,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 0,
+            "abstentions": 2,
+            "guard_only_turns": 2,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 2,
+              "min": 408.609,
+              "mean": 413.184,
+              "p50": 413.184,
+              "p95": 417.301,
+              "max": 417.759
+            },
+            "warm_judge_ms": {
+              "count": 2,
+              "min": 408.249,
+              "mean": 412.792,
+              "p50": 412.792,
+              "p95": 416.881,
+              "max": 417.335
+            }
+          },
+          "stint-status": {
+            "turns": 6,
+            "judged_turns": 6,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 6,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.39033429165637346
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 6,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.39033429165637346
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 0,
+            "abstentions": 6,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 5,
+              "min": 401.533,
+              "mean": 547.612,
+              "p50": 589.998,
+              "p95": 597.262,
+              "max": 598.927
+            },
+            "warm_judge_ms": {
+              "count": 5,
+              "min": 401.143,
+              "mean": 547.202,
+              "p50": 589.565,
+              "p95": 596.824,
+              "max": 598.478
+            }
+          },
+          "traffic-pronoun": {
+            "turns": 4,
+            "judged_turns": 4,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 0,
+            "abstentions": 4,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 4,
+              "min": 415.479,
+              "mean": 484.357,
+              "p50": 481.812,
+              "p95": 556.329,
+              "max": 558.325
+            },
+            "warm_judge_ms": {
+              "count": 4,
+              "min": 415.102,
+              "mean": 483.979,
+              "p50": 481.42,
+              "p95": 555.972,
+              "max": 557.976
+            }
+          },
+          "unsupported-scope": {
+            "turns": 4,
+            "judged_turns": 4,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 0,
+            "abstentions": 4,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 4,
+              "min": 421.663,
+              "mean": 488.681,
+              "p50": 488.203,
+              "p95": 556.186,
+              "max": 556.654
+            },
+            "warm_judge_ms": {
+              "count": 4,
+              "min": 421.308,
+              "mean": 488.271,
+              "p50": 487.807,
+              "p95": 555.707,
+              "max": 556.162
+            }
+          }
+        },
+        "whole_dialogues": {
+          "numerator": 0,
+          "denominator": 30,
+          "rate": 0.0,
+          "wilson95": [
+            0,
+            0.11351339476145204
+          ]
+        }
+      },
+      "calibration": {
+        "selected": {
+          "threshold": 0.5,
+          "margin": 0.0,
+          "eligible": false,
+          "languages": {
+            "en": {
+              "accepted": 0,
+              "correct": 0,
+              "answerable": 14,
+              "covered": 0
+            },
+            "tr": {
+              "accepted": 0,
+              "correct": 0,
+              "answerable": 14,
+              "covered": 0
+            }
+          }
+        },
+        "grid": [
+          {
+            "threshold": 0.5,
+            "margin": 0.0,
+            "eligible": false,
+            "languages": {
+              "en": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              },
+              "tr": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              }
+            }
+          },
+          {
+            "threshold": 0.5,
+            "margin": 0.1,
+            "eligible": false,
+            "languages": {
+              "en": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              },
+              "tr": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              }
+            }
+          },
+          {
+            "threshold": 0.5,
+            "margin": 0.2,
+            "eligible": false,
+            "languages": {
+              "en": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              },
+              "tr": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              }
+            }
+          },
+          {
+            "threshold": 0.65,
+            "margin": 0.0,
+            "eligible": false,
+            "languages": {
+              "en": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              },
+              "tr": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              }
+            }
+          },
+          {
+            "threshold": 0.65,
+            "margin": 0.1,
+            "eligible": false,
+            "languages": {
+              "en": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              },
+              "tr": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              }
+            }
+          },
+          {
+            "threshold": 0.65,
+            "margin": 0.2,
+            "eligible": false,
+            "languages": {
+              "en": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              },
+              "tr": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              }
+            }
+          },
+          {
+            "threshold": 0.8,
+            "margin": 0.0,
+            "eligible": false,
+            "languages": {
+              "en": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              },
+              "tr": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              }
+            }
+          },
+          {
+            "threshold": 0.8,
+            "margin": 0.1,
+            "eligible": false,
+            "languages": {
+              "en": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              },
+              "tr": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              }
+            }
+          },
+          {
+            "threshold": 0.8,
+            "margin": 0.2,
+            "eligible": false,
+            "languages": {
+              "en": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              },
+              "tr": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              }
+            }
+          }
+        ],
+        "sample_count": 48,
+        "method": "joint-threshold-grid.v1"
+      },
+      "limitations": [
+        "Synthetic typed text, not ASR or listening evaluation.",
+        "High-end host, not a minimum-hardware qualification.",
+        "No simulator/audio co-residency or critical-radio playback measured.",
+        "Calibration encoder states are teacher-forced; locked states are predicted."
+      ],
+      "raw_report_sha256": "6a511a553ffef9013f6134060846430eb68bed86427bed8d19d321361f274d7c",
+      "raw_report_file": "ce04-minilm-locked-v2.json",
+      "resident_memory": {
+        "available": false,
+        "reason": "raw Windows PID identified the venv launcher; use the dedicated worker probe"
+      },
+      "assessment": {
+        "candidate": "minilm",
+        "promote_to_live": false,
+        "reasons": [
+          "en:insufficient_independent_screening_volume",
+          "en:accepted_plan_accuracy",
+          "en:answerable_coverage",
+          "en:clarification_accuracy",
+          "tr:insufficient_independent_screening_volume",
+          "tr:accepted_plan_accuracy",
+          "tr:answerable_coverage",
+          "tr:clarification_accuracy",
+          "cpu_interpretation_p95",
+          "no_qualifying_calibration",
+          "audio_and_radio_integration_unvalidated",
+          "representative_hardware_unvalidated"
+        ]
+      },
+      "failures": [
+        {
+          "dialogue_id": "stint-status/en",
+          "turn_id": "fuel",
+          "category": "stint-status",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "stint-status/en",
+          "turn_id": "status",
+          "category": "stint-status",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "stint-status/en",
+          "turn_id": "new",
+          "category": "stint-status",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "stint-status/tr",
+          "turn_id": "fuel",
+          "category": "stint-status",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "stint-status/tr",
+          "turn_id": "status",
+          "category": "stint-status",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "stint-status/tr",
+          "turn_id": "new",
+          "category": "stint-status",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "traffic-pronoun/en",
+          "turn_id": "gap",
+          "category": "traffic-pronoun",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "traffic-pronoun/en",
+          "turn_id": "trend",
+          "category": "traffic-pronoun",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "traffic-pronoun/tr",
+          "turn_id": "gap",
+          "category": "traffic-pronoun",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "traffic-pronoun/tr",
+          "turn_id": "trend",
+          "category": "traffic-pronoun",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "running-topic/en",
+          "turn_id": "fuel",
+          "category": "running-topic",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "running-topic/en",
+          "turn_id": "place",
+          "category": "running-topic",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "running-topic/en",
+          "turn_id": "update",
+          "category": "running-topic",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "running-topic/tr",
+          "turn_id": "fuel",
+          "category": "running-topic",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "running-topic/tr",
+          "turn_id": "place",
+          "category": "running-topic",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "running-topic/tr",
+          "turn_id": "update",
+          "category": "running-topic",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "interrupted-radio/en",
+          "turn_id": "place",
+          "category": "interrupted-radio",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "interrupted-radio/en",
+          "turn_id": "repeat",
+          "category": "interrupted-radio",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "interrupted-radio/tr",
+          "turn_id": "place",
+          "category": "interrupted-radio",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "interrupted-radio/tr",
+          "turn_id": "repeat",
+          "category": "interrupted-radio",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "opponent-slot-change/en",
+          "turn_id": "gap",
+          "category": "opponent-slot-change",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "opponent-slot-change/en",
+          "turn_id": "trend",
+          "category": "opponent-slot-change",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "opponent-slot-change/tr",
+          "turn_id": "gap",
+          "category": "opponent-slot-change",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "opponent-slot-change/tr",
+          "turn_id": "trend",
+          "category": "opponent-slot-change",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "reconnect-topic/en",
+          "turn_id": "fuel",
+          "category": "reconnect-topic",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "reconnect-topic/en",
+          "turn_id": "update",
+          "category": "reconnect-topic",
+          "semantic_correct": false,
+          "decision_correct": true,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "reconnect-topic/tr",
+          "turn_id": "fuel",
+          "category": "reconnect-topic",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "reconnect-topic/tr",
+          "turn_id": "update",
+          "category": "reconnect-topic",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "place-and-chaser/en",
+          "turn_id": "mixed",
+          "category": "place-and-chaser",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "place-and-chaser/en",
+          "turn_id": "resolve",
+          "category": "place-and-chaser",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "place-and-chaser/tr",
+          "turn_id": "mixed",
+          "category": "place-and-chaser",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "place-and-chaser/tr",
+          "turn_id": "resolve",
+          "category": "place-and-chaser",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "race-frustration/en",
+          "turn_id": "social",
+          "category": "race-frustration",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "race-frustration/en",
+          "turn_id": "mixed",
+          "category": "race-frustration",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "race-frustration/en",
+          "turn_id": "close",
+          "category": "race-frustration",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "race-frustration/tr",
+          "turn_id": "social",
+          "category": "race-frustration",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "race-frustration/tr",
+          "turn_id": "mixed",
+          "category": "race-frustration",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "race-frustration/tr",
+          "turn_id": "close",
+          "category": "race-frustration",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "range-versus-quantity/en",
+          "turn_id": "compound",
+          "category": "range-versus-quantity",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "range-versus-quantity/en",
+          "turn_id": "new",
+          "category": "range-versus-quantity",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "range-versus-quantity/tr",
+          "turn_id": "compound",
+          "category": "range-versus-quantity",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "range-versus-quantity/tr",
+          "turn_id": "new",
+          "category": "range-versus-quantity",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "side-correction/en",
+          "turn_id": "gap",
+          "category": "side-correction",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "side-correction/en",
+          "turn_id": "correct",
+          "category": "side-correction",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "side-correction/en",
+          "turn_id": "both",
+          "category": "side-correction",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "side-correction/tr",
+          "turn_id": "gap",
+          "category": "side-correction",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "side-correction/tr",
+          "turn_id": "correct",
+          "category": "side-correction",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "side-correction/tr",
+          "turn_id": "both",
+          "category": "side-correction",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "language-switch/en",
+          "turn_id": "start",
+          "category": "language-switch",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "language-switch/en",
+          "turn_id": "switch",
+          "category": "language-switch",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "language-switch/en",
+          "turn_id": "override",
+          "category": "language-switch",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "language-switch/tr",
+          "turn_id": "start",
+          "category": "language-switch",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "language-switch/tr",
+          "turn_id": "switch",
+          "category": "language-switch",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "language-switch/tr",
+          "turn_id": "override",
+          "category": "language-switch",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "data-loss/en",
+          "turn_id": "missing",
+          "category": "data-loss",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "data-loss/en",
+          "turn_id": "partial",
+          "category": "data-loss",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "data-loss/tr",
+          "turn_id": "missing",
+          "category": "data-loss",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "data-loss/tr",
+          "turn_id": "partial",
+          "category": "data-loss",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "unsupported-scope/en",
+          "turn_id": "class",
+          "category": "unsupported-scope",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "unsupported-scope/en",
+          "turn_id": "injection",
+          "category": "unsupported-scope",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "unsupported-scope/tr",
+          "turn_id": "class",
+          "category": "unsupported-scope",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "unsupported-scope/tr",
+          "turn_id": "injection",
+          "category": "unsupported-scope",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "expired-clarification/en",
+          "turn_id": "unknown",
+          "category": "expired-clarification",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "expired-clarification/en",
+          "turn_id": "late",
+          "category": "expired-clarification",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "expired-clarification/tr",
+          "turn_id": "unknown",
+          "category": "expired-clarification",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "expired-clarification/tr",
+          "turn_id": "late",
+          "category": "expired-clarification",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "stale-race-feed/en",
+          "turn_id": "fresh",
+          "category": "stale-race-feed",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "stale-race-feed/tr",
+          "turn_id": "fresh",
+          "category": "stale-race-feed",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        }
+      ]
+    },
+    {
+      "candidate": "laya",
+      "synthetic_control": false,
+      "dataset_revision": "2026-09-24.1",
+      "dataset_sha256": "9f6eebcf5eff263209fc3dcb0e9944c89b24b60480c5f3517f5ec3768d6d9123",
+      "adapter_revision": "ce04-semantic.2",
+      "source_fingerprint": "abe6cbf337feed47a7bc95480a6c3b324fdc50647c793f577216f1bba3c4e578",
+      "runtime": {
+        "ready": "laya",
+        "versions": {
+          "torch": "2.14.0+cpu",
+          "transformers": "5.17.0",
+          "safetensors": "0.8.0",
+          "huggingface-hub": "1.32.0",
+          "laya": "0.3.20"
+        },
+        "threads": 8,
+        "device": "cpu",
+        "dtype": "float32",
+        "model": {
+          "repo": "convaiinnovations/laya-multilingual",
+          "revision": "e4e9ddf21a7b1903b7acffd8814ad4307bf63a67"
+        }
+      },
+      "machine": {
+        "os": "Windows-11",
+        "architecture": "AMD64",
+        "cpu": "AMD Ryzen 7 9800X3D 8-Core Processor",
+        "logical_cpus": 16,
+        "memory_bytes": 66145669120,
+        "gpus": [
+          {
+            "name": "NVIDIA GeForce RTX 5080",
+            "driver_version": "32.0.15.9186"
+          },
+          {
+            "name": "AMD Radeon(TM) Graphics",
+            "driver_version": "32.0.21030.2001"
+          }
+        ]
+      },
+      "startup_ms": 6792.614200036041,
+      "summary": {
+        "overall": {
+          "turns": 70,
+          "judged_turns": 68,
+          "complete_turn_accuracy": {
+            "numerator": 0,
+            "denominator": 68,
+            "rate": 0.0,
+            "wilson95": [
+              0,
+              0.05347133731851496
+            ]
+          },
+          "accepted_plan_accuracy": {
+            "numerator": 0,
+            "denominator": 0,
+            "rate": null,
+            "wilson95": null
+          },
+          "answerable_coverage": {
+            "numerator": 0,
+            "denominator": 46,
+            "rate": 0.0,
+            "wilson95": [
+              0,
+              0.07707356420776004
+            ]
+          },
+          "clarification_accuracy": {
+            "numerator": 0,
+            "denominator": 8,
+            "rate": 0.0,
+            "wilson95": [
+              0,
+              0.3244075683414076
+            ]
+          },
+          "errors": 0,
+          "abstentions": 68,
+          "guard_only_turns": 2,
+          "factual_guard_failures": 0,
+          "warm_total_ms": {
+            "count": 67,
+            "min": 2668.03,
+            "mean": 3238.48,
+            "p50": 3172.322,
+            "p95": 3758.171,
+            "max": 4017.083
+          },
+          "warm_judge_ms": {
+            "count": 67,
+            "min": 2667.66,
+            "mean": 3238.07,
+            "p50": 3171.977,
+            "p95": 3757.738,
+            "max": 4016.605
+          }
+        },
+        "languages": {
+          "en": {
+            "turns": 36,
+            "judged_turns": 35,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 35,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.0989009937303319
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 24,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.13797620655132792
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "errors": 0,
+            "abstentions": 35,
+            "guard_only_turns": 1,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 34,
+              "min": 2668.03,
+              "mean": 3244.875,
+              "p50": 3266.206,
+              "p95": 3775.334,
+              "max": 3799.071
+            },
+            "warm_judge_ms": {
+              "count": 34,
+              "min": 2667.66,
+              "mean": 3244.467,
+              "p50": 3265.81,
+              "p95": 3774.876,
+              "max": 3798.676
+            }
+          },
+          "tr": {
+            "turns": 34,
+            "judged_turns": 33,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 33,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.10426999901587139
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 22,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.14865487660514556
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "errors": 0,
+            "abstentions": 33,
+            "guard_only_turns": 1,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 33,
+              "min": 2712.923,
+              "mean": 3231.892,
+              "p50": 3172.322,
+              "p95": 3686.891,
+              "max": 4017.083
+            },
+            "warm_judge_ms": {
+              "count": 33,
+              "min": 2712.543,
+              "mean": 3231.478,
+              "p50": 3171.977,
+              "p95": 3686.464,
+              "max": 4016.605
+            }
+          }
+        },
+        "categories": {
+          "data-loss": {
+            "turns": 4,
+            "judged_turns": 4,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 0,
+            "abstentions": 4,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 4,
+              "min": 2919.311,
+              "mean": 3261.631,
+              "p50": 3212.073,
+              "p95": 3671.947,
+              "max": 3703.067
+            },
+            "warm_judge_ms": {
+              "count": 4,
+              "min": 2918.896,
+              "mean": 3261.225,
+              "p50": 3211.676,
+              "p95": 3671.539,
+              "max": 3702.653
+            }
+          },
+          "expired-clarification": {
+            "turns": 4,
+            "judged_turns": 4,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "errors": 0,
+            "abstentions": 4,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 4,
+              "min": 2889.791,
+              "mean": 3156.421,
+              "p50": 3148.11,
+              "p95": 3434.562,
+              "max": 3439.672
+            },
+            "warm_judge_ms": {
+              "count": 4,
+              "min": 2889.389,
+              "mean": 3156.0,
+              "p50": 3147.697,
+              "p95": 3434.112,
+              "max": 3439.217
+            }
+          },
+          "interrupted-radio": {
+            "turns": 4,
+            "judged_turns": 4,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 0,
+            "abstentions": 4,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 4,
+              "min": 2874.756,
+              "mean": 3233.455,
+              "p50": 3208.305,
+              "p95": 3624.937,
+              "max": 3642.454
+            },
+            "warm_judge_ms": {
+              "count": 4,
+              "min": 2874.347,
+              "mean": 3233.051,
+              "p50": 3207.907,
+              "p95": 3624.529,
+              "max": 3642.043
+            }
+          },
+          "language-switch": {
+            "turns": 6,
+            "judged_turns": 6,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 6,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.39033429165637346
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 6,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.39033429165637346
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 0,
+            "abstentions": 6,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 6,
+              "min": 2833.812,
+              "mean": 3382.839,
+              "p50": 3529.53,
+              "p95": 3790.775,
+              "max": 3799.071
+            },
+            "warm_judge_ms": {
+              "count": 6,
+              "min": 2833.421,
+              "mean": 3382.43,
+              "p50": 3529.126,
+              "p95": 3790.363,
+              "max": 3798.676
+            }
+          },
+          "opponent-slot-change": {
+            "turns": 4,
+            "judged_turns": 4,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "errors": 0,
+            "abstentions": 4,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 4,
+              "min": 2815.77,
+              "mean": 3193.069,
+              "p50": 3193.926,
+              "p95": 3555.865,
+              "max": 3568.656
+            },
+            "warm_judge_ms": {
+              "count": 4,
+              "min": 2815.32,
+              "mean": 3192.658,
+              "p50": 3193.524,
+              "p95": 3555.47,
+              "max": 3568.263
+            }
+          },
+          "place-and-chaser": {
+            "turns": 4,
+            "judged_turns": 4,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "errors": 0,
+            "abstentions": 4,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 4,
+              "min": 2974.922,
+              "mean": 3247.055,
+              "p50": 3288.49,
+              "p95": 3435.443,
+              "max": 3436.318
+            },
+            "warm_judge_ms": {
+              "count": 4,
+              "min": 2974.555,
+              "mean": 3246.66,
+              "p50": 3288.09,
+              "p95": 3435.036,
+              "max": 3435.908
+            }
+          },
+          "race-frustration": {
+            "turns": 6,
+            "judged_turns": 6,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 6,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.39033429165637346
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 0,
+            "abstentions": 6,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 6,
+              "min": 2807.758,
+              "mean": 3323.159,
+              "p50": 3537.443,
+              "p95": 3616.094,
+              "max": 3626.637
+            },
+            "warm_judge_ms": {
+              "count": 6,
+              "min": 2807.34,
+              "mean": 3322.713,
+              "p50": 3537.01,
+              "p95": 3615.567,
+              "max": 3626.07
+            }
+          },
+          "range-versus-quantity": {
+            "turns": 4,
+            "judged_turns": 4,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 0,
+            "abstentions": 4,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 4,
+              "min": 2985.711,
+              "mean": 3277.956,
+              "p50": 3247.596,
+              "p95": 3612.326,
+              "max": 3630.919
+            },
+            "warm_judge_ms": {
+              "count": 4,
+              "min": 2985.324,
+              "mean": 3277.558,
+              "p50": 3247.205,
+              "p95": 3611.906,
+              "max": 3630.498
+            }
+          },
+          "reconnect-topic": {
+            "turns": 4,
+            "judged_turns": 4,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "errors": 0,
+            "abstentions": 4,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 4,
+              "min": 2847.364,
+              "mean": 2861.852,
+              "p50": 2860.243,
+              "p95": 2877.364,
+              "max": 2879.558
+            },
+            "warm_judge_ms": {
+              "count": 4,
+              "min": 2846.957,
+              "mean": 2861.445,
+              "p50": 2859.828,
+              "p95": 2876.971,
+              "max": 2879.167
+            }
+          },
+          "running-topic": {
+            "turns": 6,
+            "judged_turns": 6,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 6,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.39033429165637346
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 6,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.39033429165637346
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 0,
+            "abstentions": 6,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 6,
+              "min": 2918.952,
+              "mean": 3407.059,
+              "p50": 3532.283,
+              "p95": 3763.685,
+              "max": 3792.878
+            },
+            "warm_judge_ms": {
+              "count": 6,
+              "min": 2918.542,
+              "mean": 3406.603,
+              "p50": 3531.753,
+              "p95": 3763.242,
+              "max": 3792.432
+            }
+          },
+          "side-correction": {
+            "turns": 6,
+            "judged_turns": 6,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 6,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.39033429165637346
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 6,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.39033429165637346
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 0,
+            "abstentions": 6,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 6,
+              "min": 2937.266,
+              "mean": 3453.905,
+              "p50": 3536.731,
+              "p95": 3947.854,
+              "max": 4017.083
+            },
+            "warm_judge_ms": {
+              "count": 6,
+              "min": 2936.855,
+              "mean": 3453.495,
+              "p50": 3536.333,
+              "p95": 3947.406,
+              "max": 4016.605
+            }
+          },
+          "stale-race-feed": {
+            "turns": 4,
+            "judged_turns": 2,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 0,
+            "abstentions": 2,
+            "guard_only_turns": 2,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 2,
+              "min": 2919.896,
+              "mean": 2924.247,
+              "p50": 2924.247,
+              "p95": 2928.163,
+              "max": 2928.598
+            },
+            "warm_judge_ms": {
+              "count": 2,
+              "min": 2919.541,
+              "mean": 2923.815,
+              "p50": 2923.815,
+              "p95": 2927.661,
+              "max": 2928.088
+            }
+          },
+          "stint-status": {
+            "turns": 6,
+            "judged_turns": 6,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 6,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.39033429165637346
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 6,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.39033429165637346
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 0,
+            "abstentions": 6,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 5,
+              "min": 2712.923,
+              "mean": 3179.218,
+              "p50": 3172.322,
+              "p95": 3450.366,
+              "max": 3453.314
+            },
+            "warm_judge_ms": {
+              "count": 5,
+              "min": 2712.543,
+              "mean": 3178.847,
+              "p50": 3171.977,
+              "p95": 3449.989,
+              "max": 3452.939
+            }
+          },
+          "traffic-pronoun": {
+            "turns": 4,
+            "judged_turns": 4,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 0,
+            "abstentions": 4,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 4,
+              "min": 2668.03,
+              "mean": 2961.055,
+              "p50": 2952.771,
+              "p95": 3249.071,
+              "max": 3270.647
+            },
+            "warm_judge_ms": {
+              "count": 4,
+              "min": 2667.66,
+              "mean": 2960.683,
+              "p50": 2952.404,
+              "p95": 3248.689,
+              "max": 3270.262
+            }
+          },
+          "unsupported-scope": {
+            "turns": 4,
+            "judged_turns": 4,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 0,
+            "abstentions": 4,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 4,
+              "min": 2907.529,
+              "mean": 3265.462,
+              "p50": 3266.587,
+              "p95": 3618.994,
+              "max": 3621.145
+            },
+            "warm_judge_ms": {
+              "count": 4,
+              "min": 2907.132,
+              "mean": 3265.06,
+              "p50": 3266.198,
+              "p95": 3618.565,
+              "max": 3620.71
+            }
+          }
+        },
+        "whole_dialogues": {
+          "numerator": 0,
+          "denominator": 30,
+          "rate": 0.0,
+          "wilson95": [
+            0,
+            0.11351339476145204
+          ]
+        }
+      },
+      "calibration": {
+        "selected": {
+          "threshold": 0.5,
+          "margin": 0.0,
+          "eligible": false,
+          "languages": {
+            "en": {
+              "accepted": 0,
+              "correct": 0,
+              "answerable": 14,
+              "covered": 0
+            },
+            "tr": {
+              "accepted": 0,
+              "correct": 0,
+              "answerable": 14,
+              "covered": 0
+            }
+          }
+        },
+        "grid": [
+          {
+            "threshold": 0.5,
+            "margin": 0.0,
+            "eligible": false,
+            "languages": {
+              "en": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              },
+              "tr": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              }
+            }
+          },
+          {
+            "threshold": 0.5,
+            "margin": 0.1,
+            "eligible": false,
+            "languages": {
+              "en": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              },
+              "tr": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              }
+            }
+          },
+          {
+            "threshold": 0.5,
+            "margin": 0.2,
+            "eligible": false,
+            "languages": {
+              "en": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              },
+              "tr": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              }
+            }
+          },
+          {
+            "threshold": 0.65,
+            "margin": 0.0,
+            "eligible": false,
+            "languages": {
+              "en": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              },
+              "tr": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              }
+            }
+          },
+          {
+            "threshold": 0.65,
+            "margin": 0.1,
+            "eligible": false,
+            "languages": {
+              "en": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              },
+              "tr": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              }
+            }
+          },
+          {
+            "threshold": 0.65,
+            "margin": 0.2,
+            "eligible": false,
+            "languages": {
+              "en": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              },
+              "tr": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              }
+            }
+          },
+          {
+            "threshold": 0.8,
+            "margin": 0.0,
+            "eligible": false,
+            "languages": {
+              "en": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              },
+              "tr": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              }
+            }
+          },
+          {
+            "threshold": 0.8,
+            "margin": 0.1,
+            "eligible": false,
+            "languages": {
+              "en": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              },
+              "tr": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              }
+            }
+          },
+          {
+            "threshold": 0.8,
+            "margin": 0.2,
+            "eligible": false,
+            "languages": {
+              "en": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              },
+              "tr": {
+                "accepted": 0,
+                "correct": 0,
+                "answerable": 14,
+                "covered": 0
+              }
+            }
+          }
+        ],
+        "sample_count": 48,
+        "method": "joint-threshold-grid.v1"
+      },
+      "limitations": [
+        "Synthetic typed text, not ASR or listening evaluation.",
+        "High-end host, not a minimum-hardware qualification.",
+        "No simulator/audio co-residency or critical-radio playback measured.",
+        "Calibration encoder states are teacher-forced; locked states are predicted."
+      ],
+      "raw_report_sha256": "170d52982ae2fa0c1f3779bbb754a5fafaf9cb278cbbb10f4bdcd4f37c2ea501",
+      "raw_report_file": "ce04-laya-locked-v2.json",
+      "resident_memory": {
+        "available": false,
+        "reason": "raw Windows PID identified the venv launcher; use the dedicated worker probe"
+      },
+      "assessment": {
+        "candidate": "laya",
+        "promote_to_live": false,
+        "reasons": [
+          "en:insufficient_independent_screening_volume",
+          "en:accepted_plan_accuracy",
+          "en:answerable_coverage",
+          "en:clarification_accuracy",
+          "tr:insufficient_independent_screening_volume",
+          "tr:accepted_plan_accuracy",
+          "tr:answerable_coverage",
+          "tr:clarification_accuracy",
+          "cpu_interpretation_p95",
+          "no_qualifying_calibration",
+          "audio_and_radio_integration_unvalidated",
+          "representative_hardware_unvalidated"
+        ]
+      },
+      "failures": [
+        {
+          "dialogue_id": "stint-status/en",
+          "turn_id": "fuel",
+          "category": "stint-status",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "stint-status/en",
+          "turn_id": "status",
+          "category": "stint-status",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "stint-status/en",
+          "turn_id": "new",
+          "category": "stint-status",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "stint-status/tr",
+          "turn_id": "fuel",
+          "category": "stint-status",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "stint-status/tr",
+          "turn_id": "status",
+          "category": "stint-status",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "stint-status/tr",
+          "turn_id": "new",
+          "category": "stint-status",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "traffic-pronoun/en",
+          "turn_id": "gap",
+          "category": "traffic-pronoun",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "traffic-pronoun/en",
+          "turn_id": "trend",
+          "category": "traffic-pronoun",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "traffic-pronoun/tr",
+          "turn_id": "gap",
+          "category": "traffic-pronoun",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "traffic-pronoun/tr",
+          "turn_id": "trend",
+          "category": "traffic-pronoun",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "running-topic/en",
+          "turn_id": "fuel",
+          "category": "running-topic",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "running-topic/en",
+          "turn_id": "place",
+          "category": "running-topic",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "running-topic/en",
+          "turn_id": "update",
+          "category": "running-topic",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "running-topic/tr",
+          "turn_id": "fuel",
+          "category": "running-topic",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "running-topic/tr",
+          "turn_id": "place",
+          "category": "running-topic",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "running-topic/tr",
+          "turn_id": "update",
+          "category": "running-topic",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "interrupted-radio/en",
+          "turn_id": "place",
+          "category": "interrupted-radio",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "interrupted-radio/en",
+          "turn_id": "repeat",
+          "category": "interrupted-radio",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "interrupted-radio/tr",
+          "turn_id": "place",
+          "category": "interrupted-radio",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "interrupted-radio/tr",
+          "turn_id": "repeat",
+          "category": "interrupted-radio",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "opponent-slot-change/en",
+          "turn_id": "gap",
+          "category": "opponent-slot-change",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "opponent-slot-change/en",
+          "turn_id": "trend",
+          "category": "opponent-slot-change",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "opponent-slot-change/tr",
+          "turn_id": "gap",
+          "category": "opponent-slot-change",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "opponent-slot-change/tr",
+          "turn_id": "trend",
+          "category": "opponent-slot-change",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "reconnect-topic/en",
+          "turn_id": "fuel",
+          "category": "reconnect-topic",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "reconnect-topic/en",
+          "turn_id": "update",
+          "category": "reconnect-topic",
+          "semantic_correct": false,
+          "decision_correct": true,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "reconnect-topic/tr",
+          "turn_id": "fuel",
+          "category": "reconnect-topic",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "reconnect-topic/tr",
+          "turn_id": "update",
+          "category": "reconnect-topic",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "place-and-chaser/en",
+          "turn_id": "mixed",
+          "category": "place-and-chaser",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "place-and-chaser/en",
+          "turn_id": "resolve",
+          "category": "place-and-chaser",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "place-and-chaser/tr",
+          "turn_id": "mixed",
+          "category": "place-and-chaser",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "place-and-chaser/tr",
+          "turn_id": "resolve",
+          "category": "place-and-chaser",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "race-frustration/en",
+          "turn_id": "social",
+          "category": "race-frustration",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "race-frustration/en",
+          "turn_id": "mixed",
+          "category": "race-frustration",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "race-frustration/en",
+          "turn_id": "close",
+          "category": "race-frustration",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "race-frustration/tr",
+          "turn_id": "social",
+          "category": "race-frustration",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "race-frustration/tr",
+          "turn_id": "mixed",
+          "category": "race-frustration",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "race-frustration/tr",
+          "turn_id": "close",
+          "category": "race-frustration",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "range-versus-quantity/en",
+          "turn_id": "compound",
+          "category": "range-versus-quantity",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "range-versus-quantity/en",
+          "turn_id": "new",
+          "category": "range-versus-quantity",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "range-versus-quantity/tr",
+          "turn_id": "compound",
+          "category": "range-versus-quantity",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "range-versus-quantity/tr",
+          "turn_id": "new",
+          "category": "range-versus-quantity",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "side-correction/en",
+          "turn_id": "gap",
+          "category": "side-correction",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "side-correction/en",
+          "turn_id": "correct",
+          "category": "side-correction",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "side-correction/en",
+          "turn_id": "both",
+          "category": "side-correction",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "side-correction/tr",
+          "turn_id": "gap",
+          "category": "side-correction",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "side-correction/tr",
+          "turn_id": "correct",
+          "category": "side-correction",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "side-correction/tr",
+          "turn_id": "both",
+          "category": "side-correction",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "language-switch/en",
+          "turn_id": "start",
+          "category": "language-switch",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "language-switch/en",
+          "turn_id": "switch",
+          "category": "language-switch",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "language-switch/en",
+          "turn_id": "override",
+          "category": "language-switch",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "language-switch/tr",
+          "turn_id": "start",
+          "category": "language-switch",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "language-switch/tr",
+          "turn_id": "switch",
+          "category": "language-switch",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "language-switch/tr",
+          "turn_id": "override",
+          "category": "language-switch",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "data-loss/en",
+          "turn_id": "missing",
+          "category": "data-loss",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "data-loss/en",
+          "turn_id": "partial",
+          "category": "data-loss",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "data-loss/tr",
+          "turn_id": "missing",
+          "category": "data-loss",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "data-loss/tr",
+          "turn_id": "partial",
+          "category": "data-loss",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "unsupported-scope/en",
+          "turn_id": "class",
+          "category": "unsupported-scope",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "unsupported-scope/en",
+          "turn_id": "injection",
+          "category": "unsupported-scope",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "unsupported-scope/tr",
+          "turn_id": "class",
+          "category": "unsupported-scope",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "unsupported-scope/tr",
+          "turn_id": "injection",
+          "category": "unsupported-scope",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "expired-clarification/en",
+          "turn_id": "unknown",
+          "category": "expired-clarification",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "expired-clarification/en",
+          "turn_id": "late",
+          "category": "expired-clarification",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "expired-clarification/tr",
+          "turn_id": "unknown",
+          "category": "expired-clarification",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "expired-clarification/tr",
+          "turn_id": "late",
+          "category": "expired-clarification",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "stale-race-feed/en",
+          "turn_id": "fresh",
+          "category": "stale-race-feed",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        },
+        {
+          "dialogue_id": "stale-race-feed/tr",
+          "turn_id": "fresh",
+          "category": "stale-race-feed",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "uncertain",
+          "accepted": false,
+          "abstained": true,
+          "error": false
+        }
+      ]
+    },
+    {
+      "candidate": "qwen",
+      "synthetic_control": false,
+      "dataset_revision": "2026-09-24.1",
+      "dataset_sha256": "9f6eebcf5eff263209fc3dcb0e9944c89b24b60480c5f3517f5ec3768d6d9123",
+      "adapter_revision": "ce04-semantic.2",
+      "source_fingerprint": "abe6cbf337feed47a7bc95480a6c3b324fdc50647c793f577216f1bba3c4e578",
+      "runtime": {
+        "model": "Qwen3-4B-Instruct-2507",
+        "threads": 8,
+        "device": "cpu",
+        "model_revision": "a06e946bb6b655725eafa393f4a9745d460374c9",
+        "runtime_revision": "b10964",
+        "quantization": "Q4_K_M",
+        "model_sha256": "3605803b982cb64aead44f6c1b2ae36e3acdb41d8e46c8a94c6533bc4c67e597"
+      },
+      "machine": {
+        "os": "Windows-11",
+        "architecture": "AMD64",
+        "cpu": "AMD Ryzen 7 9800X3D 8-Core Processor",
+        "logical_cpus": 16,
+        "memory_bytes": 66145669120,
+        "gpus": [
+          {
+            "name": "NVIDIA GeForce RTX 5080",
+            "driver_version": "32.0.15.9186"
+          },
+          {
+            "name": "AMD Radeon(TM) Graphics",
+            "driver_version": "32.0.21030.2001"
+          }
+        ]
+      },
+      "startup_ms": 3827.6154999621212,
+      "summary": {
+        "overall": {
+          "turns": 70,
+          "judged_turns": 68,
+          "complete_turn_accuracy": {
+            "numerator": 17,
+            "denominator": 68,
+            "rate": 0.25,
+            "wilson95": [
+              0.1623501391377172,
+              0.36438552952154035
+            ]
+          },
+          "accepted_plan_accuracy": {
+            "numerator": 19,
+            "denominator": 30,
+            "rate": 0.6333333333333333,
+            "wilson95": [
+              0.4551356351862472,
+              0.7812607928773656
+            ]
+          },
+          "answerable_coverage": {
+            "numerator": 16,
+            "denominator": 46,
+            "rate": 0.34782608695652173,
+            "wilson95": [
+              0.22680993290439397,
+              0.49229941272405464
+            ]
+          },
+          "clarification_accuracy": {
+            "numerator": 1,
+            "denominator": 8,
+            "rate": 0.125,
+            "wilson95": [
+              0.022417491199971912,
+              0.47088818505608376
+            ]
+          },
+          "errors": 38,
+          "abstentions": 0,
+          "guard_only_turns": 2,
+          "factual_guard_failures": 0,
+          "warm_total_ms": {
+            "count": 67,
+            "min": 2833.422,
+            "mean": 5216.481,
+            "p50": 4458.707,
+            "p95": 7897.194,
+            "max": 10504.295
+          },
+          "warm_judge_ms": {
+            "count": 67,
+            "min": 2833.058,
+            "mean": 5216.139,
+            "p50": 4458.317,
+            "p95": 7896.951,
+            "max": 10503.751
+          }
+        },
+        "languages": {
+          "en": {
+            "turns": 36,
+            "judged_turns": 35,
+            "complete_turn_accuracy": {
+              "numerator": 10,
+              "denominator": 35,
+              "rate": 0.2857142857142857,
+              "wilson95": [
+                0.16326536162242042,
+                0.45054934997629326
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 11,
+              "denominator": 15,
+              "rate": 0.7333333333333333,
+              "wilson95": [
+                0.48049565748447975,
+                0.8910254675038264
+              ]
+            },
+            "answerable_coverage": {
+              "numerator": 9,
+              "denominator": 24,
+              "rate": 0.375,
+              "wilson95": [
+                0.21159367459047676,
+                0.5729003770473553
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 1,
+              "denominator": 4,
+              "rate": 0.25,
+              "wilson95": [
+                0.04558726029536886,
+                0.6993581599030918
+              ]
+            },
+            "errors": 20,
+            "abstentions": 0,
+            "guard_only_turns": 1,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 34,
+              "min": 2837.469,
+              "mean": 5234.373,
+              "p50": 4412.868,
+              "p95": 8381.789,
+              "max": 10504.295
+            },
+            "warm_judge_ms": {
+              "count": 34,
+              "min": 2836.998,
+              "mean": 5234.042,
+              "p50": 4412.54,
+              "p95": 8381.525,
+              "max": 10503.751
+            }
+          },
+          "tr": {
+            "turns": 34,
+            "judged_turns": 33,
+            "complete_turn_accuracy": {
+              "numerator": 7,
+              "denominator": 33,
+              "rate": 0.21212121212121213,
+              "wilson95": [
+                0.10676021475084824,
+                0.3775164513491988
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 8,
+              "denominator": 15,
+              "rate": 0.5333333333333333,
+              "wilson95": [
+                0.3011697987531101,
+                0.751904647673791
+              ]
+            },
+            "answerable_coverage": {
+              "numerator": 7,
+              "denominator": 22,
+              "rate": 0.3181818181818182,
+              "wilson95": [
+                0.16360593093002795,
+                0.5268140241991159
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "errors": 18,
+            "abstentions": 0,
+            "guard_only_turns": 1,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 33,
+              "min": 2833.422,
+              "mean": 5198.047,
+              "p50": 4502.056,
+              "p95": 7705.197,
+              "max": 8130.91
+            },
+            "warm_judge_ms": {
+              "count": 33,
+              "min": 2833.058,
+              "mean": 5197.693,
+              "p50": 4501.612,
+              "p95": 7704.786,
+              "max": 8130.653
+            }
+          }
+        },
+        "categories": {
+          "data-loss": {
+            "turns": 4,
+            "judged_turns": 4,
+            "complete_turn_accuracy": {
+              "numerator": 2,
+              "denominator": 4,
+              "rate": 0.5,
+              "wilson95": [
+                0.15003898774401986,
+                0.8499610122559802
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 2,
+              "denominator": 2,
+              "rate": 1.0,
+              "wilson95": [
+                0.3423802239546494,
+                1
+              ]
+            },
+            "answerable_coverage": {
+              "numerator": 2,
+              "denominator": 2,
+              "rate": 1.0,
+              "wilson95": [
+                0.3423802239546494,
+                1
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 2,
+            "abstentions": 0,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 4,
+              "min": 4512.34,
+              "mean": 6016.207,
+              "p50": 6008.653,
+              "p95": 7500.576,
+              "max": 7535.181
+            },
+            "warm_judge_ms": {
+              "count": 4,
+              "min": 4512.11,
+              "mean": 6015.846,
+              "p50": 6008.31,
+              "p95": 7500.064,
+              "max": 7534.652
+            }
+          },
+          "expired-clarification": {
+            "turns": 4,
+            "judged_turns": 4,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "errors": 4,
+            "abstentions": 0,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 4,
+              "min": 4252.66,
+              "mean": 5062.397,
+              "p50": 5111.063,
+              "p95": 5763.47,
+              "max": 5774.803
+            },
+            "warm_judge_ms": {
+              "count": 4,
+              "min": 4252.423,
+              "mean": 5062.144,
+              "p50": 5110.796,
+              "p95": 5763.225,
+              "max": 5774.563
+            }
+          },
+          "interrupted-radio": {
+            "turns": 4,
+            "judged_turns": 4,
+            "complete_turn_accuracy": {
+              "numerator": 1,
+              "denominator": 4,
+              "rate": 0.25,
+              "wilson95": [
+                0.04558726029536886,
+                0.6993581599030918
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 1,
+              "denominator": 2,
+              "rate": 0.5,
+              "wilson95": [
+                0.09453120463920084,
+                0.9054687953607992
+              ]
+            },
+            "answerable_coverage": {
+              "numerator": 1,
+              "denominator": 4,
+              "rate": 0.25,
+              "wilson95": [
+                0.04558726029536886,
+                0.6993581599030918
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 2,
+            "abstentions": 0,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 4,
+              "min": 4059.216,
+              "mean": 4806.019,
+              "p50": 4326.434,
+              "p95": 6186.637,
+              "max": 6511.993
+            },
+            "warm_judge_ms": {
+              "count": 4,
+              "min": 4058.992,
+              "mean": 4805.648,
+              "p50": 4325.917,
+              "p95": 6186.365,
+              "max": 6511.764
+            }
+          },
+          "language-switch": {
+            "turns": 6,
+            "judged_turns": 6,
+            "complete_turn_accuracy": {
+              "numerator": 5,
+              "denominator": 6,
+              "rate": 0.8333333333333334,
+              "wilson95": [
+                0.4364971749742326,
+                0.969946630588185
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 5,
+              "denominator": 5,
+              "rate": 1.0,
+              "wilson95": [
+                0.5655175313406071,
+                1
+              ]
+            },
+            "answerable_coverage": {
+              "numerator": 5,
+              "denominator": 6,
+              "rate": 0.8333333333333334,
+              "wilson95": [
+                0.4364971749742326,
+                0.969946630588185
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 1,
+            "abstentions": 0,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 6,
+              "min": 4333.174,
+              "mean": 4409.23,
+              "p50": 4398.723,
+              "p95": 4491.219,
+              "max": 4502.056
+            },
+            "warm_judge_ms": {
+              "count": 6,
+              "min": 4332.729,
+              "mean": 4408.832,
+              "p50": 4398.379,
+              "p95": 4490.788,
+              "max": 4501.612
+            }
+          },
+          "opponent-slot-change": {
+            "turns": 4,
+            "judged_turns": 4,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "errors": 4,
+            "abstentions": 0,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 4,
+              "min": 4336.922,
+              "mean": 5230.147,
+              "p50": 5210.091,
+              "p95": 6139.008,
+              "max": 6163.484
+            },
+            "warm_judge_ms": {
+              "count": 4,
+              "min": 4336.682,
+              "mean": 5229.898,
+              "p50": 5209.853,
+              "p95": 6138.736,
+              "max": 6163.205
+            }
+          },
+          "place-and-chaser": {
+            "turns": 4,
+            "judged_turns": 4,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "errors": 4,
+            "abstentions": 0,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 4,
+              "min": 4356.375,
+              "mean": 5956.198,
+              "p50": 5859.141,
+              "p95": 7690.836,
+              "max": 7750.135
+            },
+            "warm_judge_ms": {
+              "count": 4,
+              "min": 4356.14,
+              "mean": 5955.941,
+              "p50": 5858.877,
+              "p95": 7690.57,
+              "max": 7749.871
+            }
+          },
+          "race-frustration": {
+            "turns": 6,
+            "judged_turns": 6,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 6,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.39033429165637346
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 3,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.5614970356393196
+              ]
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 3,
+            "abstentions": 0,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 6,
+              "min": 2833.422,
+              "mean": 4649.535,
+              "p50": 4161.285,
+              "p95": 7456.047,
+              "max": 7960.22
+            },
+            "warm_judge_ms": {
+              "count": 6,
+              "min": 2833.058,
+              "mean": 4649.193,
+              "p50": 4160.929,
+              "p95": 7455.803,
+              "max": 7959.986
+            }
+          },
+          "range-versus-quantity": {
+            "turns": 4,
+            "judged_turns": 4,
+            "complete_turn_accuracy": {
+              "numerator": 2,
+              "denominator": 4,
+              "rate": 0.5,
+              "wilson95": [
+                0.15003898774401986,
+                0.8499610122559802
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 2,
+              "denominator": 2,
+              "rate": 1.0,
+              "wilson95": [
+                0.3423802239546494,
+                1
+              ]
+            },
+            "answerable_coverage": {
+              "numerator": 2,
+              "denominator": 4,
+              "rate": 0.5,
+              "wilson95": [
+                0.15003898774401986,
+                0.8499610122559802
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 2,
+            "abstentions": 0,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 4,
+              "min": 5454.511,
+              "mean": 6005.338,
+              "p50": 6117.093,
+              "p95": 6304.179,
+              "max": 6332.655
+            },
+            "warm_judge_ms": {
+              "count": 4,
+              "min": 5454.117,
+              "mean": 6004.987,
+              "p50": 6116.722,
+              "p95": 6303.915,
+              "max": 6332.385
+            }
+          },
+          "reconnect-topic": {
+            "turns": 4,
+            "judged_turns": 4,
+            "complete_turn_accuracy": {
+              "numerator": 3,
+              "denominator": 4,
+              "rate": 0.75,
+              "wilson95": [
+                0.3006418400969081,
+                0.954412739704631
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 3,
+              "denominator": 4,
+              "rate": 0.75,
+              "wilson95": [
+                0.3006418400969081,
+                0.954412739704631
+              ]
+            },
+            "answerable_coverage": {
+              "numerator": 2,
+              "denominator": 2,
+              "rate": 1.0,
+              "wilson95": [
+                0.3423802239546494,
+                1
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 1,
+              "denominator": 2,
+              "rate": 0.5,
+              "wilson95": [
+                0.09453120463920084,
+                0.9054687953607992
+              ]
+            },
+            "errors": 0,
+            "abstentions": 0,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 4,
+              "min": 3632.516,
+              "mean": 4675.314,
+              "p50": 4558.641,
+              "p95": 5757.426,
+              "max": 5951.459
+            },
+            "warm_judge_ms": {
+              "count": 4,
+              "min": 3632.093,
+              "mean": 4674.86,
+              "p50": 4558.191,
+              "p95": 5756.939,
+              "max": 5950.963
+            }
+          },
+          "running-topic": {
+            "turns": 6,
+            "judged_turns": 6,
+            "complete_turn_accuracy": {
+              "numerator": 3,
+              "denominator": 6,
+              "rate": 0.5,
+              "wilson95": [
+                0.18761630498040816,
+                0.8123836950195918
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 4,
+              "denominator": 5,
+              "rate": 0.8,
+              "wilson95": [
+                0.375534627029995,
+                0.9637758917743693
+              ]
+            },
+            "answerable_coverage": {
+              "numerator": 3,
+              "denominator": 6,
+              "rate": 0.5,
+              "wilson95": [
+                0.18761630498040816,
+                0.8123836950195918
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 1,
+            "abstentions": 0,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 6,
+              "min": 3107.578,
+              "mean": 4032.456,
+              "p50": 4251.025,
+              "p95": 4455.311,
+              "max": 4471.293
+            },
+            "warm_judge_ms": {
+              "count": 6,
+              "min": 3107.071,
+              "mean": 4032.047,
+              "p50": 4250.681,
+              "p95": 4454.887,
+              "max": 4470.876
+            }
+          },
+          "side-correction": {
+            "turns": 6,
+            "judged_turns": 6,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 6,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.39033429165637346
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 6,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.39033429165637346
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 6,
+            "abstentions": 0,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 6,
+              "min": 4285.174,
+              "mean": 6063.677,
+              "p50": 6267.14,
+              "p95": 7541.413,
+              "max": 7569.269
+            },
+            "warm_judge_ms": {
+              "count": 6,
+              "min": 4284.917,
+              "mean": 6063.431,
+              "p50": 6266.905,
+              "p95": 7541.169,
+              "max": 7569.028
+            }
+          },
+          "stale-race-feed": {
+            "turns": 4,
+            "judged_turns": 2,
+            "complete_turn_accuracy": {
+              "numerator": 1,
+              "denominator": 2,
+              "rate": 0.5,
+              "wilson95": [
+                0.09453120463920084,
+                0.9054687953607992
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 1,
+              "denominator": 2,
+              "rate": 0.5,
+              "wilson95": [
+                0.09453120463920084,
+                0.9054687953607992
+              ]
+            },
+            "answerable_coverage": {
+              "numerator": 1,
+              "denominator": 2,
+              "rate": 0.5,
+              "wilson95": [
+                0.09453120463920084,
+                0.9054687953607992
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 0,
+            "abstentions": 0,
+            "guard_only_turns": 2,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 2,
+              "min": 4380.756,
+              "mean": 4394.602,
+              "p50": 4394.602,
+              "p95": 4407.064,
+              "max": 4408.449
+            },
+            "warm_judge_ms": {
+              "count": 2,
+              "min": 4380.313,
+              "mean": 4394.177,
+              "p50": 4394.177,
+              "p95": 4406.655,
+              "max": 4408.041
+            }
+          },
+          "stint-status": {
+            "turns": 6,
+            "judged_turns": 6,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 6,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.39033429165637346
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 1,
+              "denominator": 3,
+              "rate": 0.3333333333333333,
+              "wilson95": [
+                0.06149194402093078,
+                0.7923404011921757
+              ]
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 6,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.39033429165637346
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 3,
+            "abstentions": 0,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 5,
+              "min": 3986.561,
+              "mean": 5518.889,
+              "p50": 4379.039,
+              "p95": 9294.531,
+              "max": 10504.295
+            },
+            "warm_judge_ms": {
+              "count": 5,
+              "min": 3985.985,
+              "mean": 5518.476,
+              "p50": 4378.811,
+              "p95": 9294.045,
+              "max": 10503.751
+            }
+          },
+          "traffic-pronoun": {
+            "turns": 4,
+            "judged_turns": 4,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 4,
+            "abstentions": 0,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 4,
+              "min": 4339.861,
+              "mean": 5166.221,
+              "p50": 5113.999,
+              "p95": 6062.8,
+              "max": 6097.026
+            },
+            "warm_judge_ms": {
+              "count": 4,
+              "min": 4339.616,
+              "mean": 5165.961,
+              "p50": 5113.722,
+              "p95": 6062.549,
+              "max": 6096.783
+            }
+          },
+          "unsupported-scope": {
+            "turns": 4,
+            "judged_turns": 4,
+            "complete_turn_accuracy": {
+              "numerator": 0,
+              "denominator": 4,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.4898908403969213
+              ]
+            },
+            "accepted_plan_accuracy": {
+              "numerator": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "wilson95": [
+                0,
+                0.6576197760453506
+              ]
+            },
+            "answerable_coverage": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "clarification_accuracy": {
+              "numerator": 0,
+              "denominator": 0,
+              "rate": null,
+              "wilson95": null
+            },
+            "errors": 2,
+            "abstentions": 0,
+            "guard_only_turns": 0,
+            "factual_guard_failures": 0,
+            "warm_total_ms": {
+              "count": 4,
+              "min": 4375.672,
+              "mean": 6629.955,
+              "p50": 6294.644,
+              "p95": 9341.267,
+              "max": 9554.86
+            },
+            "warm_judge_ms": {
+              "count": 4,
+              "min": 4375.259,
+              "mean": 6629.605,
+              "p50": 6294.283,
+              "p95": 9341.005,
+              "max": 9554.596
+            }
+          }
+        },
+        "whole_dialogues": {
+          "numerator": 3,
+          "denominator": 30,
+          "rate": 0.1,
+          "wilson95": [
+            0.03459988847741868,
+            0.256210827331743
+          ]
+        }
+      },
+      "calibration": null,
+      "limitations": [
+        "Synthetic typed text, not ASR or listening evaluation.",
+        "High-end host, not a minimum-hardware qualification.",
+        "No simulator/audio co-residency or critical-radio playback measured.",
+        "Calibration encoder states are teacher-forced; locked states are predicted."
+      ],
+      "raw_report_sha256": "0df50b5d9600b7da458839b3f6ec1889032d4964f794b26e43ba6acedecc1e75",
+      "raw_report_file": "ce04-qwen-locked-v2.json",
+      "resident_memory": {
+        "available": false,
+        "reason": "raw Windows PID identified the venv launcher; use the dedicated worker probe"
+      },
+      "assessment": {
+        "candidate": "qwen",
+        "promote_to_live": false,
+        "reasons": [
+          "en:insufficient_independent_screening_volume",
+          "en:accepted_plan_accuracy",
+          "en:answerable_coverage",
+          "en:clarification_accuracy",
+          "en:inference_errors",
+          "tr:insufficient_independent_screening_volume",
+          "tr:accepted_plan_accuracy",
+          "tr:answerable_coverage",
+          "tr:clarification_accuracy",
+          "tr:inference_errors",
+          "audio_and_radio_integration_unvalidated",
+          "representative_hardware_unvalidated"
+        ]
+      },
+      "failures": [
+        {
+          "dialogue_id": "stint-status/en",
+          "turn_id": "fuel",
+          "category": "stint-status",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "stint-status/en",
+          "turn_id": "status",
+          "category": "stint-status",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "answered",
+          "reason": "resolved",
+          "accepted": true,
+          "abstained": false,
+          "error": false
+        },
+        {
+          "dialogue_id": "stint-status/en",
+          "turn_id": "new",
+          "category": "stint-status",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "stint-status/tr",
+          "turn_id": "fuel",
+          "category": "stint-status",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "stint-status/tr",
+          "turn_id": "status",
+          "category": "stint-status",
+          "semantic_correct": true,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "topic_unclear",
+          "accepted": true,
+          "abstained": false,
+          "error": false
+        },
+        {
+          "dialogue_id": "stint-status/tr",
+          "turn_id": "new",
+          "category": "stint-status",
+          "semantic_correct": false,
+          "decision_correct": true,
+          "outcome": "answered",
+          "reason": "resolved",
+          "accepted": true,
+          "abstained": false,
+          "error": false
+        },
+        {
+          "dialogue_id": "traffic-pronoun/en",
+          "turn_id": "gap",
+          "category": "traffic-pronoun",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "traffic-pronoun/en",
+          "turn_id": "trend",
+          "category": "traffic-pronoun",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "traffic-pronoun/tr",
+          "turn_id": "gap",
+          "category": "traffic-pronoun",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "traffic-pronoun/tr",
+          "turn_id": "trend",
+          "category": "traffic-pronoun",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "running-topic/en",
+          "turn_id": "place",
+          "category": "running-topic",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "running-topic/en",
+          "turn_id": "update",
+          "category": "running-topic",
+          "semantic_correct": true,
+          "decision_correct": false,
+          "outcome": "answered",
+          "reason": "resolved",
+          "accepted": true,
+          "abstained": false,
+          "error": false
+        },
+        {
+          "dialogue_id": "running-topic/tr",
+          "turn_id": "update",
+          "category": "running-topic",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "partial",
+          "reason": "resolved",
+          "accepted": true,
+          "abstained": false,
+          "error": false
+        },
+        {
+          "dialogue_id": "interrupted-radio/en",
+          "turn_id": "repeat",
+          "category": "interrupted-radio",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "interrupted-radio/tr",
+          "turn_id": "place",
+          "category": "interrupted-radio",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "partial",
+          "reason": "resolved",
+          "accepted": true,
+          "abstained": false,
+          "error": false
+        },
+        {
+          "dialogue_id": "interrupted-radio/tr",
+          "turn_id": "repeat",
+          "category": "interrupted-radio",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "opponent-slot-change/en",
+          "turn_id": "gap",
+          "category": "opponent-slot-change",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "opponent-slot-change/en",
+          "turn_id": "trend",
+          "category": "opponent-slot-change",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "opponent-slot-change/tr",
+          "turn_id": "gap",
+          "category": "opponent-slot-change",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "opponent-slot-change/tr",
+          "turn_id": "trend",
+          "category": "opponent-slot-change",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "reconnect-topic/tr",
+          "turn_id": "update",
+          "category": "reconnect-topic",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "partial",
+          "reason": "resolved",
+          "accepted": true,
+          "abstained": false,
+          "error": false
+        },
+        {
+          "dialogue_id": "place-and-chaser/en",
+          "turn_id": "mixed",
+          "category": "place-and-chaser",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "place-and-chaser/en",
+          "turn_id": "resolve",
+          "category": "place-and-chaser",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "place-and-chaser/tr",
+          "turn_id": "mixed",
+          "category": "place-and-chaser",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "place-and-chaser/tr",
+          "turn_id": "resolve",
+          "category": "place-and-chaser",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "race-frustration/en",
+          "turn_id": "social",
+          "category": "race-frustration",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "race-frustration/en",
+          "turn_id": "mixed",
+          "category": "race-frustration",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "partial",
+          "reason": "resolved",
+          "accepted": true,
+          "abstained": false,
+          "error": false
+        },
+        {
+          "dialogue_id": "race-frustration/en",
+          "turn_id": "close",
+          "category": "race-frustration",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "answered",
+          "reason": "resolved",
+          "accepted": true,
+          "abstained": false,
+          "error": false
+        },
+        {
+          "dialogue_id": "race-frustration/tr",
+          "turn_id": "social",
+          "category": "race-frustration",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "race-frustration/tr",
+          "turn_id": "mixed",
+          "category": "race-frustration",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "race-frustration/tr",
+          "turn_id": "close",
+          "category": "race-frustration",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "clarify",
+          "reason": "topic_unclear",
+          "accepted": true,
+          "abstained": false,
+          "error": false
+        },
+        {
+          "dialogue_id": "range-versus-quantity/en",
+          "turn_id": "new",
+          "category": "range-versus-quantity",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "range-versus-quantity/tr",
+          "turn_id": "new",
+          "category": "range-versus-quantity",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "side-correction/en",
+          "turn_id": "gap",
+          "category": "side-correction",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "side-correction/en",
+          "turn_id": "correct",
+          "category": "side-correction",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "side-correction/en",
+          "turn_id": "both",
+          "category": "side-correction",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "side-correction/tr",
+          "turn_id": "gap",
+          "category": "side-correction",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "side-correction/tr",
+          "turn_id": "correct",
+          "category": "side-correction",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "side-correction/tr",
+          "turn_id": "both",
+          "category": "side-correction",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "language-switch/tr",
+          "turn_id": "switch",
+          "category": "language-switch",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "data-loss/en",
+          "turn_id": "missing",
+          "category": "data-loss",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "data-loss/tr",
+          "turn_id": "missing",
+          "category": "data-loss",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "unsupported-scope/en",
+          "turn_id": "class",
+          "category": "unsupported-scope",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "answered",
+          "reason": "resolved",
+          "accepted": true,
+          "abstained": false,
+          "error": false
+        },
+        {
+          "dialogue_id": "unsupported-scope/en",
+          "turn_id": "injection",
+          "category": "unsupported-scope",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "unsupported-scope/tr",
+          "turn_id": "class",
+          "category": "unsupported-scope",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "partial",
+          "reason": "resolved",
+          "accepted": true,
+          "abstained": false,
+          "error": false
+        },
+        {
+          "dialogue_id": "unsupported-scope/tr",
+          "turn_id": "injection",
+          "category": "unsupported-scope",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "expired-clarification/en",
+          "turn_id": "unknown",
+          "category": "expired-clarification",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "expired-clarification/en",
+          "turn_id": "late",
+          "category": "expired-clarification",
+          "semantic_correct": false,
+          "decision_correct": true,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "expired-clarification/tr",
+          "turn_id": "unknown",
+          "category": "expired-clarification",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "expired-clarification/tr",
+          "turn_id": "late",
+          "category": "expired-clarification",
+          "semantic_correct": false,
+          "decision_correct": true,
+          "outcome": "unavailable",
+          "reason": "model_error",
+          "accepted": false,
+          "abstained": false,
+          "error": true
+        },
+        {
+          "dialogue_id": "stale-race-feed/tr",
+          "turn_id": "fresh",
+          "category": "stale-race-feed",
+          "semantic_correct": false,
+          "decision_correct": false,
+          "outcome": "partial",
+          "reason": "resolved",
+          "accepted": true,
+          "abstained": false,
+          "error": false
+        }
+      ]
+    }
+  ],
+  "decision": {
+    "production_primary": "existing-qwen-v1",
+    "semantic_v2_live_enabled": false,
+    "small_judge_primary": null,
+    "fallback_enabled": false,
+    "residency": "No new live model; evaluation workers are closed after each candidate.",
+    "qualification": "No promotion from this pilot; see per-candidate evidence gates.",
+    "next": "CE-05 opt-in integration work; new holdout evidence before activation."
+  }
+}

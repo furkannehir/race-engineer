@@ -84,6 +84,22 @@ probe_timeout_s = 5.0
 startup_timeout_s = 120.0
 shutdown_timeout_s = 5.0
 
+# CE-05 is an explicit preview. False keeps the proven v1 live conversation unchanged.
+# Enable only for replay/listening or deliberate live testing while qualification is pending.
+[conversation.dialogue]
+enabled = true
+adapter = "qwen-v1-hybrid"
+history_turns = 6
+history_ttl_s = 120.0
+topic_ttl_s = 60.0
+reference_ttl_s = 30.0
+clarification_ttl_s = 15.0
+turn_timeout_s = 30.0
+max_snapshot_age_s = 3.0
+event_limit = 8
+retain_utterances = false
+default_language = "en"
+
 [stt]
 adapter = "qwen3-asr"
 python_path = "data/stt-prototype/runtime/Scripts/python.exe"
@@ -97,6 +113,7 @@ sample_rate_hz = 16000
 ptt_key = "F8"
 max_capture_s = 15.0
 min_capture_s = 0.2
+release_tail_ms = 120
 silence_threshold_dbfs = -42.0
 # input_device = 1  # choose an index from list-input-devices; otherwise system default
 

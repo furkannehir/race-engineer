@@ -6,7 +6,7 @@ import importlib
 import sys
 import threading
 import time
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 from race_engineer.config import SttConfig
@@ -180,6 +180,8 @@ class PushToTalkMicrophone:
         notify: Callable[[str], None] = print,
         *,
         before_capture: Callable[[], None] | None = None,
+        after_stream_started: Callable[[], Awaitable[object]] | None = None,
+        after_capture: Callable[[], Awaitable[object]] | None = None,
     ) -> AudioClip | None:
         # A key held during model inference must be released before a new recording.
         while self._button.is_down():
@@ -192,9 +194,15 @@ class PushToTalkMicrophone:
             await asyncio.sleep(0.01)
         if before_capture is not None:
             before_capture()
-        self._buffer.begin()
+        # Without a cue, preserve immediate capture. With a cue, start the physical
+        # stream first but discard its samples until the opening sound finishes.
+        if after_stream_started is None:
+            self._buffer.begin()
         try:
             await self._operate(self._stream.start)
+            if after_stream_started is not None:
+                await after_stream_started()
+                self._buffer.begin()
             notify("Listening... release the push-to-talk button to submit.")
             started = time.monotonic()
             while self._button.is_down():
@@ -205,6 +213,12 @@ class PushToTalkMicrophone:
                     self._buffer.discard()
                     raise SpeechInputError("capture_too_long")
                 await asyncio.sleep(0.01)
+            # Drivers commonly release PTT on the final syllable. Keep a small bounded
+            # tail before stopping PortAudio so that release does not clip the last phoneme.
+            remaining_s = self._config.max_capture_s - (time.monotonic() - started)
+            tail_s = min(self._config.release_tail_ms / 1000, max(0.0, remaining_s))
+            if tail_s:
+                await asyncio.sleep(tail_s)
         except (OSError, RuntimeError) as error:
             self._buffer.discard()
             raise SpeechInputError("microphone_capture_failed") from error
@@ -214,7 +228,10 @@ class PushToTalkMicrophone:
             except Exception as error:
                 self._buffer.discard()
                 raise SpeechInputError("microphone_stop_failed") from error
-        return self._buffer.finish()
+        clip = self._buffer.finish()
+        if after_capture is not None:
+            await after_capture()
+        return clip
 
     async def aclose(self) -> None:
         self._buffer.discard()

@@ -4,8 +4,10 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 
 from race_engineer.conversation.answers import render, retrieve
+from race_engineer.conversation.facts import DEFAULT_FACT_CATALOG, FactIdentityChanged
 from race_engineer.core.contracts import RaceContext
 from race_engineer.core.conversation import ConversationReply, RaceSnapshot
+from race_engineer.core.dialogue import GroundedAnswer, ResponseDecision
 
 
 class LiveTelemetryUnavailable(Exception):
@@ -66,5 +68,65 @@ class LiveRaceState:
                 if any(a.status == "available" for a in answers)
                 else "unavailable",
                 "source_sequence": frame.sequence,
+            }
+        )
+
+    def refresh_decision(self, decision: ResponseDecision, epoch: int) -> ResponseDecision:
+        """Refresh facts by part/opponent identity while preserving approved dialogue acts."""
+        snapshot = self.snapshot()
+        frame = snapshot.context.frame
+        if (
+            epoch != self.epoch
+            or decision.session_id != frame.session_id
+            or decision.generation != epoch
+        ):
+            raise LiveTelemetryUnavailable("live_session_changed")
+        if snapshot.as_of >= decision.expires_at:
+            raise LiveTelemetryUnavailable("dialogue_reply_expired")
+        answers: list[GroundedAnswer] = []
+        for old in decision.answers:
+            part = DEFAULT_FACT_CATALOG.part_for_query(
+                old.query,
+                part_id=old.part_id,
+                field_relation=old.field_relation,
+            )
+            try:
+                current = DEFAULT_FACT_CATALOG.resolve_part(snapshot, part, old.opponent)
+            except FactIdentityChanged as error:
+                raise LiveTelemetryUnavailable("dialogue_opponent_changed") from error
+            answers.append(
+                GroundedAnswer(
+                    part_id=old.part_id,
+                    query=current.query,
+                    status=current.status,
+                    value=current.value,
+                    unit=current.unit,
+                    total=current.total,
+                    field_relation=current.field_relation,
+                    source_sequence=frame.sequence,
+                    opponent=old.opponent,
+                )
+            )
+        available = sum(answer.status == "available" for answer in answers)
+        outcome = decision.outcome
+        if answers:
+            outcome = (
+                "partial"
+                if available
+                and (
+                    available != len(answers)
+                    or decision.unresolved
+                    or decision.clarification != "none"
+                )
+                else "answered"
+                if available
+                else "unavailable"
+            )
+        return ResponseDecision.model_validate(
+            {
+                **decision.model_dump(),
+                "source_sequence": frame.sequence,
+                "answers": [answer.model_dump() for answer in answers],
+                "outcome": outcome,
             }
         )

@@ -43,6 +43,9 @@ race-engineer-panel = "race_engineer.ui.app:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+race_engineer = ["py.typed", "assets/audio/*.wav"]
+
 [tool.pytest.ini_options]
 addopts = "-ra --strict-config --strict-markers"
 testpaths = ["tests"]

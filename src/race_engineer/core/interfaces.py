@@ -12,6 +12,7 @@ from race_engineer.core.contracts import (
     Utterance,
 )
 from race_engineer.core.conversation import ConversationPlan, ConversationReply, ConversationRequest
+from race_engineer.core.dialogue import DialogueTurnInput, SemanticProposal
 from race_engineer.core.speech_input import AudioClip, Transcription
 from race_engineer.core.speech_output import SpeechOutputResult
 
@@ -52,6 +53,10 @@ class TextToSpeechEngine(Protocol):
 
 class ConversationPlanner(Protocol):
     async def plan(self, request: ConversationRequest) -> ConversationPlan: ...
+
+
+class SemanticJudge(Protocol):
+    async def judge(self, request: DialogueTurnInput) -> SemanticProposal: ...
 
 
 class SpeechRecognizer(Protocol):

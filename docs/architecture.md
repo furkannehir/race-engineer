@@ -97,7 +97,11 @@ The adapter reconnects after simulator startup and disconnect events, rejects du
 out-of-order `SessionTick` values within a session, resets ordering on session transition,
 and suppresses replay frames unless explicitly configured. M1 samples lap, position,
 speed, fuel, flags, pit state, traffic distance, and reliable same-lap race gaps where the
-SDK exposes all required fields.
+SDK exposes all required fields. During an active race, CE-05R.1 derives a complete current
+running order from `CarIdxLap` plus `CarIdxLapDistPct` instead of waiting for scored
+position fields to change at the timing line. It uses the derived order only when every
+classified non-pace car has valid progress; otherwise it retains the official position
+fields and omits the `live_position` capability.
 
 ## Deterministic M2 boundary
 
@@ -217,12 +221,24 @@ an externally managed loopback server carries no verified compute-mode claim. Se
 `ConversationContextAssembler` prepares immutable per-turn input; `SemanticJudge` proposes
 meaning through a Laya, MiniLM, or Qwen adapter; ordinary controller code validates the
 proposal and the session commits state transitions. Fresh fact resolution, bounded
-composition and radio delivery events complete the turn. These components are planned,
-not the current v1 runtime.
+composition and radio delivery events complete the turn. The CE-04b contracts and
+orchestration foundation is implemented. The schema keeps the established route as its
+default; the development configuration explicitly enables CE-05 through its preview switch.
 
-CE-04 evaluates alternative semantic judges. CE-05 integrates qualified routing and
-delivery-aware conversation. CE-06 separately evaluates proactive usefulness in shadow
-mode; selecting a semantic model does not select or validate the proactive ranker. The
+CE-04 evaluates alternative semantic judges. CE-05's preview integrates the retained Qwen
+model through bounded dialogue fields and delivery-aware conversation. CE-05.1 adds a
+deterministic complete-classification resolver for last/place-out-of-field/cars-behind
+questions. CE-05R.2 carries the requested first/last/ahead/behind relationship separately
+from current facts; Qwen selects that meaning but never calculates the result. CE-05R.4
+routes advertised capabilities, semantic query bindings, deterministic retrieval and
+pre-playback refresh through one fact-provider catalog. Providers—not the model—own values,
+availability and stable opponent identity. CE-05R.5.1–R.5.4 compile the refreshed decision
+into typed utterance clauses and render deterministic natural English/Turkish variants.
+Each fact clause must map one-to-one to a grounded answer; response scope, social acts,
+clarification, single-line output and a 48-word limit are validated before TTS. Failure
+uses the previous bounded wording, and no second model inference is involved. CE-06
+separately evaluates proactive usefulness in shadow mode; selecting a semantic model does
+not select or validate the proactive ranker. The
 [implementation plan](context-engine-implementation-plan.md) retains CE-03 immediately
 before CE-08 for acceleration and combined-workload validation.
 

@@ -1,8 +1,10 @@
 # CE-04 architecture: dialogue sessions and semantic judgment
 
-Updated 2026-09-24. Revision 2 of the proposed conversational architecture. This is a
-design for CE-04 and its CE-05 live integration; the current runtime still uses the v1
-conversation path. See the [delivery plan](context-engine-implementation-plan.md) and
+Updated 2026-09-24. Revision 2 of the conversational architecture. The CE-04b contracts,
+session/state, context assembler and controller foundation are implemented. CE-04c–e add
+the [evaluation suite/adapters](dialogue-evaluation.md) and an initial
+[routing decision](ce04-routing-decision.md); the current live runtime still uses v1. See the
+[delivery plan](context-engine-implementation-plan.md) and
 [behavior scenarios](conversational-core-design.md) for scope and acceptance criteria.
 
 ## Names and ownership
@@ -104,8 +106,8 @@ must not reject a valid compound request simply because both ahead and behind oc
 
 ## Contracts crossing the boundaries
 
-Final class fields and limits will be implemented in CE-04b; these are the required
-semantics. Use explicit schema versions for serialized successors to the current contracts.
+CE-04b implements these contract fields and semantics. Further serialized changes require
+an explicit schema version rather than silently changing the current contracts.
 
 | Proposed contract | Required information |
 | --- | --- |
@@ -178,10 +180,10 @@ against the current frame. A reused relative slot must not silently inherit the 
 identity. A pending clarification retains the unresolved request and expires on its own
 deadline or an explicit topic change.
 
-CE-04b will document configurable topic/reference/clarification lifetimes and pending-turn
-limits before tests are frozen. Start from the existing history bound (default six turns,
-maximum twelve) and current freshness boundary. Do not infer end-to-end deadlines from
-the model HTTP timeout: ASR, inference, synthesis, and radio waiting share a turn budget.
+CE-04b configures topic, reference, clarification and history lifetimes; history defaults
+to six turns with a maximum of twelve. It admits one active driver turn and no pending
+turn queue. Its turn deadline can begin before ASR so capture/recognition time consumes the
+shared budget. CE-04c evaluates these initial bounds before they become promotion criteria.
 
 ## Processes, resources, and the two judge roles
 
@@ -220,8 +222,15 @@ keeps compatibility clearer.
 | `application/live_conversation.py`, radio and Piper | CE-05 composition, mixed-act refresh, ID-tagged delivery callbacks and output-mode handling |
 | Existing evaluation runner | Add versioned dialogue scenarios, calibration, split audits and fake-clock delivery events |
 
-CE-04b's first reviewable change implements contracts, state transitions, context assembly,
-and controller/session behavior with a scripted judge and fake clock/delivery events. Its
-tests cover pronoun ambiguity, valid compounds, corrections, partial answers, clarification
-expiry, opponent replacement, duplicate delivery callbacks, text-only outcomes, and reset
-during inference. Production activation is CE-05 after evaluation and routing decisions.
+CE-04b implements contracts, state transitions, context assembly, and controller/session
+behavior with a scripted judge and fake clock/delivery events. Its tests cover pronoun
+ambiguity, valid compounds, corrections, partial answers, clarification expiry, opponent
+replacement, duplicate delivery callbacks, text-only outcomes, and reset during inference.
+CE-05 now provides an opt-in production-path preview after the initial evaluation and routing
+decision. It is not the default route until the remaining promotion gates pass.
+
+The initial CE-04e decision is to retain the existing Qwen-v1 runtime and leave the new
+router inactive. MiniLM, Laya and Qwen-v2 remain offline evaluation adapters; their presence
+does not certify broader conversational behavior. CE-05 implements mixed-act refresh and
+radio delivery behind the preview switch; activation still requires new held-out semantic
+evidence plus radio/listening and live validation.

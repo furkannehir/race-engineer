@@ -1,4 +1,6 @@
 import asyncio
+import json
+import wave
 from pathlib import Path
 
 import pytest
@@ -205,3 +207,25 @@ def test_transcript_displayed_before_conversation_inference():
     )
     asyncio.run(spoken_turn(recognizer, conversation, tone(), on_transcript=display))
     assert seen == ["Position?"]
+
+
+def test_diagnose_wav_does_not_load_recognizer(tmp_path, monkeypatch, capsys):
+    from race_engineer.application.speech_cli import diagnose_wav
+
+    path = tmp_path / "short.wav"
+    clip = tone()
+    with wave.open(str(path), "wb") as output:
+        output.setnchannels(1)
+        output.setsampwidth(2)
+        output.setframerate(clip.sample_rate_hz)
+        output.writeframes(clip.pcm16)
+
+    monkeypatch.setattr(
+        "race_engineer.application.speech_cli.QwenSpeechRecognizer",
+        lambda config: (_ for _ in ()).throw(AssertionError("ASR must not load")),
+    )
+    root = Path(__file__).parents[1]
+    assert diagnose_wav(root / "config/default.toml", path) == 0
+    result = json.loads(capsys.readouterr().out)
+    assert result["gate_result"] == "accepted"
+    assert result["activity_at_start"] is True

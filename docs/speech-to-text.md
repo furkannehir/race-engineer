@@ -76,6 +76,18 @@ For an existing recording, use a PCM16 mono/stereo WAV at 16 kHz, 44.1 kHz, or 4
 This command needs only the ASR worker, not the conversation server. Output includes text,
 detected language, clip duration, and model processing time. It does not write a recording.
 
+To inspect the capture and energy gate without loading Qwen3-ASR, run:
+
+```powershell
+.\.venv\Scripts\python.exe -m race_engineer diagnose-wav path/to/question.wav `
+  --config config/default.toml
+```
+
+The content-free `audio-diagnostic.v1` result reports duration, RMS/peak level, active-speech
+duration, leading/trailing silence, boundary activity, and whether the clip passes the gate.
+It never includes audio bytes or a transcript. Activity in the first or last 20 ms is a
+clipping clue, not proof: compare that result with what `transcribe-wav` hears.
+
 To pass a WAV through both recognition and conversation without opening the microphone:
 
 ```powershell
@@ -93,6 +105,9 @@ Synthetic speech smoke tests prove integration, not microphone or bilingual reco
 - Clips shorter than 0.2 seconds are ignored. A configurable energy gate rejects silence,
   DC offset, and near-silent input before model inference. This is not a speech/noise
   classifier: engine noise or music can still pass the gate and be misrecognized.
+- Capture continues for a bounded 120 ms after PTT release by default. This preserves the
+  final phoneme when the driver releases on the last syllable; `release_tail_ms` can be set
+  from 0 to 500, and the total clip remains subject to `max_capture_s`.
 - Only successful English/Turkish transcripts reach conversation. Silence, unsupported
   language, malformed output, capture overflow, and model failure leave its history alone.
 - The ASR process uses a private stdin/stdout pipe, not a network endpoint. Startup and
@@ -140,6 +155,7 @@ never sampled by the binding layer.
 
 Automated tests use synthetic PCM, fake key/button states, fake microphone streams, fake
 SDL devices, and fake worker pipes. They verify capture bounds, release/cancel behaviour,
-device-qualified button selection, silence rejection, bilingual result parsing, timeout
-cleanup, and the conversation handoff. Human microphone and real wheel tests are still
-required before claiming recognition or hardware compatibility.
+release-tail capture, content-free diagnostics, device-qualified button selection, silence
+rejection, bilingual result parsing, timeout cleanup, and the conversation handoff. Human
+English/Turkish one-word recordings and real wheel tests are still required before claiming
+recognition or hardware compatibility.

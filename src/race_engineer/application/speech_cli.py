@@ -13,7 +13,7 @@ from race_engineer.core.interfaces import ConversationSpeaker, SpeechRecognizer
 from race_engineer.core.speech_input import AudioClip, SpeechInputError, Transcription
 from race_engineer.core.speech_output import SpeechOutputError
 from race_engineer.observability import configure_logging
-from race_engineer.stt.audio import load_wav
+from race_engineer.stt.audio import analyze_audio, load_wav
 from race_engineer.stt.buttons import binding_label, legacy_binding
 from race_engineer.stt.capture import PushToTalkMicrophone
 from race_engineer.stt.qwen import QwenSpeechRecognizer
@@ -47,6 +47,17 @@ async def transcribe_wav(config_path: Path, audio_path: Path) -> int:
         return 0 if result.status == "transcribed" else 1
     finally:
         await recognizer.aclose()
+
+
+def diagnose_wav(config_path: Path, audio_path: Path) -> int:
+    """Inspect capture/gate characteristics without loading ASR or retaining the clip."""
+
+    config = load_config(config_path)
+    audio = load_wav(audio_path, max_duration_s=config.stt.max_capture_s)
+    diagnostic = analyze_audio(audio, config.stt)
+    del audio
+    print(diagnostic.model_dump_json(indent=2))
+    return 0 if diagnostic.gate_result == "accepted" else 1
 
 
 async def voice_replay(
@@ -103,10 +114,7 @@ async def voice_replay(
                     await speaker.aclose()
                     speaker = None
             microphone = PushToTalkMicrophone(stt)
-            print(
-                f"Ready. Hold {binding_label(stt)} to talk; "
-                "ESC exits while waiting/listening."
-            )
+            print(f"Ready. Hold {binding_label(stt)} to talk; ESC exits while waiting/listening.")
             print("Spoken + text replies." if speaker is not None else "Text replies only.")
             print("Replay stays on the selected frame. Ctrl+C stops processing/playback and exits.")
         while True:

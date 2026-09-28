@@ -16,6 +16,8 @@ class FakeSdk:
             "SessionTime",
             "PlayerCarIdx",
             "Speed",
+            "CarIdxLap",
+            "CarIdxLapDistPct",
         ]
         self.values: dict[str, object] = {
             "SessionUniqueID": 123,
@@ -24,6 +26,8 @@ class FakeSdk:
             "SessionTime": 4.5,
             "PlayerCarIdx": 0,
             "Speed": 12.5,
+            "CarIdxLap": [4, 4],
+            "CarIdxLapDistPct": [0.25, 0.2],
             "DriverInfo": {
                 "Drivers": [
                     {
@@ -71,6 +75,8 @@ def test_sdk_source_freezes_sample_and_discards_personal_metadata(
     sample = result.sample
     assert sample.session_unique_id == 123
     assert sample.speed_mps == 12.5
+    assert sample.car_idx_laps == (4, 4)
+    assert sample.car_idx_lap_dist_pct == (0.25, 0.2)
     assert sample.session_type == "Race"
     assert sample.drivers[0].user_id == 99
     assert "Must Not Be Retained" not in sample.model_dump_json()

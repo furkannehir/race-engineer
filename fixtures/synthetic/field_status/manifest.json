@@ -1,0 +1,6 @@
+{
+  "fixture_version": "race-fixture.v1",
+  "fixture_id": "synthetic:field-status:1",
+  "description": "Made-up complete classifications for grounded last-place conversation tests.",
+  "frames_file": "frames.jsonl"
+}

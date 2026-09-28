@@ -133,8 +133,8 @@ personality, incident, or preference writes are introduced by this work.
   from actual delivery. An unanswered driver question can still establish a topic; an
   undelivered engineer answer cannot establish that the driver received its information.
 - A pending clarification has its originating turn, unresolved request, allowed choices,
-  and expiry. A new explicit request supersedes it. Specify topic/reference/clarification
-  lifetimes in CE-04b and test clock boundaries rather than leaving them implicit.
+  and expiry. A new explicit request supersedes it. CE-04b configures separate topic,
+  reference, clarification and history lifetimes and tests their clock boundaries.
 - Anchor an opponent reference to stable identity when available. If identity changes or
   cannot be established, clear or clarify the reference; never silently transfer "he" to
   a different car occupying the same relative position. Derived trends need the same rule.
@@ -146,9 +146,10 @@ personality, incident, or preference writes are introduced by this work.
   to retain the existing unavailable response on stale/disconnected input. Relaxing that
   rule requires separate tests and must not reopen stale factual answers.
 - A newer request or critical interruption must not create a backlog of obsolete replies.
-  Fix queue/deadline/resume rules in CE-04b using existing radio limits. Keep inference off
-  the telemetry path. Run interpretation per driver turn and proactive judgment per
-  eligible candidate change, not per telemetry frame.
+  CE-04b admits one active driver turn with no pending-turn backlog and carries the
+  PTT-origin time into a shared turn deadline. Keep inference off the telemetry path. Run
+  interpretation per driver turn and proactive judgment per eligible candidate change,
+  not per telemetry frame.
 - Ask once for a repeat when input is unintelligible; do not report a hardware/model failure
   as though the driver spoke unclearly. ASR, semantic uncertainty, missing data, and model
   timeout have distinct outcomes and diagnostics.
@@ -213,17 +214,18 @@ These sub-slices refine the existing CE numbering; they do not reorder the roadm
 | Slice | Deliverable | Completion evidence |
 | --- | --- | --- |
 | CE-04a | Behavior contract, architecture revision 2 and bilingual scenario review | Design and component ownership documented; calm-teammate tone recorded; scenario expectations reviewed before freezing |
-| CE-04b | Versioned contracts, session/state, context assembler and controller | Scripted SemanticJudge and fake-clock tests for corrections, clarification/reference expiry, valid compounds, delivery state, text-only mode and resets; exact bounds documented |
-| CE-04c | Dialogue evaluation protocol, fixtures and split audit | Distinct v2 metrics and leakage checks; frozen calibration/test scenarios; old baseline preserved |
-| CE-04d | MiniLM, Laya and v2 Qwen evaluation adapters | Same-context CPU comparisons, calibrated joint decisions, bounded local-only execution; no implicit live replacement |
-| CE-04e | Evidence-backed routing decision | Select the reliable scope for each route, fallback/residency cost, or retain Qwen if alternatives do not earn promotion |
-| CE-05 | Opt-in live integration and calm-teammate responses | Fresh grounded replies, delivery-aware memory, partial answers, bounded social acts, graceful failure, radio and listening-review gates |
+| CE-04b — implemented | Versioned contracts, session/state, context assembler and controller | Scripted SemanticJudge and fake-clock tests cover corrections, clarification/reference expiry, valid compounds, delivery state, text-only mode and resets; exact bounds are configured |
+| CE-04c — implemented | Dialogue evaluation protocol, fixtures and split audit | Separate dialogue-eval.v1 suite: 48 calibration + 70 locked turns; oracle/abstention controls; old baseline preserved; screening-sized, not release qualification |
+| CE-04d — initial screening completed | MiniLM, Laya and v2 Qwen evaluation adapters | Same-context CPU comparisons, frozen acceptance-threshold grid, bounded local-only workers; no live replacement; broader qualification pending |
+| CE-04e — decision recorded | Evidence-backed routing decision | Retain current Qwen-v1 live path; no small judge or new v2 fallback promoted; see the routing decision |
+| CE-05 â€” opt-in preview implemented | Live integration and calm-teammate responses | Fresh grounded replies, delivery-aware memory, partial answers, bounded social acts and graceful failure are implemented; semantic, radio/listening and live promotion gates remain |
 
-The next implementation task is CE-04b using architecture revision 2 and the CE-04a
-scenarios; complete their review before freezing the CE-04c evaluation. Contract,
-state, and evaluation work can proceed without choosing the winning model. CE-06 proactive
-usefulness remains a separately labeled/shadow-evaluated task. Sharing context does not
-make a question interpreter qualified to decide when to interrupt the driver.
+CE-04b–e now have foundation, evaluation adapters and an initial evidence-backed
+[retain-current-route decision](ce04-routing-decision.md). This is not model promotion
+or live activation. CE-05 now exposes the retained model through an explicit preview path;
+semantic refinement and new held-out evidence remain required before replacing the default
+live planner. CE-06 proactive usefulness remains separately labeled/shadow-evaluated;
+interpreting a question does not qualify a model to decide when to interrupt the driver.
 
 Still evidence-driven: model choice, exact confidence/lifetime settings, fallback residency,
 and minimum hardware. Broader personality controls and freer generated wording can follow

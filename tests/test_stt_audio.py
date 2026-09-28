@@ -8,7 +8,7 @@ from pydantic import ValidationError
 
 from race_engineer.config import PttBindingConfig, SttConfig
 from race_engineer.core.speech_input import AudioClip, SpeechInputError, Transcription
-from race_engineer.stt.audio import load_wav, silence_reason
+from race_engineer.stt.audio import analyze_audio, load_wav, silence_reason
 from race_engineer.stt.capture import CaptureBuffer, PushToTalkMicrophone, virtual_key
 from race_engineer.stt.worker import normalize_result
 
@@ -41,6 +41,21 @@ def test_energy_gate_handles_silence_dc_offset_and_short_clips():
     assert silence_reason(tone(), config) is None
     with pytest.raises(SpeechInputError, match="audio_too_long"):
         silence_reason(tone(2), SttConfig(max_capture_s=1))
+
+
+def test_audio_diagnostic_is_content_free_and_exposes_gate_and_boundaries():
+    quiet = AudioClip(b"\0\0" * 16000)
+    rejected = analyze_audio(quiet, SttConfig())
+    assert rejected.gate_result == "audio_below_threshold"
+    assert rejected.active_duration_s == 0
+    assert rejected.leading_silence_s == rejected.trailing_silence_s == 1
+
+    accepted = analyze_audio(tone(), SttConfig())
+    payload = accepted.model_dump()
+    assert accepted.gate_result == "accepted"
+    assert accepted.activity_at_start and accepted.activity_at_end
+    assert accepted.active_ratio == 1
+    assert not {"pcm16", "audio", "text", "transcript"} & payload.keys()
 
 
 def test_wav_stereo_downmix_and_duration_rejection(tmp_path):
@@ -144,6 +159,116 @@ def test_push_to_talk_starts_on_press_and_stops_on_release():
 
     assert asyncio.run(run()).duration_s == pytest.approx(0.4)
     assert streams[0].started and streams[0].stopped and streams[0].closed
+
+
+def test_radio_cues_are_outside_the_recorded_clip():
+    events = []
+
+    class Stream:
+        def __init__(self, **kwargs):
+            self.callback = kwargs["callback"]
+
+        def start(self):
+            events.append("stream_started")
+            self.callback(tone(0.1).pcm16, 1600, None, False)
+
+        def stop(self):
+            events.append("stream_stopped")
+
+        def close(self):
+            pass
+
+    states = iter((False, True, True, False))
+    streams = []
+
+    def factory(**kwargs):
+        stream = Stream(**kwargs)
+        streams.append(stream)
+        return stream
+
+    mic = PushToTalkMicrophone(
+        SttConfig(),
+        stream_factory=factory,
+        key_down=lambda key: next(states) if key == 0x77 else False,
+    )
+
+    async def run():
+        async def opened():
+            events.append("open_cue")
+            asyncio.get_running_loop().call_soon(
+                streams[0].callback, tone().pcm16, 6400, None, False
+            )
+
+        async def closed():
+            events.append("close_cue")
+
+        clip = await mic.next_clip(
+            lambda message: events.append("listening"),
+            after_stream_started=opened,
+            after_capture=closed,
+        )
+        await mic.aclose()
+        return clip
+
+    clip = asyncio.run(run())
+    assert clip is not None and clip.duration_s == pytest.approx(0.4)
+    assert events == [
+        "stream_started",
+        "open_cue",
+        "listening",
+        "stream_stopped",
+        "close_cue",
+    ]
+
+
+def test_release_tail_keeps_final_audio_before_stream_stop():
+    events = []
+    stream = None
+
+    class Stream:
+        def __init__(self, **kwargs):
+            nonlocal stream
+            self.callback = kwargs["callback"]
+            stream = self
+
+        def start(self):
+            self.callback(tone(0.2).pcm16, 3200, None, False)
+
+        def stop(self):
+            events.append("stopped")
+
+        def close(self):
+            pass
+
+    class Button:
+        def __init__(self):
+            self.states = iter((False, True, True, False))
+            self.reads = 0
+
+        def is_down(self):
+            self.reads += 1
+            down = next(self.states)
+            if self.reads == 4 and not down and stream is not None:
+                asyncio.get_running_loop().call_later(
+                    0.02, stream.callback, tone(0.1).pcm16, 1600, None, False
+                )
+            return down
+
+        def close(self):
+            pass
+
+    microphone = PushToTalkMicrophone(
+        SttConfig(release_tail_ms=60), button_input=Button(), stream_factory=Stream
+    )
+
+    async def run():
+        clip = await microphone.next_clip(lambda message: None)
+        await microphone.aclose()
+        return clip
+
+    clip = asyncio.run(run())
+    assert clip is not None and clip.duration_s == pytest.approx(0.3)
+    assert events == ["stopped"]
 
 
 def test_escape_before_press_does_not_start_capture():

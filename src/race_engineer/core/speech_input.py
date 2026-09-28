@@ -28,6 +28,23 @@ class AudioClip:
         return len(self.pcm16) / (2 * self.sample_rate_hz)
 
 
+class AudioDiagnostic(ContractModel):
+    """Content-free measurements for separating capture/gate failures from ASR failures."""
+
+    schema_version: Literal["audio-diagnostic.v1"] = "audio-diagnostic.v1"
+    duration_s: float = Field(ge=0, le=30, allow_inf_nan=False)
+    sample_rate_hz: Literal[16000, 44100, 48000]
+    rms_dbfs: float = Field(ge=-96, le=0, allow_inf_nan=False)
+    peak_dbfs: float = Field(ge=-96, le=0, allow_inf_nan=False)
+    active_duration_s: float = Field(ge=0, le=30, allow_inf_nan=False)
+    active_ratio: float = Field(ge=0, le=1, allow_inf_nan=False)
+    leading_silence_s: float = Field(ge=0, le=30, allow_inf_nan=False)
+    trailing_silence_s: float = Field(ge=0, le=30, allow_inf_nan=False)
+    activity_at_start: bool
+    activity_at_end: bool
+    gate_result: Literal["accepted", "audio_too_short", "audio_below_threshold"]
+
+
 class Transcription(ContractModel):
     schema_version: Literal["transcription.v1"] = "transcription.v1"
     status: Literal["transcribed", "no_speech", "unsupported_language"]

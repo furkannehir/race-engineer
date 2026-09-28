@@ -77,14 +77,18 @@ single-question mode also returns exit code 1. Configuration/fixture errors retu
 
 ## Supported information and boundaries
 
-Current queries cover overall position, lap, same-lap gaps ahead/behind, fuel remaining,
-and observed average fuel consumption. Each answer carries a session ID, source sequence,
-replay/live marker, and its retrieved facts in the JSON result.
+Current queries cover overall position, complete-field status, lap, same-lap gaps
+ahead/behind, fuel remaining, and observed average fuel consumption. Field status answers
+whether the driver is last, reports place out of the classified field, and counts cars
+behind. It is available only when the overall positions form one complete, unique running
+order; otherwise the engineer declines to guess. Each answer carries a session ID, source
+sequence, replay/live marker, and its retrieved facts in the JSON result.
 
 Fuel-to-finish and gap trends are recognized but explicitly unavailable. The prototype
 does not infer a trend from a single gap or recommend pit strategy from fuel level alone.
 Class position, driver names, flags, tires, historical comparisons, and settings changes
-are not supported. The known false blue-flag issue is unchanged and outside this slice.
+are not supported. The false-blue normalization fix remains pending genuine-blue live
+validation and is outside this conversation slice.
 
 Only meanings/questions are retained in bounded in-memory conversation history; previous
 answer values are not supplied to the model. Facts are fetched again after inference.

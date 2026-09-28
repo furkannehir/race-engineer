@@ -529,7 +529,7 @@ class RadioDesk(QWidget):
         ptt_text = QVBoxLayout()
         ptt_text.setSpacing(9)
         ptt_text.addWidget(label("Hold to talk", "instruction"))
-        helper = label("Release to send your question.", "muted")
+        helper = label("Hold, wait for the cue, then talk. Release to send.", "muted")
         helper.setWordWrap(True)
         ptt_text.addWidget(helper)
         ptt.addLayout(ptt_text, 1)
@@ -537,8 +537,10 @@ class RadioDesk(QWidget):
         left.addSpacing(8)
         left.addWidget(divider())
         left.addSpacing(4)
+        self.engine = StatusRow("Engineer stopped")
         self.telemetry = StatusRow("iRacing not connected")
         self.models = StatusRow("Local speech not loaded")
+        left.addWidget(self.engine)
         left.addWidget(self.telemetry)
         left.addWidget(self.models)
         left.addSpacing(8)
@@ -955,7 +957,14 @@ class RadioDesk(QWidget):
         self._mode, self._failed = mode, False
         self._phase = "starting"
         self._telemetry_ready = self._models_ready = self._speaking = False
-        self.notice.setText("Do not run another live engineer alongside this panel.")
+        if mode == "engineer":
+            self.notice.setText(
+                "Engineer start confirmed. Loading local systems and waiting for iRacing."
+            )
+        else:
+            self.notice.setText(
+                "Microphone test started." if mode == "mic" else "Voice test started."
+            )
         self.worker = EngineWorker(
             self.root,
             self.config_path,
@@ -990,7 +999,12 @@ class RadioDesk(QWidget):
 
     def _status(self, topic: str, value: str) -> None:
         if topic == "telemetry":
+            was_ready = self._telemetry_ready
             self._telemetry_ready = value == "ready"
+            if self._telemetry_ready and not was_ready:
+                self.notice.setText("iRacing connected. Live telemetry is ready.")
+            elif was_ready and not self._telemetry_ready:
+                self.notice.setText("iRacing disconnected. Waiting to reconnect.")
         elif topic == "models":
             self._models_ready = value == "ready"
         elif topic == "phase" and self._phase != "stopping":
@@ -1057,6 +1071,11 @@ class RadioDesk(QWidget):
             self.eyebrow.setText("RADIO TEST" if self._mode != "engineer" else "ENGINEER STARTING")
         if self._phase == "stopping":
             self.eyebrow.setText("STOPPING")
+        engineer_started = self.worker is not None and self._mode == "engineer"
+        self.engine.update_status(
+            "Engineer started" if engineer_started else "Engineer stopped",
+            engineer_started,
+        )
         self.telemetry.update_status(
             "iRacing connected" if self._telemetry_ready else "iRacing not connected",
             self._telemetry_ready,

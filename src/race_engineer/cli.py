@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import json
 import logging
+import sys
 import uuid
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -51,6 +52,11 @@ def _parser() -> argparse.ArgumentParser:
     )
     transcribe.add_argument("audio", type=Path)
     transcribe.add_argument("--config", type=Path, required=True)
+    diagnose = subparsers.add_parser(
+        "diagnose-wav", help="inspect capture boundaries and energy without loading ASR"
+    )
+    diagnose.add_argument("audio", type=Path)
+    diagnose.add_argument("--config", type=Path, required=True)
     voice = subparsers.add_parser(
         "voice-replay", help="push-to-talk replay questions with local spoken and text replies"
     )
@@ -256,9 +262,7 @@ def _history_action(
     if action == "recent":
         result["sessions"] = [
             summary.model_dump(mode="json")
-            for summary in repository.recent_session_history(
-                profile.profile_id, limit=limit
-            )
+            for summary in repository.recent_session_history(profile.profile_id, limit=limit)
         ]
     elif action == "prune":
         result["deleted_decisions"] = repository.prune_history(
@@ -341,9 +345,7 @@ async def _read_iracing(
             if live is not None and (reset_requested or not live.available):
                 previous = None
                 context_builder = DefaultRaceContextBuilder(config.policy.context)
-                policy = StrictRulePolicy(
-                    config.policy.strict, decision_sink=capture_decision
-                )
+                policy = StrictRulePolicy(config.policy.strict, decision_sink=capture_decision)
                 pending_decisions.clear()
                 reset_requested = False
             events = tuple(event_deriver.derive(previous, frame))
@@ -601,6 +603,13 @@ async def _test_tts(config_path: Path, text: str) -> PlaybackResult:
 
 
 def main() -> None:
+    # Windows commonly starts Python with a legacy code page that cannot represent
+    # Turkish radio text. Keep redirected output deterministic and never crash while
+    # displaying an otherwise valid bilingual response.
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if callable(reconfigure):
+            reconfigure(encoding="utf-8", errors="replace")
     args = _parser().parse_args()
     match args.command:
         case "voice-iracing":
@@ -658,8 +667,12 @@ def main() -> None:
             except KeyboardInterrupt:
                 radio_code = 130
             raise SystemExit(radio_code)
-        case "list-input-devices" | "transcribe-wav" | "voice-replay":
-            from race_engineer.application.speech_cli import transcribe_wav, voice_replay
+        case "list-input-devices" | "diagnose-wav" | "transcribe-wav" | "voice-replay":
+            from race_engineer.application.speech_cli import (
+                diagnose_wav,
+                transcribe_wav,
+                voice_replay,
+            )
             from race_engineer.core.speech_input import SpeechInputError
             from race_engineer.stt.capture import input_devices
 
@@ -667,6 +680,8 @@ def main() -> None:
                 if args.command == "list-input-devices":
                     print(json.dumps(input_devices(), indent=2, ensure_ascii=False))
                     speech_code = 0
+                elif args.command == "diagnose-wav":
+                    speech_code = diagnose_wav(args.config, args.audio)
                 elif args.command == "transcribe-wav":
                     speech_code = asyncio.run(transcribe_wav(args.config, args.audio))
                 else:

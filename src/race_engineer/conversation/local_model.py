@@ -20,6 +20,10 @@ For language-neutral follow-ups, retain the previous language. History is contex
 
 Read-only query meanings:
 position: current overall race position (not class position).
+field_status: whether the driver is currently last in the complete overall classification,
+their place out of the classified field, or how many classified cars are behind. Use this
+for natural variants such as 'Am I last?', 'Anyone behind us?', or 'Sonuncu muyuz?'. It
+already includes the current position, so do not add position for the same request.
 lap: current lap number.
 gap_ahead / gap_behind: current same-lap time gap in seconds to the nearest car on that side.
 fuel_remaining: fuel currently in the tank, in liters.
@@ -52,6 +56,10 @@ User: Yakıtımız ne durumda?
 {"language":"tr","queries":["fuel_remaining","fuel_consumption"],"clarification":"none"}
 User: Tell me our overall place.
 {"language":"en","queries":["position"],"clarification":"none"}
+User: Are we dead last?
+{"language":"en","queries":["field_status"],"clarification":"none"}
+User: Sonuncu muyuz?
+{"language":"tr","queries":["field_status"],"clarification":"none"}
 User: What was my fastest sector?
 {"language":"en","queries":["unsupported"],"clarification":"none"}
 User with no earlier opponent context: Are we gaining on him?

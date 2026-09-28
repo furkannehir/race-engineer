@@ -2,7 +2,7 @@
 
 ## STT-001: Short and single-word questions are sometimes misrecognized
 
-**Status:** Deferred improvement - accepted prototype limitation
+**Status:** CE-05R.3 diagnostics and release-tail mitigation implemented; sample evaluation pending
 
 **Reported:** 2026-09-21, driver feedback after the combined live test
 
@@ -10,10 +10,24 @@ Recognition sometimes fails, especially for one-word input. The driver accepts t
 prototype for now. This report does not yet identify whether capture boundaries, the energy
 gate, language detection, or the recognizer is responsible; do not assume an engine defect.
 
+The live path now plays an original opening radio-noise cue after the microphone stream is
+ready and starts buffering only after that cue finishes. A closing noise cue confirms
+release. This gives the driver an explicit speaking boundary and prevents the cue itself
+entering the ASR clip.
+It is a usability mitigation, not evidence that short-utterance recognition is fixed; the
+diagnostic and engine comparison below remain required.
+
+CE-05R.3 now retains a configurable 120 ms of microphone input after PTT release so the
+last phoneme is less likely to be clipped. Every Qwen adapter submission emits content-free
+`stt_audio_diagnostic` measurements, and `diagnose-wav` exposes the same gate/boundary data
+for a deliberately supplied WAV without loading the model. Neither path stores audio or
+transcripts. These changes locate likely capture/gate failures; they do not prove recognition
+accuracy or choose a replacement engine.
+
 Future work:
 
-- distinguish clipped/discarded capture from incorrect transcription using explicitly
-  supplied or consented English/Turkish test samples; no background microphone recording;
+- run the new boundary/gate diagnostic and transcription on explicitly supplied or consented
+  English/Turkish test samples; no background microphone recording;
 - evaluate one-word questions such as "Position", "Fuel", "Sıra", and "Yakıt", along with
   longer paraphrases and realistic racing noise;
 - assess capture timing, silence thresholds, language selection, accuracy, and latency
@@ -23,6 +37,29 @@ Future work:
 Keep Qwen3-ASR as the current adapter. faster-whisper remains an evaluation alternative,
 not a newly selected engine or automatic fallback. Natural phrasing must remain supported;
 the test examples are not a restricted command vocabulary.
+
+## TEL-001: Position changes can lag until the timing line
+
+**Status:** CE-05R.1 implemented; live race validation pending
+
+**Reported:** 2026-09-26, driver feedback after the CE-05/05.1 live test
+
+The engineer could retain the previous position after a start or mid-lap overtake because
+normalization used `PlayerCarPosition` for the player and `CarIdxPosition` for opponents.
+Those scored position values can remain unchanged while live per-car track progress has
+already changed.
+
+CE-05R.1 now samples `CarIdxLap` and `CarIdxLapDistPct` in the same frozen SDK buffer and
+derives a complete current overall running order during the racing state. The order updates
+the player and opponent positions together, so conversation refresh, field-status answers,
+position-change events, and strict-policy candidates see one consistent frame. The
+official fields remain the fallback whenever the live progress set is incomplete or
+invalid. Formation and non-race sessions retain their established behavior.
+
+Regression tests prove that a pass changes P1 to P2 while both official inputs remain P1,
+and that one missing opponent progress value disables the entire live derivation. Validate
+this in a live race start, an ordinary overtake, a pit cycle, a lapped-car interaction, and
+after a retirement before closing the issue.
 
 ## TTS-001: Spoken replies need a more natural voice
 
@@ -79,7 +116,8 @@ Upstream references: [model card](https://huggingface.co/freyavoice/Freya-TTS),
 
 ## CONV-004: Add contextual race-engineer acknowledgments and reassurance
 
-**Status:** Deferred feature request - not implemented
+**Status:** R.5 natural bounded composition implemented behind the CE-05 preview switch;
+listening/live validation pending
 
 **Requested:** 2026-09-21
 
@@ -88,14 +126,14 @@ example, "That's dirty" could receive a concise acknowledgment or "Focus on your
 now", rather than being forced into a position/fuel query or a generic unsupported reply.
 The requested feel is a supportive race engineer, not simply a spoken telemetry lookup.
 
-Future work:
+Validation and later extensions:
 
-- add bounded conversational acts for acknowledgments, reassurance, and refocusing,
-  alongside the existing read-only factual-query route;
-- support English/Turkish paraphrases and conversational context without requiring fixed
-  phrases or generating a reply to every remark;
-- keep responses short and subject to radio priority, expiry, and interruption; critical
-  calls still take precedence and busy racing situations should not gain extra chatter;
+- broaden independently authored English/Turkish paraphrase evidence without turning the
+  examples into a fixed command vocabulary;
+- listening-test whether the bounded acknowledgment/refocus templates feel natural and
+  concise during a race, including repeated remarks and intentional silence;
+- validate radio priority, expiry and interruption in live racing; critical calls must
+  still take precedence and busy situations must not gain extra chatter;
 - distinguish the driver's report from verified race evidence: "Copy. Focus on your race"
   is a possible neutral reply, while "Yes, we saw it" requires evidence the system can
   actually observe. Do not invent witnessed contact, assign blame, or imply steward review;
@@ -104,8 +142,89 @@ Future work:
 - add evaluation cases separating factual questions, emotional remarks, mixed inputs,
   and ambiguous comments, including when clarification or silence is preferable.
 
-These three items are follow-up quality/features, not changes to current runtime behavior.
-See [roadmap.md](roadmap.md) for milestone status and the proposed next implementation slice.
+The bounded acknowledgment/close acts, mixed factual composition and delivery-aware state
+are implemented in CE-05. CE-05R.5.1–R.5.4 add typed speech clauses, deterministic natural
+English/Turkish variants, exact grounded-part coverage, a radio word limit and automatic
+fallback to the earlier bounded wording. They remain behind the preview switch, which the
+development configuration currently enables deliberately; fresh bilingual model evidence
+and listening/live validation still gate default promotion. See
+[CE-05 live dialogue](ce05-live-dialogue.md).
+
+## CONV-005: Relational overall-field questions
+
+**Status:** Implemented in CE-05.1; real-race classification validation pending
+
+**Requested:** 2026-09-26
+
+The engineer previously exposed only the player's numeric overall position, so a natural
+question such as “Am I on the last place?” could at best produce “You're P23” and could not
+ground the yes/no comparison. CE-05.1 adds one `field_status` meaning for English/Turkish
+questions about being last, place out of the field, and how many classified cars are behind.
+
+The answer remains deterministic. It requires `position` and `opponents` telemetry
+capabilities plus a unique, gap-free set of positive overall positions after known pace-car
+exclusion. It carries both current position and classified total, is refreshed immediately
+before delivery, and reports unavailable rather than guessing when the order is incomplete
+or contradictory. Class position and original-starting-field comparisons remain unsupported.
+
+Scripted tests cover last/not-last, bilingual wording, missing/duplicate classifications,
+contract validation, replay transitions and live refresh. A 2026-09-26 CPU smoke test with
+the real local Qwen model passed three English/Turkish paraphrases and a compound field-status
+plus gap question. A real iRacing race is still required to validate classification behavior
+across gridding, disconnects, retirements and finish-state transitions.
+
+## CONV-006: Field comparison can contradict the reported position
+
+**Status:** Fixed in CE-05R.2; targeted local-model check passed, live validation pending
+
+**Reported:** 2026-09-26, driver feedback after asking whether the car was first
+
+The CE-05.1 semantic plan represented first/last/count questions with only `field_status`.
+The deterministic renderer therefore assumed the original last-place meaning. If Qwen
+mapped “Am I first?” to that query while the driver was P1, the result could be the logically
+contradictory “No, you're P1.” The numeric telemetry was grounded; the missing requested
+relationship caused the incorrect yes/no word.
+
+CE-05R.2 adds a bounded field relationship to the semantic request and grounded answer:
+first, last, cars ahead, cars behind, or position out of total. The model chooses only this
+meaning. Ordinary code validates the complete field, computes the comparison/count and
+renders matching English/Turkish wording. Relation and facts remain separate through
+dialogue memory and pre-delivery refresh. Unknown combinations fail schema validation.
+
+Regression tests cover P1/P2 leading answers, last-place compatibility, ahead/behind counts,
+place out of field, Turkish wording, Qwen-plan mapping, and a P1-to-P2 refresh between the
+initial decision and delivery. Run new independent model paraphrases and a live race test
+before closing the issue.
+
+The 2026-09-27 retained-Qwen CPU smoke check passed the final English/Turkish first, last
+and rear-count probes on the synthetic four-car field. An initial “Lider miyiz?” run chose
+the correct `first` relation but English reply language; a symmetric Turkish example fixed
+that phrase and a distinct “Şu an birinci miyiz?” paraphrase also passed. This small targeted
+check does not replace an independently authored bilingual set or live validation.
+
+## CONV-007: Telemetry facts are difficult to extend consistently
+
+**Status:** CE-05R.4 provider catalog and R.5 composition implemented; broader facts and
+R.5.5 acceptance pending
+
+**Reported:** 2026-09-26, driver feedback after the CE-05/05.1 live test
+
+Fact retrieval was spread across separate semantic maps, capability checks, controller
+branches, legacy lookup code and live refresh logic. Adding information risked advertising
+one capability while resolving or refreshing it differently elsewhere. It also made the
+bounded deterministic grounding layer feel like a growing collection of special cases.
+
+CE-05R.4 introduces one complete `FactCatalog`. Every `RaceQuery` is registered exactly
+once with its semantic meaning/reference and deterministic resolver. Context assembly,
+Qwen compatibility conversion, initial answers and delivery-time refresh use that catalog;
+the legacy route delegates to it while preserving its nearest-gap behavior. Duplicate or
+missing registrations fail construction, and replacement-provider tests prove that one
+registration drives both advertised availability and the grounded answer.
+
+This does not expose arbitrary telemetry to Qwen or remove the need to define trustworthy
+derived facts. New information still needs a typed query, capability-aware provider,
+bilingual wording and evaluation. CE-05R.5 now composes those facts more naturally without
+adding another model call; broader fact coverage remains separate.
 
 ## CONV-001: Vague fuel follow-up switches to position
 

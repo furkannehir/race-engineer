@@ -1,0 +1,1207 @@
+{
+  "schema_version": "dialogue-eval.v1",
+  "split": "calibration",
+  "revision": "2026-09-24.1",
+  "scenarios": [
+    {
+      "family": "grid-rundown",
+      "description": "Overall place and lap recap before asking for an update.",
+      "en": [
+        {
+          "turn_id": "place",
+          "question": "Tell me our overall race place.",
+          "acceptable": [
+            {
+              "language": "en",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "position",
+                  "reference": "none"
+                }
+              ],
+              "model_id": "fixture"
+            }
+          ],
+          "outcomes": [
+            "answered"
+          ],
+          "answers": [
+            "position:available"
+          ],
+          "category": "grid-rundown"
+        },
+        {
+          "turn_id": "lap",
+          "question": "What lap are we running currently?",
+          "acceptable": [
+            {
+              "language": "en",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "lap",
+                  "reference": "none"
+                }
+              ],
+              "model_id": "fixture"
+            }
+          ],
+          "outcomes": [
+            "answered"
+          ],
+          "answers": [
+            "lap:available"
+          ],
+          "category": "grid-rundown"
+        },
+        {
+          "turn_id": "update",
+          "question": "Update that lap count.",
+          "acceptable": [
+            {
+              "language": "en",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "lap",
+                  "reference": "none"
+                }
+              ],
+              "model_id": "fixture"
+            }
+          ],
+          "outcomes": [
+            "answered"
+          ],
+          "answers": [
+            "lap:available"
+          ],
+          "category": "grid-rundown",
+          "world": {
+            "lap": 4
+          }
+        }
+      ],
+      "tr": [
+        {
+          "turn_id": "place",
+          "question": "Genel yarış sıramızı söyler misin?",
+          "acceptable": [
+            {
+              "language": "tr",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "position",
+                  "reference": "none"
+                }
+              ],
+              "model_id": "fixture"
+            }
+          ],
+          "outcomes": [
+            "answered"
+          ],
+          "answers": [
+            "position:available"
+          ],
+          "category": "grid-rundown"
+        },
+        {
+          "turn_id": "lap",
+          "question": "Şu anda hangi turu atıyoruz?",
+          "acceptable": [
+            {
+              "language": "tr",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "lap",
+                  "reference": "none"
+                }
+              ],
+              "model_id": "fixture"
+            }
+          ],
+          "outcomes": [
+            "answered"
+          ],
+          "answers": [
+            "lap:available"
+          ],
+          "category": "grid-rundown"
+        },
+        {
+          "turn_id": "update",
+          "question": "O tur sayısını güncelle.",
+          "acceptable": [
+            {
+              "language": "tr",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "lap",
+                  "reference": "none"
+                }
+              ],
+              "model_id": "fixture"
+            }
+          ],
+          "outcomes": [
+            "answered"
+          ],
+          "answers": [
+            "lap:available"
+          ],
+          "category": "grid-rundown",
+          "world": {
+            "lap": 4
+          }
+        }
+      ]
+    },
+    {
+      "family": "tank-check",
+      "description": "Tank quantity update then finish feasibility, preserving distinct meanings.",
+      "en": [
+        {
+          "turn_id": "tank",
+          "question": "How many liters are left in our tank?",
+          "acceptable": [
+            {
+              "language": "en",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "fuel_remaining",
+                  "reference": "none"
+                }
+              ],
+              "model_id": "fixture"
+            }
+          ],
+          "outcomes": [
+            "answered"
+          ],
+          "answers": [
+            "fuel_remaining:available"
+          ],
+          "category": "tank-check"
+        },
+        {
+          "turn_id": "update",
+          "question": "And now?",
+          "acceptable": [
+            {
+              "language": "en",
+              "requests": [],
+              "model_id": "fixture",
+              "mode": "follow_up"
+            }
+          ],
+          "outcomes": [
+            "answered"
+          ],
+          "answers": [
+            "fuel_remaining:available"
+          ],
+          "category": "tank-check",
+          "world": {
+            "fuel": 28
+          }
+        },
+        {
+          "turn_id": "finish",
+          "question": "Will that fuel get us to the finish line?",
+          "acceptable": [
+            {
+              "language": "en",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "fuel_to_finish",
+                  "reference": "none"
+                }
+              ],
+              "model_id": "fixture"
+            }
+          ],
+          "outcomes": [
+            "unavailable"
+          ],
+          "answers": [
+            "fuel_to_finish:unsupported"
+          ],
+          "category": "tank-check"
+        }
+      ],
+      "tr": [
+        {
+          "turn_id": "tank",
+          "question": "Depomuzda kaç litre kaldı?",
+          "acceptable": [
+            {
+              "language": "tr",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "fuel_remaining",
+                  "reference": "none"
+                }
+              ],
+              "model_id": "fixture"
+            }
+          ],
+          "outcomes": [
+            "answered"
+          ],
+          "answers": [
+            "fuel_remaining:available"
+          ],
+          "category": "tank-check"
+        },
+        {
+          "turn_id": "update",
+          "question": "Peki şimdi?",
+          "acceptable": [
+            {
+              "language": "tr",
+              "requests": [],
+              "model_id": "fixture",
+              "mode": "follow_up"
+            }
+          ],
+          "outcomes": [
+            "answered"
+          ],
+          "answers": [
+            "fuel_remaining:available"
+          ],
+          "category": "tank-check",
+          "world": {
+            "fuel": 28
+          }
+        },
+        {
+          "turn_id": "finish",
+          "question": "Bu yakıt bizi finiş çizgisine götürür mü?",
+          "acceptable": [
+            {
+              "language": "tr",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "fuel_to_finish",
+                  "reference": "none"
+                }
+              ],
+              "model_id": "fixture"
+            }
+          ],
+          "outcomes": [
+            "unavailable"
+          ],
+          "answers": [
+            "fuel_to_finish:unsupported"
+          ],
+          "category": "tank-check"
+        }
+      ]
+    },
+    {
+      "family": "rear-traffic",
+      "description": "Behind gap and anchored trend followed by a correction.",
+      "en": [
+        {
+          "turn_id": "gap",
+          "question": "Give me the interval to the car behind.",
+          "acceptable": [
+            {
+              "language": "en",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "gap",
+                  "reference": "behind"
+                }
+              ],
+              "model_id": "fixture"
+            }
+          ],
+          "outcomes": [
+            "answered"
+          ],
+          "answers": [
+            "gap_behind:available"
+          ],
+          "category": "rear-traffic"
+        },
+        {
+          "turn_id": "trend",
+          "question": "Is he catching us?",
+          "acceptable": [
+            {
+              "language": "en",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "gap_trend",
+                  "reference": "active"
+                }
+              ],
+              "model_id": "fixture"
+            }
+          ],
+          "outcomes": [
+            "unavailable"
+          ],
+          "answers": [
+            "gap_trend_behind:unsupported"
+          ],
+          "category": "rear-traffic"
+        },
+        {
+          "turn_id": "correct",
+          "question": "No, I meant the one in front.",
+          "acceptable": [
+            {
+              "language": "en",
+              "requests": [],
+              "model_id": "fixture",
+              "mode": "correction",
+              "reference": "ahead"
+            }
+          ],
+          "outcomes": [
+            "unavailable"
+          ],
+          "answers": [
+            "gap_trend_ahead:unsupported"
+          ],
+          "category": "rear-traffic"
+        }
+      ],
+      "tr": [
+        {
+          "turn_id": "gap",
+          "question": "Arkadaki araçla zaman farkını ver.",
+          "acceptable": [
+            {
+              "language": "tr",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "gap",
+                  "reference": "behind"
+                }
+              ],
+              "model_id": "fixture"
+            }
+          ],
+          "outcomes": [
+            "answered"
+          ],
+          "answers": [
+            "gap_behind:available"
+          ],
+          "category": "rear-traffic"
+        },
+        {
+          "turn_id": "trend",
+          "question": "Bize yaklaşıyor mu?",
+          "acceptable": [
+            {
+              "language": "tr",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "gap_trend",
+                  "reference": "active"
+                }
+              ],
+              "model_id": "fixture"
+            }
+          ],
+          "outcomes": [
+            "unavailable"
+          ],
+          "answers": [
+            "gap_trend_behind:unsupported"
+          ],
+          "category": "rear-traffic"
+        },
+        {
+          "turn_id": "correct",
+          "question": "Hayır, öndekini kastettim.",
+          "acceptable": [
+            {
+              "language": "tr",
+              "requests": [],
+              "model_id": "fixture",
+              "mode": "correction",
+              "reference": "ahead"
+            }
+          ],
+          "outcomes": [
+            "unavailable"
+          ],
+          "answers": [
+            "gap_trend_ahead:unsupported"
+          ],
+          "category": "rear-traffic"
+        }
+      ]
+    },
+    {
+      "family": "unspecified-chase",
+      "description": "An unidentified opponent requires one targeted clarification.",
+      "en": [
+        {
+          "turn_id": "unknown",
+          "question": "Are we gaining on him?",
+          "acceptable": [
+            {
+              "language": "en",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "gap_trend",
+                  "reference": "unspecified"
+                }
+              ],
+              "model_id": "fixture"
+            }
+          ],
+          "outcomes": [
+            "clarify"
+          ],
+          "answers": [],
+          "category": "unspecified-chase",
+          "clarification": "opponent"
+        },
+        {
+          "turn_id": "resolve",
+          "question": "The one behind us.",
+          "acceptable": [
+            {
+              "language": "en",
+              "requests": [],
+              "model_id": "fixture",
+              "mode": "clarification_answer",
+              "reference": "behind"
+            }
+          ],
+          "outcomes": [
+            "unavailable"
+          ],
+          "answers": [
+            "gap_trend_behind:unsupported"
+          ],
+          "category": "unspecified-chase"
+        },
+        {
+          "turn_id": "close",
+          "question": "Thanks, understood.",
+          "acceptable": [
+            {
+              "language": "en",
+              "requests": [],
+              "model_id": "fixture",
+              "acts": [
+                "close"
+              ]
+            }
+          ],
+          "outcomes": [
+            "no_reply"
+          ],
+          "answers": [],
+          "category": "unspecified-chase"
+        }
+      ],
+      "tr": [
+        {
+          "turn_id": "unknown",
+          "question": "Ona yaklaşıyor muyuz?",
+          "acceptable": [
+            {
+              "language": "tr",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "gap_trend",
+                  "reference": "unspecified"
+                }
+              ],
+              "model_id": "fixture"
+            }
+          ],
+          "outcomes": [
+            "clarify"
+          ],
+          "answers": [],
+          "category": "unspecified-chase",
+          "clarification": "opponent"
+        },
+        {
+          "turn_id": "resolve",
+          "question": "Arkamızdaki.",
+          "acceptable": [
+            {
+              "language": "tr",
+              "requests": [],
+              "model_id": "fixture",
+              "mode": "clarification_answer",
+              "reference": "behind"
+            }
+          ],
+          "outcomes": [
+            "unavailable"
+          ],
+          "answers": [
+            "gap_trend_behind:unsupported"
+          ],
+          "category": "unspecified-chase"
+        },
+        {
+          "turn_id": "close",
+          "question": "Teşekkürler, anladım.",
+          "acceptable": [
+            {
+              "language": "tr",
+              "requests": [],
+              "model_id": "fixture",
+              "acts": [
+                "close"
+              ]
+            }
+          ],
+          "outcomes": [
+            "no_reply"
+          ],
+          "answers": [],
+          "category": "unspecified-chase"
+        }
+      ]
+    },
+    {
+      "family": "unfair-move",
+      "description": "Complaint plus requested rear gap, then repeat.",
+      "en": [
+        {
+          "turn_id": "mixed",
+          "question": "That was dirty. How far back is the next car?",
+          "acceptable": [
+            {
+              "language": "en",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "gap",
+                  "reference": "behind"
+                }
+              ],
+              "model_id": "fixture",
+              "acts": [
+                "acknowledge"
+              ]
+            }
+          ],
+          "outcomes": [
+            "answered"
+          ],
+          "answers": [
+            "gap_behind:available"
+          ],
+          "category": "unfair-move"
+        },
+        {
+          "turn_id": "repeat",
+          "question": "Repeat that please.",
+          "acceptable": [
+            {
+              "language": "en",
+              "requests": [],
+              "model_id": "fixture",
+              "mode": "repeat"
+            }
+          ],
+          "outcomes": [
+            "answered"
+          ],
+          "answers": [
+            "gap_behind:available"
+          ],
+          "category": "unfair-move"
+        }
+      ],
+      "tr": [
+        {
+          "turn_id": "mixed",
+          "question": "Bu yaptığı hiç hoş değildi. Arkadaki ne kadar uzakta?",
+          "acceptable": [
+            {
+              "language": "tr",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "gap",
+                  "reference": "behind"
+                }
+              ],
+              "model_id": "fixture",
+              "acts": [
+                "acknowledge"
+              ]
+            }
+          ],
+          "outcomes": [
+            "answered"
+          ],
+          "answers": [
+            "gap_behind:available"
+          ],
+          "category": "unfair-move"
+        },
+        {
+          "turn_id": "repeat",
+          "question": "Onu tekrarlar mısın?",
+          "acceptable": [
+            {
+              "language": "tr",
+              "requests": [],
+              "model_id": "fixture",
+              "mode": "repeat"
+            }
+          ],
+          "outcomes": [
+            "answered"
+          ],
+          "answers": [
+            "gap_behind:available"
+          ],
+          "category": "unfair-move"
+        }
+      ]
+    },
+    {
+      "family": "fuel-negation",
+      "description": "A negated topic must not add an unwanted request.",
+      "en": [
+        {
+          "turn_id": "negation",
+          "question": "Not fuel, I only want our place.",
+          "acceptable": [
+            {
+              "language": "en",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "position",
+                  "reference": "none"
+                }
+              ],
+              "model_id": "fixture"
+            }
+          ],
+          "outcomes": [
+            "answered"
+          ],
+          "answers": [
+            "position:available"
+          ],
+          "category": "fuel-negation"
+        },
+        {
+          "turn_id": "social",
+          "question": "That was a really unfair move.",
+          "acceptable": [
+            {
+              "language": "en",
+              "requests": [],
+              "model_id": "fixture",
+              "acts": [
+                "acknowledge"
+              ]
+            }
+          ],
+          "outcomes": [
+            "acknowledge"
+          ],
+          "answers": [],
+          "category": "fuel-negation"
+        }
+      ],
+      "tr": [
+        {
+          "turn_id": "negation",
+          "question": "Yakıt değil, sadece sıramızı istiyorum.",
+          "acceptable": [
+            {
+              "language": "tr",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "position",
+                  "reference": "none"
+                }
+              ],
+              "model_id": "fixture"
+            }
+          ],
+          "outcomes": [
+            "answered"
+          ],
+          "answers": [
+            "position:available"
+          ],
+          "category": "fuel-negation"
+        },
+        {
+          "turn_id": "social",
+          "question": "Bu gerçekten haksız bir hareketti.",
+          "acceptable": [
+            {
+              "language": "tr",
+              "requests": [],
+              "model_id": "fixture",
+              "acts": [
+                "acknowledge"
+              ]
+            }
+          ],
+          "outcomes": [
+            "acknowledge"
+          ],
+          "answers": [],
+          "category": "fuel-negation"
+        }
+      ]
+    },
+    {
+      "family": "unknown-call",
+      "description": "Unintelligible text followed by an explicit new request.",
+      "en": [
+        {
+          "turn_id": "noise",
+          "question": "zzzx rrr kth",
+          "acceptable": [
+            {
+              "language": "en",
+              "requests": [],
+              "model_id": "fixture",
+              "abstain": true
+            }
+          ],
+          "outcomes": [
+            "clarify"
+          ],
+          "answers": [],
+          "category": "unknown-call",
+          "clarification": "topic"
+        },
+        {
+          "turn_id": "new",
+          "question": "Tell me the lap number instead.",
+          "acceptable": [
+            {
+              "language": "en",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "lap",
+                  "reference": "none"
+                }
+              ],
+              "model_id": "fixture"
+            }
+          ],
+          "outcomes": [
+            "answered"
+          ],
+          "answers": [
+            "lap:available"
+          ],
+          "category": "unknown-call"
+        }
+      ],
+      "tr": [
+        {
+          "turn_id": "noise",
+          "question": "zzzx rrr kth",
+          "acceptable": [
+            {
+              "language": "tr",
+              "requests": [],
+              "model_id": "fixture",
+              "abstain": true
+            }
+          ],
+          "outcomes": [
+            "clarify"
+          ],
+          "answers": [],
+          "category": "unknown-call",
+          "clarification": "topic"
+        },
+        {
+          "turn_id": "new",
+          "question": "Onun yerine tur numarasını söyle.",
+          "acceptable": [
+            {
+              "language": "tr",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "lap",
+                  "reference": "none"
+                }
+              ],
+              "model_id": "fixture"
+            }
+          ],
+          "outcomes": [
+            "answered"
+          ],
+          "answers": [
+            "lap:available"
+          ],
+          "category": "unknown-call"
+        }
+      ]
+    },
+    {
+      "family": "two-sided-intervals",
+      "description": "Independent ahead and behind parts are both retained.",
+      "en": [
+        {
+          "turn_id": "both",
+          "question": "Give me both gaps, ahead and behind.",
+          "acceptable": [
+            {
+              "language": "en",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "gap",
+                  "reference": "ahead"
+                },
+                {
+                  "part_id": "q2",
+                  "query": "gap",
+                  "reference": "behind"
+                }
+              ],
+              "model_id": "fixture"
+            }
+          ],
+          "outcomes": [
+            "answered"
+          ],
+          "answers": [
+            "gap_ahead:available",
+            "gap_behind:available"
+          ],
+          "category": "two-sided-intervals"
+        },
+        {
+          "turn_id": "fuel",
+          "question": "How much do we burn each lap?",
+          "acceptable": [
+            {
+              "language": "en",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "fuel_consumption",
+                  "reference": "none"
+                }
+              ],
+              "model_id": "fixture"
+            }
+          ],
+          "outcomes": [
+            "answered"
+          ],
+          "answers": [
+            "fuel_consumption:available"
+          ],
+          "category": "two-sided-intervals"
+        }
+      ],
+      "tr": [
+        {
+          "turn_id": "both",
+          "question": "Öndeki ve arkadaki farkların ikisini de ver.",
+          "acceptable": [
+            {
+              "language": "tr",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "gap",
+                  "reference": "ahead"
+                },
+                {
+                  "part_id": "q2",
+                  "query": "gap",
+                  "reference": "behind"
+                }
+              ],
+              "model_id": "fixture"
+            }
+          ],
+          "outcomes": [
+            "answered"
+          ],
+          "answers": [
+            "gap_ahead:available",
+            "gap_behind:available"
+          ],
+          "category": "two-sided-intervals"
+        },
+        {
+          "turn_id": "fuel",
+          "question": "Her turda ne kadar yakıyoruz?",
+          "acceptable": [
+            {
+              "language": "tr",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "fuel_consumption",
+                  "reference": "none"
+                }
+              ],
+              "model_id": "fixture"
+            }
+          ],
+          "outcomes": [
+            "answered"
+          ],
+          "answers": [
+            "fuel_consumption:available"
+          ],
+          "category": "two-sided-intervals"
+        }
+      ]
+    },
+    {
+      "family": "missing-dashboard",
+      "description": "Missing fuel quantity does not suppress an independent lap answer.",
+      "en": [
+        {
+          "turn_id": "partial",
+          "question": "Fuel remaining and our lap please.",
+          "acceptable": [
+            {
+              "language": "en",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "fuel_remaining",
+                  "reference": "none"
+                },
+                {
+                  "part_id": "q2",
+                  "query": "lap",
+                  "reference": "none"
+                }
+              ],
+              "model_id": "fixture"
+            }
+          ],
+          "outcomes": [
+            "partial"
+          ],
+          "answers": [
+            "fuel_remaining:missing",
+            "lap:available"
+          ],
+          "category": "missing-dashboard",
+          "world": {
+            "fuel": null
+          }
+        },
+        {
+          "turn_id": "unsupported",
+          "question": "What tire pressure should I set?",
+          "acceptable": [
+            {
+              "language": "en",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "unsupported",
+                  "reference": "none"
+                }
+              ],
+              "model_id": "fixture"
+            }
+          ],
+          "outcomes": [
+            "unavailable"
+          ],
+          "answers": [
+            "unsupported:unsupported"
+          ],
+          "category": "missing-dashboard"
+        }
+      ],
+      "tr": [
+        {
+          "turn_id": "partial",
+          "question": "Kalan yakıt ve turumuz lütfen.",
+          "acceptable": [
+            {
+              "language": "tr",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "fuel_remaining",
+                  "reference": "none"
+                },
+                {
+                  "part_id": "q2",
+                  "query": "lap",
+                  "reference": "none"
+                }
+              ],
+              "model_id": "fixture"
+            }
+          ],
+          "outcomes": [
+            "partial"
+          ],
+          "answers": [
+            "fuel_remaining:missing",
+            "lap:available"
+          ],
+          "category": "missing-dashboard",
+          "world": {
+            "fuel": null
+          }
+        },
+        {
+          "turn_id": "unsupported",
+          "question": "Lastik basıncını neye ayarlamalıyım?",
+          "acceptable": [
+            {
+              "language": "tr",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "unsupported",
+                  "reference": "none"
+                }
+              ],
+              "model_id": "fixture"
+            }
+          ],
+          "outcomes": [
+            "unavailable"
+          ],
+          "answers": [
+            "unsupported:unsupported"
+          ],
+          "category": "missing-dashboard"
+        }
+      ]
+    },
+    {
+      "family": "topic-repair",
+      "description": "Unclear topic can be repaired with an explicit query.",
+      "en": [
+        {
+          "turn_id": "vague",
+          "question": "How is it?",
+          "acceptable": [
+            {
+              "language": "en",
+              "requests": [],
+              "model_id": "fixture",
+              "clarification": "topic"
+            }
+          ],
+          "outcomes": [
+            "clarify"
+          ],
+          "answers": [],
+          "category": "topic-repair",
+          "clarification": "topic"
+        },
+        {
+          "turn_id": "resolve",
+          "question": "I mean the fuel left in the tank.",
+          "acceptable": [
+            {
+              "language": "en",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "fuel_remaining",
+                  "reference": "none"
+                }
+              ],
+              "model_id": "fixture",
+              "mode": "clarification_answer"
+            }
+          ],
+          "outcomes": [
+            "answered"
+          ],
+          "answers": [
+            "fuel_remaining:available"
+          ],
+          "category": "topic-repair"
+        }
+      ],
+      "tr": [
+        {
+          "turn_id": "vague",
+          "question": "O nasıl?",
+          "acceptable": [
+            {
+              "language": "tr",
+              "requests": [],
+              "model_id": "fixture",
+              "clarification": "topic"
+            }
+          ],
+          "outcomes": [
+            "clarify"
+          ],
+          "answers": [],
+          "category": "topic-repair",
+          "clarification": "topic"
+        },
+        {
+          "turn_id": "resolve",
+          "question": "Depoda kalan yakıtı kastediyorum.",
+          "acceptable": [
+            {
+              "language": "tr",
+              "requests": [
+                {
+                  "part_id": "q1",
+                  "query": "fuel_remaining",
+                  "reference": "none"
+                }
+              ],
+              "model_id": "fixture",
+              "mode": "clarification_answer"
+            }
+          ],
+          "outcomes": [
+            "answered"
+          ],
+          "answers": [
+            "fuel_remaining:available"
+          ],
+          "category": "topic-repair"
+        }
+      ]
+    }
+  ]
+}

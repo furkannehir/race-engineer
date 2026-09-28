@@ -35,7 +35,9 @@ class IracingRawSample(ContractModel):
     car_ahead_distance_m: float | None = Field(default=None, allow_inf_nan=False)
     car_behind_distance_m: float | None = Field(default=None, allow_inf_nan=False)
     car_idx_positions: tuple[int, ...] = ()
+    car_idx_laps: tuple[int, ...] = ()
     car_idx_laps_completed: tuple[int, ...] = ()
+    car_idx_lap_dist_pct: tuple[float, ...] = ()
     car_idx_f2_time_s: tuple[float, ...] = ()
     drivers: tuple[IracingDriverMetadata, ...] = ()
 

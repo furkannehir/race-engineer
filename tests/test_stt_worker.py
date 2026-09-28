@@ -55,10 +55,14 @@ def runtime_config(tmp_path, **kwargs):
     return SttConfig(python_path=python, model_path=model, **kwargs)
 
 
-def test_silence_never_starts_a_worker(tmp_path):
+def test_silence_never_starts_a_worker_and_logs_only_content_free_diagnostic(tmp_path, caplog):
     recognizer = QwenSpeechRecognizer(SttConfig(python_path=tmp_path / "missing"))
-    result = asyncio.run(recognizer.transcribe(AudioClip(b"\0\0" * 16000)))
+    with caplog.at_level("INFO", logger="race_engineer.stt.qwen"):
+        result = asyncio.run(recognizer.transcribe(AudioClip(b"\0\0" * 16000)))
     assert result.status == "no_speech"
+    diagnostic = next(record for record in caplog.records if record.event == "stt_audio_diagnostic")
+    assert diagnostic.gate_result == "audio_below_threshold"
+    assert not {"pcm16", "audio", "text", "transcript"} & diagnostic.__dict__.keys()
 
 
 def test_persistent_worker_uses_offline_environment_and_cleans_up(tmp_path, monkeypatch):

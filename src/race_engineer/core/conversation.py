@@ -8,10 +8,18 @@ from pydantic import Field, model_validator
 from race_engineer.core.contracts import ContractModel, RaceContext, UtcDatetime
 
 type RadioLanguage = Literal["en", "tr"]
+type FieldRelation = Literal[
+    "first",
+    "last",
+    "cars_ahead",
+    "cars_behind",
+    "position_of_total",
+]
 
 
 class RaceQuery(StrEnum):
     POSITION = "position"
+    FIELD_STATUS = "field_status"
     LAP = "lap"
     GAP_AHEAD = "gap_ahead"
     GAP_BEHIND = "gap_behind"
@@ -64,6 +72,30 @@ class RaceAnswer(ContractModel):
     status: Literal["available", "missing", "unsupported"]
     value: int | float | None = None
     unit: Literal["position", "lap", "s", "l", "l/lap"] | None = None
+    total: int | None = Field(default=None, ge=1)
+    field_relation: FieldRelation | None = None
+
+    @model_validator(mode="after")
+    def validate_field_status(self) -> "RaceAnswer":
+        if self.query is not RaceQuery.FIELD_STATUS:
+            if self.total is not None or self.field_relation is not None:
+                raise ValueError("only field status carries field comparison data")
+            return self
+        if self.status != "available":
+            if self.total is not None:
+                raise ValueError("unavailable field status cannot carry a total")
+            return self
+        if (
+            not isinstance(self.value, int)
+            or isinstance(self.value, bool)
+            or self.unit != "position"
+            or self.total is None
+            or self.field_relation is None
+            or self.value < 1
+            or self.value > self.total
+        ):
+            raise ValueError("available field status needs a relation, valid position and total")
+        return self
 
 
 class ConversationReply(ContractModel):

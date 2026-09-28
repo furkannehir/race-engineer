@@ -201,6 +201,7 @@ class LiveRadio:
         if intent.intent_id != utterance.intent_id:
             raise ValueError("speech intent and utterance IDs do not match")
         if self._engine is None:
+
             async def unavailable() -> None:
                 return None
 
@@ -240,12 +241,20 @@ class LiveRadio:
         # No playback/cancellation waits on the telemetry loop.
         return not job.done.done()
 
-    async def answer(self, action: Callable[[], Awaitable[None]], epoch: int, ttl_s: float) -> str:
+    async def answer(
+        self,
+        action: Callable[[], Awaitable[None]],
+        epoch: int,
+        ttl_s: float,
+        *,
+        identifier: str | None = None,
+        deadline: datetime | None = None,
+    ) -> str:
         job = self._enqueue(
-            f"answer-{self._sequence}",
+            identifier or f"answer-{self._sequence}",
             50,
             epoch,
-            self._clock() + timedelta(seconds=ttl_s),
+            deadline or self._clock() + timedelta(seconds=ttl_s),
             action,
             interruption=InterruptionPolicy.NEVER,
         )

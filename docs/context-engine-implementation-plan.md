@@ -1,7 +1,13 @@
 # Local context engine and portable inference implementation plan
 
-Updated 2026-09-24. Status: CE-01 and the CE-02 typed baseline are implemented; CE-04 is next.
-CE-04 architecture revision 2 is documented; its first implementation slice is CE-04b.
+Updated 2026-09-24. Status: CE-01, the CE-02 typed baseline, and CE-04b–e foundation,
+evaluation adapters and initial screening/routing decision are implemented. Keep the
+current Qwen-v1 model/runtime; no new candidate is promoted. CE-05 opt-in integration is
+implemented, with broader qualification and semantic-quality work still required before
+default activation. Driver feedback inserted CE-05 recovery work before CE-06; CE-05R.1
+live running-position, CE-05R.2 truthful field relationships, CE-05R.3 diagnostics and the
+CE-05R.4 fact-provider catalog are implemented. CE-05R.5.1–R.5.4 add typed natural
+composition and bounded fallback; sample/listening/live validation in R.5.5 remains.
 
 This is the next implementation increment after the accepted live prototype. It combines
 the smaller local context-judge evaluation with optional CPU/GPU execution and resource
@@ -129,14 +135,16 @@ stable for history; the rows below are in the current execution order.
 | --- | --- | --- | --- |
 | CE-01 | Implemented | Model-neutral planner configuration and shared runtime launcher | Existing CPU behavior preserved; backend discovery and fallback tested |
 | CE-02 | Implemented (typed baseline) | Bilingual evaluation and performance baseline | Reproducible Qwen CPU report and frozen promotion criteria recorded; speech stages await supplied audio |
-| CE-04 | Next; architecture revision 2 documented | Session/state, context assembler, SemanticJudge adapters and dialogue evaluation | CE-02; CE-04b fake-driven foundation, reviewed scenarios, v2 bilingual quality/resource report |
-| CE-05 | Planned | Hybrid conversational routing and bounded social replies | CE-04; grounded outputs, bounded fallback, radio regression gates |
+| CE-04 | Implemented; initial screening concluded | Session/state, context assembler, SemanticJudge adapters and dialogue evaluation | No candidate promoted; larger independent qualification remains |
+| CE-05 | Implemented as preview, including CE-05.1 field status | Grounded dialogue integration, bounded social replies and reliable complete-field comparisons | Deterministic/radio gates and targeted model probes pass; independent semantic/listening/live promotion gates remain |
+| CE-05R | Active; R.1–R.4 and R.5.1–R.5.4 implemented | Recover live data, factual/semantic consistency, short-input reliability, scalable grounded facts and natural bounded radio composition | Deterministic tests and the R.2 targeted Qwen check pass; R.3 samples and R.5.5 listening/live acceptance remain |
 | CE-06 | Planned | Proactive usefulness baseline and shadow evaluation | CE-02 and CE-04 context; labels defined, audible behavior unchanged |
 | CE-07 | Planned | Trained small judges and targeted alternatives | CE-04/06 labeled datasets; held-out improvement demonstrated |
 | CE-03 | Deferred before CE-08 | Optional CUDA/Vulkan execution and compute controls | Stable CE-05/06 workload; real NVIDIA and AMD reports before claiming support |
 | CE-08 | Planned | Promotion, conservative Automatic mode, and release evidence | CE-03/05/06; CE-07 only for models being promoted |
 
-CE-04 proceeds next. CE-03 remains technically independent but is deliberately scheduled
+The remaining CE-05 recovery slices proceed before CE-06. CE-03 remains technically
+independent but is deliberately scheduled
 after CE-06 and any selected CE-07 work, immediately before CE-08, so acceleration is
 measured against the stable combined workload intended for release. Pull it forward only
 if CPU performance blocks CE-04/05/06 development. Missing AMD access blocks an AMD support
@@ -192,7 +200,7 @@ local suites, with no model download or microphone activation in ordinary tests.
 
 - Follow the [behavior design](conversational-core-design.md) and
   [architecture revision 2](ce04-architecture.md). CE-04a records behavior/ownership;
-  CE-04b builds versioned contracts, session/state, context assembly, and the controller
+  CE-04b has built versioned contracts, session/state, context assembly, and the controller
   using a scripted SemanticJudge. CE-04c freezes the reviewed dialogue evaluation and
   split audit; CE-04d compares adapters; CE-04e selects routing from measured evidence.
 - Make `DialogueSession` the only writer of conversational state. Validate turn/session/
@@ -250,7 +258,16 @@ including accuracy-versus-coverage, total judge latency, resident memory, calibr
 multi-turn limitations. A candidate may be rejected without blocking the other. No live
 replacement is implied by merely obtaining faster inference.
 
-### CE-05: Hybrid driver conversation
+Initial CE-04c–e delivery: [evaluation protocol and reproduction](dialogue-evaluation.md)
+and [routing decision](ce04-routing-decision.md). The pilot is intentionally rejection
+evidence, not completion of the release-quality gates: 68 judged locked turns (35 English/
+33 Turkish expected replies after overrides), one high-end CPU, typed text only. The
+multilingual single-resident head compositions did
+not earn promotion. Dual English/multilingual Laya residency, alternative head designs,
+fine-tuning and combined ASR/TTS/simulator memory remain deferred experiments, not measured
+benefits. Larger independent holdouts and audio/race validation remain required.
+
+### CE-05: Hybrid driver conversation — opt-in implementation complete
 
 - Route accepted small-judge results directly to the existing fresh fact retrieval and
   deterministic renderer. Send uncertain/complex requests to Qwen once if enabled and
@@ -279,6 +296,13 @@ replacement is implied by merely obtaining faster inference.
 Exit: replay and opt-in live routing pass the quality gates, all known ambiguity cases
 remain represented, and no model can add race values or bypass scheduling. Failure of
 both planners produces a bounded response; telemetry and critical calls keep running.
+
+Implementation status: contracts, retained-Qwen compatibility adapter, deterministic
+bilingual composer, mixed/partial/no-reply behavior, fresh per-opponent refresh and
+ID-tagged radio delivery feedback are complete behind `conversation.dialogue.enabled`.
+Deterministic regression gates pass. The model/listening/replay quality exit is deliberately
+still pending, so the switch defaults false and no fallback chain is enabled. See
+[CE-05 live dialogue](ce05-live-dialogue.md).
 
 ### CE-06: Proactive judgment and shadow evaluation
 
@@ -405,12 +429,12 @@ targeted config/lifecycle tests. The shipped execution remains Qwen on CPU. CE-0
 versioned bilingual datasets, content-free report schema, and frozen promotion protocol
 are implemented. The owned-runtime CPU baseline recorded 164/200 exact turns, 1.28-second
 warm planning p95, and about 5.27 GiB peak working set. CE-04 compact context/judge
-work proceeds next using the [revised architecture](ce04-architecture.md) and
+work uses the [revised architecture](ce04-architecture.md) and
 [delivery sub-slices](conversational-core-design.md#reviewable-delivery-slices).
-Implement CE-04b contracts, session/state, assembler and controller with a scripted judge;
-review scenario expectations before freezing CE-04c, then compare Laya/MiniLM/v2 Qwen.
-The v1 report does not establish multi-turn interaction quality;
-the new suite must address its split and coverage-definition limitations. CE-03 acceleration
+CE-04b–e contracts, orchestration, evaluation adapters and retain-current-route decision
+are implemented. CE-05 adds an opt-in retained-Qwen compatibility path with bounded acts,
+fresh grounded composition and delivery-aware radio state. Its default remains off because
+the model/listening/live promotion evidence is pending. CE-03 acceleration
 is deliberately deferred until immediately before CE-08; none is an automatic default
 replacement.
 
@@ -419,6 +443,7 @@ residency, CPU/offload presets, exact minimum hardware, ASR acceleration/replace
 whether a trained ranker improves calls. Keep TTS-001 voice replacement and STT-001 capture/
 recognition improvements separate unless timing/quality evidence makes them a prerequisite.
 TTS-001 now tracks FreyaTTS-small as a Turkish-only evaluation candidate while retaining
-Piper for English/fallback; no dependency or runtime change is selected. CONV-004 is
-explicitly scheduled in CE-05. Real-race history/panel checks and genuine-blue IR-001
+Piper for English/fallback; no dependency or runtime change is selected. CONV-004's bounded
+behavior is implemented in the CE-05 preview; listening/live validation remains. Real-race
+history/panel checks and genuine-blue IR-001
 validation remain open and can run alongside these slices. M6 remains deferred.

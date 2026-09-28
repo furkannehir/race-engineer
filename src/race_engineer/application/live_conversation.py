@@ -9,11 +9,19 @@ from pathlib import Path
 
 from race_engineer.application.control import LiveControl
 from race_engineer.config import AppConfig, RadioTtsConfig, SttConfig, load_config
-from race_engineer.conversation.factory import conversation_planner
+from race_engineer.conversation.composer import compose
+from race_engineer.conversation.dialogue_session import DialogueSession
+from race_engineer.conversation.factory import conversation_planner, semantic_judge
 from race_engineer.conversation.live import LiveRaceState, LiveTelemetryUnavailable
 from race_engineer.conversation.session import ConversationSession
 from race_engineer.core.contracts import PlaybackResult, RaceContext, SpeechIntent, Utterance
 from race_engineer.core.conversation import ConversationReply, RadioLanguage
+from race_engineer.core.dialogue import (
+    DeliveryEvent,
+    DeliveryStatus,
+    OutputMode,
+    ResponseDecision,
+)
 from race_engineer.core.enums import PlaybackStatus
 from race_engineer.core.interfaces import ConversationSpeaker, SpeechRecognizer
 from race_engineer.core.speech_input import AudioClip, SpeechInputError
@@ -22,11 +30,40 @@ from race_engineer.observability import configure_logging
 from race_engineer.stt.buttons import binding_label, legacy_binding
 from race_engineer.stt.capture import PushToTalkMicrophone
 from race_engineer.stt.qwen import QwenSpeechRecognizer
+from race_engineer.stt.radio_cues import RadioCuePlayer
 from race_engineer.tts import tts_factory
 from race_engineer.tts.live_radio import LiveRadio
 from race_engineer.tts.piper import PiperConversationSpeaker
 
 _LOGGER = logging.getLogger(__name__)
+
+_DELIVERY_OUTCOMES: dict[str, DeliveryStatus] = {
+    "completed": "completed",
+    "interrupted": "interrupted",
+    "expired": "expired",
+    "failed": "failed",
+    "engine_unavailable": "failed",
+    "muted": "cancelled",
+    "dropped": "cancelled",
+    "superseded": "cancelled",
+    "invalidated": "cancelled",
+}
+
+
+def _delivery(
+    decision: ResponseDecision, status: DeliveryStatus, mode: OutputMode
+) -> DeliveryEvent:
+    return DeliveryEvent.model_validate(
+        {
+            "turn_id": decision.turn_id,
+            "response_id": decision.response_id,
+            "session_id": decision.session_id,
+            "generation": decision.generation,
+            "output_mode": mode,
+            "status": status,
+            "occurred_at": datetime.now(UTC),
+        }
+    )
 
 
 class LiveBridge:
@@ -113,6 +150,7 @@ async def _capture(
     state: LiveRaceState,
     radio: LiveRadio,
     control: LiveControl | None = None,
+    cues: RadioCuePlayer | None = None,
 ) -> tuple[AudioClip | None, int]:
     epoch = state.epoch
 
@@ -126,7 +164,16 @@ async def _capture(
             control.emit("phase", "listening")
 
     try:
-        return await microphone.next_clip(before_capture=claim), epoch
+        if cues is None:
+            return await microphone.next_clip(before_capture=claim), epoch
+        return (
+            await microphone.next_clip(
+                before_capture=claim,
+                after_stream_started=lambda: cues.play("open"),
+                after_capture=lambda: cues.play("close"),
+            ),
+            epoch,
+        )
     finally:
         # next_clip's finally has already stopped the physical microphone stream.
         radio.release_capture()
@@ -141,17 +188,36 @@ async def live_dialogue(
     speaker: ConversationSpeaker | None,
     reply_language: RadioLanguage | None,
     control: LiveControl | None = None,
+    cues: RadioCuePlayer | None = None,
 ) -> None:
     from race_engineer.core.speech_output import SpeechOutputError
 
-    session = ConversationSession(
-        conversation_planner(config.conversation),
-        state.snapshot,
-        config.conversation,
-        generation=lambda: state.epoch,
+    dialogue_session = (
+        DialogueSession(
+            semantic_judge(config.conversation),
+            state.snapshot,
+            config.conversation.dialogue,
+            generation=lambda: state.epoch,
+        )
+        if config.conversation.dialogue.enabled
+        else None
+    )
+    legacy_session = (
+        None
+        if dialogue_session is not None
+        else ConversationSession(
+            conversation_planner(config.conversation),
+            state.snapshot,
+            config.conversation,
+            generation=lambda: state.epoch,
+        )
     )
     microphone: PushToTalkMicrophone | None = None
     try:
+        if dialogue_session is not None:
+            print("CE-05 dialogue preview enabled; the established route remains the default.")
+            if control:
+                control.emit("notice", "CE-05 dialogue preview enabled for this run.")
         print("Loading local speech models. Telemetry continues independently.", flush=True)
         await recognizer.start()
         if speaker is not None:
@@ -170,15 +236,14 @@ async def live_dialogue(
         if control:
             control.emit("models", "ready" if speaker is not None else "no_reply_voice")
         print(
-            f"Radio ready. Hold {binding_label(stt)} when telemetry is ready; "
-            "ESC or Ctrl+C exits."
+            f"Radio ready. Hold {binding_label(stt)} when telemetry is ready; ESC or Ctrl+C exits."
         )
         print("Critical calls interrupt speech/capture. Release the key and ask again afterwards.")
         while True:
             if control:
                 control.emit("phase", "ready")
             try:
-                capture = asyncio.create_task(_capture(microphone, state, radio, control))
+                capture = asyncio.create_task(_capture(microphone, state, radio, control, cues))
                 try:
                     audio, epoch = await asyncio.shield(capture)
                 except asyncio.CancelledError:
@@ -197,6 +262,7 @@ async def live_dialogue(
                 started = time.perf_counter()
                 if epoch != state.epoch or not state.available:
                     raise LiveTelemetryUnavailable()
+                turn_started_at = datetime.now(UTC)
                 print("Transcribing...", flush=True)
                 if control:
                     control.emit("phase", "transcribing")
@@ -205,8 +271,23 @@ async def live_dialogue(
                 if transcript.status != "transcribed":
                     print(f"No question submitted: {transcript.reason or transcript.status}.")
                     if control:
+                        notice = {
+                            "audio_too_short": (
+                                "PTT capture was too short. Hold it through the final word."
+                            ),
+                            "audio_below_threshold": (
+                                "No clear speech detected. Check microphone level and try again."
+                            ),
+                            "unsupported_language": (
+                                "Speech was not recognized as English or Turkish. Please try again."
+                            ),
+                        }.get(
+                            transcript.reason or transcript.status,
+                            "Speech was not understood. Release PTT and try again.",
+                        )
                         control.emit(
-                            "notice", "No clear speech detected. Release PTT and try again."
+                            "notice",
+                            notice,
                         )
                     continue
                 if epoch != state.epoch or not state.available:
@@ -214,20 +295,38 @@ async def live_dialogue(
                 print(f"You ({transcript.language}): {transcript.text}", flush=True)
                 if control:
                     control.emit("phase", "thinking")
-                reply = await session.ask(
-                    transcript.text, reply_language=reply_language or transcript.language
-                )
+                if dialogue_session is None:
+                    assert legacy_session is not None
+                    reply = await legacy_session.ask(
+                        transcript.text, reply_language=reply_language or transcript.language
+                    )
+                    decision = None
+                else:
+                    decision = await dialogue_session.ask(
+                        transcript.text,
+                        asr_language=transcript.language,
+                        reply_language=reply_language,
+                        output_mode="speech" if speaker is not None else "text",
+                        turn_started_at=turn_started_at,
+                        origin_generation=epoch,
+                    )
+                    reply = None
                 if epoch != state.epoch or not state.available:
                     raise LiveTelemetryUnavailable()
                 print(f"ASR + reply processing: {time.perf_counter() - started:.2f}s")
 
-                async def deliver(
-                    answer: ConversationReply = reply, answer_epoch: int = epoch
-                ) -> None:
-                    refreshed = state.refresh(answer, answer_epoch)
-                    observed_at = state.snapshot().context.frame.observed_at
-                    print(f"Engineer ({refreshed.language}): {refreshed.text}", flush=True)
-                    if speaker is not None:
+                if dialogue_session is None:
+                    assert reply is not None
+                    legacy_reply = reply
+
+                    async def deliver_legacy(
+                        answer: ConversationReply = legacy_reply, answer_epoch: int = epoch
+                    ) -> None:
+                        refreshed = state.refresh(answer, answer_epoch)
+                        observed_at = state.snapshot().context.frame.observed_at
+                        print(f"Engineer ({refreshed.language}): {refreshed.text}", flush=True)
+                        if speaker is None:
+                            return
 
                         def still_current() -> bool:
                             age = (datetime.now(UTC) - observed_at).total_seconds()
@@ -239,7 +338,73 @@ async def live_dialogue(
 
                         await speaker.speak(refreshed, before_playback=still_current)
 
-                outcome = await radio.answer(deliver, epoch, config.conversation.max_snapshot_age_s)
+                    outcome = await radio.answer(
+                        deliver_legacy, epoch, config.conversation.max_snapshot_age_s
+                    )
+                else:
+                    assert decision is not None
+                    dialogue_decision = decision
+                    if decision.outcome in {"discarded", "no_reply"}:
+                        if decision.outcome == "discarded":
+                            print(f"Dialogue discarded: {decision.reason}.", flush=True)
+                        continue
+                    output_mode: OutputMode = "speech" if speaker is not None else "text"
+                    dialogue_session.record_delivery(_delivery(decision, "queued", output_mode))
+                    acknowledgments = sum(
+                        "acknowledge" in turn.acts for turn in dialogue_session.state.history[-2:]
+                    )
+
+                    async def deliver_dialogue(
+                        answer: ResponseDecision = dialogue_decision,
+                        answer_epoch: int = epoch,
+                        repeated: bool = acknowledgments > 1,
+                    ) -> None:
+                        refreshed = state.refresh_decision(answer, answer_epoch)
+                        text = compose(refreshed, repeated_acknowledgment=repeated)
+                        if text is None:
+                            return
+                        observed_at = state.snapshot().context.frame.observed_at
+                        print(f"Engineer ({refreshed.language}): {text}", flush=True)
+                        if speaker is None:
+                            return
+                        speech_reply = ConversationReply(
+                            language=refreshed.language,
+                            text=text,
+                            status="answered"
+                            if refreshed.outcome in {"answered", "partial", "acknowledge"}
+                            else "clarification"
+                            if refreshed.outcome == "clarify"
+                            else "unavailable",
+                            session_id=refreshed.session_id,
+                            source_sequence=refreshed.source_sequence,
+                            mode="live",
+                            reason=refreshed.reason,
+                        )
+
+                        def still_current() -> bool:
+                            age = (datetime.now(UTC) - observed_at).total_seconds()
+                            current = (
+                                state.available
+                                and state.epoch == answer_epoch
+                                and 0 <= age <= config.conversation.dialogue.max_snapshot_age_s
+                            )
+                            if current:
+                                dialogue_session.record_delivery(
+                                    _delivery(answer, "started", "speech")
+                                )
+                            return current
+
+                        await speaker.speak(speech_reply, before_playback=still_current)
+
+                    outcome = await radio.answer(
+                        deliver_dialogue,
+                        epoch,
+                        config.conversation.dialogue.max_snapshot_age_s,
+                        identifier=decision.response_id,
+                        deadline=decision.expires_at,
+                    )
+                    final_status = _DELIVERY_OUTCOMES.get(outcome, "cancelled")
+                    dialogue_session.record_delivery(_delivery(decision, final_status, output_mode))
                 if outcome != "completed":
                     print(f"Radio answer {outcome}; no audio retry. Release the key and ask again.")
                 print(
@@ -247,13 +412,19 @@ async def live_dialogue(
                     flush=True,
                 )
             except LiveTelemetryUnavailable:
-                session.reset()
+                if dialogue_session is not None:
+                    dialogue_session.reset()
+                else:
+                    assert legacy_session is not None
+                    legacy_session.reset()
                 print("Telemetry/session changed; that question was discarded. Please ask again.")
             except SpeechInputError as error:
                 print(f"Speech input: {error}. Release the key before trying again.")
                 if control:
                     control.emit("notice", f"Speech input: {error}. Release PTT and try again.")
     finally:
+        if dialogue_session is not None:
+            await dialogue_session.aclose()
         if microphone is not None:
             await microphone.aclose()
 
@@ -272,6 +443,7 @@ async def voice_iracing(
     control: LiveControl | None = None,
     persist_history: bool = False,
     history_database_path: Path | None = None,
+    cue_player: RadioCuePlayer | None = None,
 ) -> int:
     # Existing recorder and policy pipeline are shared, not run in a second process.
     from race_engineer.cli import _read_iracing
@@ -292,6 +464,12 @@ async def voice_iracing(
     if output_device is not None:
         output_settings["output_device"] = output_device
     radio_tts = RadioTtsConfig.model_validate(output_settings)
+    cues = cue_player or RadioCuePlayer(
+        output_device=radio_tts.output_device,
+        volume=min(1.0, radio_tts.volume * 0.2),
+        muted=(lambda: control.muted.is_set()) if control else (lambda: False),
+        enabled=radio_tts.enabled and not text_only,
+    )
     state = LiveRaceState(config.conversation.max_snapshot_age_s)
     history = None
     if persist_history and config.history.enabled:
@@ -317,9 +495,7 @@ async def voice_iracing(
         activity=lambda value: control.emit("speech", value) if control else None,
         result_sink=(history.record_playback_result if history is not None else None),
         engine_unavailable_reason=(
-            "audio_disabled"
-            if text_only or not config.tts.enabled
-            else "engine_unavailable"
+            "audio_disabled" if text_only or not config.tts.enabled else "engine_unavailable"
         ),
     )
     radio.set_muted(control.muted.is_set() if control else False)
@@ -356,7 +532,17 @@ async def voice_iracing(
             )
         )
         dialogue = asyncio.create_task(
-            live_dialogue(config, stt, state, radio, recognizer, speaker, reply_language, control)
+            live_dialogue(
+                config,
+                stt,
+                state,
+                radio,
+                recognizer,
+                speaker,
+                reply_language,
+                control,
+                cues,
+            )
         )
         watchdog = asyncio.create_task(bridge.watch_freshness())
         tasks.extend((telemetry, dialogue, watchdog))

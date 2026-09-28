@@ -79,6 +79,7 @@ class FakeWorker(QObject):
 def test_opening_panel_never_claims_connected_or_loads_models(panel):
     assert panel.worker is None
     assert panel.heading.text() == "Ready to start"
+    assert panel.engine.text.text() == "Engineer stopped"
     assert panel.telemetry.text.text() == "iRacing not connected"
     assert panel.start_button.text() == "Start engineer"
 
@@ -106,9 +107,13 @@ def test_start_stop_locks_settings_and_keeps_mute_available(panel, monkeypatch):
     QTest.mouseClick(panel.start_button, Qt.MouseButton.LeftButton)
     worker = panel.worker
     assert worker is not None and not panel.microphone.isEnabled()
+    assert panel.engine.text.text() == "Engineer started"
+    assert "start confirmed" in panel.notice.text()
     assert panel.heading.text() == "Waiting for iRacing"
     worker.status.emit("telemetry", "ready")
     assert panel.heading.text() == "Radio ready"
+    assert panel.telemetry.text.text() == "iRacing connected"
+    assert "Live telemetry is ready" in panel.notice.text()
     QTest.mouseClick(panel.mute_button, Qt.MouseButton.LeftButton)
     assert worker.control.muted.is_set() and panel.tray_mute.isChecked()
     assert panel.heading.text() == "Audio muted"
@@ -117,6 +122,7 @@ def test_start_stop_locks_settings_and_keeps_mute_available(panel, monkeypatch):
     assert not panel.start_button.isEnabled()
     worker.finished.emit()
     assert panel.worker is None and panel.microphone.isEnabled()
+    assert panel.engine.text.text() == "Engineer stopped"
     assert panel.heading.text() == "Ready to start"
 
 
@@ -139,6 +145,8 @@ def test_test_buttons_use_test_jobs_and_can_be_cancelled(panel, monkeypatch):
     QTest.mouseClick(panel.test_mic, Qt.MouseButton.LeftButton)
     worker = panel.worker
     assert worker.mode == "mic" and panel.start_button.text() == "Cancel test"
+    assert panel.engine.text.text() == "Engineer stopped"
+    assert panel.notice.text() == "Microphone test started."
     QTest.mouseClick(panel.start_button, Qt.MouseButton.LeftButton)
     worker.finished.emit()
     QTest.mouseClick(panel.test_voice, Qt.MouseButton.LeftButton)

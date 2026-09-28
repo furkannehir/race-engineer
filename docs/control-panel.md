@@ -28,8 +28,8 @@ the push-to-talk binding dialog. There is no download or cloud fallback.
 ## First shakedown
 
 1. Select the microphone and output. System default is the safest first choice. Output
-   selection affects **Piper replies only**; automatic SAPI calls use Windows' default
-   playback device. Set that default to the same headset yourself if needed.
+   selection affects **Piper replies and push-to-talk cues**; automatic SAPI calls use
+   Windows' default playback device. Set that default to the same headset yourself if needed.
 2. Click **Test mic** and speak for three seconds. It reports a level, without saving
    audio. **Test voice** plays a short Piper radio check; Auto uses English for this test.
    Both tests can be cancelled, and cannot overlap a live session.
@@ -38,7 +38,8 @@ the push-to-talk binding dialog. There is no download or cloud fallback.
    steering wheels, button boxes, joysticks, and gamepads. Steering, pedals, triggers, and
    other analog axes are deliberately ignored so driving cannot open the microphone. Save
    the detected binding; there is no device-name or button-number hunting.
-4. Click **Start engineer**. The panel reuses a matching local conversation server or
+4. Click **Start engineer**. A separate status check confirms that the engineer process
+   has started. The panel reuses a matching local conversation server or
    starts the runtime selected in `[conversation.runtime]` on literal `127.0.0.1`. The
    default remains the downloaded CPU runtime; accelerated setup and controls are planned.
    Wait for both iRacing and
@@ -53,6 +54,13 @@ the push-to-talk binding dialog. There is no download or cloud fallback.
 Do not run `voice-iracing`, `read-iracing` or `voice-replay` alongside the panel. A local
 lock prevents two panels from the same checkout; it does not detect independently
 launched CLI processes or another checkout.
+
+Push-to-talk uses short original radio-style cues. Hold the configured button through the
+opening chirp, speak after it, and release when finished; the closing chirp confirms that
+the question was submitted. The microphone stream is ready before the opening sound, but
+buffering starts only after it finishes, so the cue itself is not sent to speech
+recognition. Mute suppresses the cues together with other application audio. If cue
+playback is unavailable, push-to-talk continues without it.
 
 **Mute all audio includes critical calls.** It cancels current speech, discards queued
 speech and drops new calls/replies while muted. Unmuting does not replay old messages.

@@ -3,6 +3,7 @@
 import asyncio
 import base64
 import json
+import logging
 import os
 import subprocess
 from contextlib import suppress
@@ -10,7 +11,9 @@ from contextlib import suppress
 from race_engineer.config import SttConfig
 from race_engineer.core.speech_input import AudioClip, SpeechInputError, Transcription
 from race_engineer.processes import start_owned_process
-from race_engineer.stt.audio import silence_reason
+from race_engineer.stt.audio import analyze_audio
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class QwenSpeechRecognizer:
@@ -86,10 +89,16 @@ class QwenSpeechRecognizer:
                 raise
 
     async def transcribe(self, audio: AudioClip) -> Transcription:
-        reason = silence_reason(audio, self._config)
-        if reason is not None:
+        diagnostic = analyze_audio(audio, self._config)
+        _LOGGER.info(
+            "speech clip analyzed",
+            extra={"event": "stt_audio_diagnostic", **diagnostic.model_dump()},
+        )
+        if diagnostic.gate_result != "accepted":
             return Transcription(
-                status="no_speech", audio_duration_s=audio.duration_s, reason=reason
+                status="no_speech",
+                audio_duration_s=audio.duration_s,
+                reason=diagnostic.gate_result,
             )
         await self.start()
         async with self._lock:
