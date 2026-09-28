@@ -1,5 +1,9 @@
 # Local context engine and portable inference implementation plan
 
+> **Superseded 2026-09-28.** This CE-04/05 plan is retained for historical decisions and
+> evaluation evidence. New implementation follows
+> [Context/Core Engineer architecture v3](context-core-architecture-v3.md).
+
 Updated 2026-09-24. Status: CE-01 and the CE-02 typed baseline are implemented; CE-04 is next.
 CE-04 architecture revision 2 is documented; its first implementation slice is CE-04b.
 

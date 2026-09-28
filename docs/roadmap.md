@@ -1,6 +1,6 @@
 # Working roadmap
 
-Updated 2026-09-24. This is the current progress/backlog companion to the original
+Updated 2026-09-28. This is the current progress/backlog companion to the original
 [implementation plan](personalized-ai-race-engineer-implementation-plan.docx), not a claim
 that every original milestone exit criterion has been formally validated.
 
@@ -14,11 +14,11 @@ This is qualitative functional acceptance. There are no new measured accuracy, l
 frame-time, or endurance results accompanying the feedback. Existing defects remain open.
 
 The next implementation increment is the
-[local context engine and portable inference plan](context-engine-implementation-plan.md):
-smaller bilingual judges, optional CPU/GPU execution including AMD/Vulkan, measured resource
-budgets, and independent promotion gates for conversation and proactive ranking. CE-01
-runtime foundations and the CE-02 bilingual typed CPU baseline are implemented. This
-updates the next-task order without closing pending live validation.
+[Context/Core Engineer architecture v3](context-core-architecture-v3.md). It replaces the
+planned bounded semantic-query path with continuous telemetry memory, evidence-producing
+context intelligence, a Core Engineer decision boundary, Qwen-generated conversation and a
+deterministic grounding gate. CE-01 runtime foundations and the CE-02 evaluation baseline
+remain reusable; the old CE-04/05 design is historical rather than the next task.
 
 | Milestone | Current position | Remaining/deferred work |
 | --- | --- | --- |
@@ -72,24 +72,25 @@ should share the validated service later. CONV-004 is scheduled in CE-05, not ye
 
 ## Next implementation order
 
-1. **Done — CE-01:** configurable planners, shared runtime launch, and bounded backend
-   discovery; CPU defaults preserved.
-2. **Done — CE-02 typed baseline:** versioned bilingual suites, frozen promotion targets,
-   content-free reports, and the owned-runtime Qwen CPU baseline are recorded. Audio-stage
-   timing remains pending deliberately supplied test samples.
-3. **Next — CE-04b:** implement the session/state, stateless context assembler, versioned
-   SemanticJudge contracts and deterministic controller from
-   [architecture revision 2](ce04-architecture.md), using scripted judges first. Complete
-   [behavior scenario review](conversational-core-design.md) before freezing CE-04c dialogue
-   evaluation; compare Laya/MiniLM/v2 Qwen in CE-04d and decide routing in CE-04e. Tone:
-   calm teammate. CE-04 runtime work is not yet implemented.
-4. CE-05: grounded hybrid conversation and bounded bilingual acknowledgments.
-5. CE-06: labeled proactive usefulness evaluation in shadow mode.
-6. CE-07: optionally train/evaluate smaller classifiers or alternatives if data justifies it.
-7. CE-03: optional CUDA/Vulkan controls and stable combined-workload benchmarks. AMD
-   support still requires an actual AMD test.
-8. CE-08: representative hardware and race validation, conservative Automatic mode,
-   independent promotion decisions, and open-source distribution readiness.
+1. **Done — INT-01:** versioned evidence/brief/generation contracts, Context/Core/Qwen
+   interfaces, one-turn orchestration and deterministic grounding. Scripted tests cover the
+   three architecture proofs: direct fact, telemetry analysis and natural social response.
+2. **Done — INT-02 foundation:** bounded Telemetry Memory now exposes generic normalized
+   signal selectors and replay-deterministic current/window operations. Missing signals or
+   incomplete history produce explicit unknown evidence instead of fabricated values.
+3. **Next — INT-03:** implement a Context Engineer baseline that selects measurements,
+   deterministic derivations, learned inferences and explicit unknowns without a spoken
+   command grammar.
+4. **INT-04:** implement Core Engineer and Qwen conversational generation adapters plus
+   evidence-aware English/Turkish evaluation.
+5. **INT-05:** integrate the new path with live radio, delivery-time evidence refresh,
+   cancellation and deterministic critical-call coexistence.
+6. **INT-06:** evaluate temporal/context model candidates and portable/enhanced execution
+   profiles.
+7. Optional CUDA/Vulkan controls and stable combined-workload benchmarks remain after a
+   stable intelligence workload; AMD support still requires an actual AMD test.
+8. Proactive usefulness learning remains separate and shadow-only until independently
+   labeled evidence justifies promotion.
 
 ## Constraints carried forward
 

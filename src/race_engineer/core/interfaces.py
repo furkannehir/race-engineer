@@ -12,6 +12,15 @@ from race_engineer.core.contracts import (
     Utterance,
 )
 from race_engineer.core.conversation import ConversationPlan, ConversationReply, ConversationRequest
+from race_engineer.core.intelligence import (
+    ContextPacket,
+    DriverTurn,
+    EngineerBrief,
+    EvidenceItem,
+    EvidenceQuery,
+    GeneratedResponse,
+    GroundedResponse,
+)
 from race_engineer.core.speech_input import AudioClip, Transcription
 from race_engineer.core.speech_output import SpeechOutputResult
 
@@ -52,6 +61,46 @@ class TextToSpeechEngine(Protocol):
 
 class ConversationPlanner(Protocol):
     async def plan(self, request: ConversationRequest) -> ConversationPlan: ...
+
+
+class ContextEngineer(Protocol):
+    async def analyze(self, turn: DriverTurn) -> ContextPacket: ...
+
+    async def refresh(
+        self,
+        packet: ContextPacket,
+        evidence_ids: Sequence[str],
+    ) -> ContextPacket: ...
+
+
+class TelemetryMemory(Protocol):
+    def update(self, context: RaceContext) -> None: ...
+
+    def query(self, request: EvidenceQuery) -> EvidenceItem: ...
+
+    def query_many(self, requests: Sequence[EvidenceQuery]) -> tuple[EvidenceItem, ...]: ...
+
+
+class CoreEngineer(Protocol):
+    async def decide(self, turn: DriverTurn, context: ContextPacket) -> EngineerBrief: ...
+
+
+class EngineerResponseGenerator(Protocol):
+    async def generate(
+        self,
+        turn: DriverTurn,
+        context: ContextPacket,
+        brief: EngineerBrief,
+    ) -> GeneratedResponse: ...
+
+
+class EvidenceGrounder(Protocol):
+    def ground(
+        self,
+        response: GeneratedResponse,
+        context: ContextPacket,
+        brief: EngineerBrief,
+    ) -> GroundedResponse: ...
 
 
 class SpeechRecognizer(Protocol):

@@ -1,0 +1,198 @@
+# Context/Core Engineer architecture v3
+
+Updated 2026-09-28. This is the authoritative design for the replacement conversational
+intelligence path. It supersedes the CE-04 bounded semantic-query design and the associated
+CE-05 plan. The existing conversational prototype remains available only as a migration
+source and fallback reference.
+
+## Product outcome
+
+The driver speaks naturally. The system builds relevant evidence from live and historical
+telemetry, reasons about what a race engineer should communicate, and lets Qwen produce the
+actual conversation. Strict code protects evidence, freshness, radio priority and critical
+calls; it does not define a command grammar or one answer template per question.
+
+The first architecture proof must handle the same pipeline for:
+
+1. “Where are we?” — direct current evidence.
+2. “Why am I losing time?” — time-window analysis and an evidence-backed hypothesis.
+3. “He has no idea about racing.” — natural teammate interaction without forcing a
+   telemetry query.
+
+## Runtime shape
+
+    continuous
+    iRacing -> normalization -> Telemetry Memory -> Context Engineer
+                                                      ^       |
+                                                      |       | evidence
+    STT -> DriverTurn --------------------------------+       v
+                                                 Core Engineer
+                                                      |
+                                                      | EngineerBrief
+                                                      v
+                                                    Qwen
+                                                      |
+                                                      | GeneratedResponse
+                                                      v
+                                          refresh -> Grounding Gate
+                                                      |
+                                                      v
+                                                radio scheduler -> TTS
+
+The Context Engineer is both continuous and query-aware. It incrementally maintains useful
+time windows and race entities, then selects or derives evidence relevant to the current
+utterance. The Core Engineer may later make a small bounded request for additional evidence;
+an unbounded agent loop is not part of the first implementation.
+
+These boxes are logical interfaces, not a requirement for a separate model per box. A
+portable mode may combine Core Engineer reasoning and Qwen generation in one inference.
+A stronger mode may run a continuous temporal model and a small separate Core Engineer.
+
+## Boundary contracts
+
+DriverTurn
+: Transcript, language hints, session generation, receipt time and bounded recent dialogue.
+
+EvidenceItem
+: A measurement, deterministic derivation, learned inference or explicit unknown. Every
+  known item carries a subject, metric, source sequence, timestamp, confidence and source
+  fields. Inferences carry a claim; unknowns carry neither a fabricated value nor claim.
+
+ContextPacket
+: The Context Engineer's bounded evidence selection and situation tags for one turn. It
+  cannot mix sessions, duplicate evidence IDs or cite future telemetry.
+
+EngineerBrief
+: The Core Engineer's communication decision: goal, language, tone, evidence IDs, guidance
+  and confidence. It is not final speech and cannot cite evidence absent from the packet.
+
+GeneratedResponse
+: Qwen-authored natural speech. Volatile numerical values use explicit evidence
+  placeholders, and every placeholder maps to one Core-approved evidence item. Qwen may
+  produce evidence-free social conversation when the brief calls for it.
+
+GroundedResponse
+: Final text after refreshed evidence substitution and scope validation. Only this contract
+  may enter the conversational radio path.
+
+The initial contracts and orchestration live in core/intelligence.py and intelligence/.
+They are additive and do not make the old query planner part of the new design.
+
+## Telemetry Memory
+
+Telemetry Memory retains bounded current and historical data independently from driver
+turns:
+
+- current normalized frame and session generation;
+- recent high-frequency signal windows;
+- lap and sector summaries;
+- nearby opponent histories;
+- normalized events and race phase; and
+- driver baselines that are valid for the current car/track/session scope.
+
+It exposes generic operations such as latest value, window delta, trend, comparison,
+ranking, aggregation, change detection, correlation and event lookup. These operations are
+typed numerical tools, not spoken intents. Simulator-specific SDK names stay behind the
+normalization/schema boundary.
+
+An LLM will not receive thousands of raw frames as JSON. Numerical processing belongs in
+the memory/query substrate or a temporal model. Language models receive compact evidence.
+
+## Context Engineer
+
+The Context Engineer answers “what evidence is relevant and what does the data suggest?”
+It may combine:
+
+- direct measurements;
+- generic deterministic time-series operations;
+- learned temporal representations or anomaly detectors;
+- semantic relevance selection for the current utterance; and
+- explicit uncertainty when the simulator or history cannot support a conclusion.
+
+The implementation is model-agnostic. Laya/MiniLM-style language encoders may help select
+language-side relevance, but they are not treated as temporal telemetry models. Candidate
+models must be evaluated against scripted evidence controls and replay data before live use.
+
+## Core Engineer
+
+The Core Engineer answers “what should a good teammate communicate now?” It chooses whether
+to inform, analyze, coach, acknowledge, clarify or remain silent. It separates facts from
+hypotheses, considers race phase and radio load, and emits an evidence-backed brief.
+
+The first version may use a local general model behind this interface. Later versions may
+use a smaller distilled reasoner or policy model. Critical race-control calls remain on the
+existing deterministic policy path and do not wait for this component.
+
+## Qwen and grounding
+
+Qwen is the conversational generator, not merely an intent classifier. It receives the
+turn, compact evidence, Core brief, personality and bounded dialogue context. It writes the
+actual English or Turkish response.
+
+Generated speech cannot embed literal numeric telemetry; it uses placeholders such as
+{{position}} or {{sector_loss}}. Before delivery, the Context Engineer refreshes cited
+evidence and the grounding gate:
+
+- checks turn, session, generation and language scope;
+- requires the generator to use exactly the evidence approved by the Core brief;
+- rejects missing, expired, unknown or nonscalar referenced evidence;
+- substitutes refreshed values;
+- rejects unresolved placeholders and overlong radio text; and
+- hands only the grounded response to the radio scheduler.
+
+This mechanism cannot prove every free-text statement true. Prompts, evidence-aware
+evaluation and conservative handling of unverified incidents remain required. Precise
+telemetry claims and numerical values have a mechanical provenance boundary.
+
+## Runtime profiles
+
+Portable
+: Generic telemetry analytics plus a combined Core/Qwen inference. One conversational
+  model call per driver turn.
+
+Enhanced
+: Continuous temporal context model, small Core reasoner and Qwen generator. Context work
+  occurs incrementally so PTT does not trigger whole-session analysis.
+
+CPU remains a complete supported route. Optional CUDA/Vulkan acceleration is a deployment
+choice and does not change these contracts.
+
+## Migration boundary
+
+Carry forward:
+
+- telemetry adapters, normalization, recording and replay;
+- event derivation and critical strict policy;
+- STT/TTS adapters, PTT controls and radio scheduling;
+- process ownership, cancellation and timeout behavior;
+- driver profiles, explicit preferences and privacy defaults; and
+- session freshness and opponent identity concepts.
+
+Replace as the primary path:
+
+- closed RaceQuery/semantic-intent routing;
+- Qwen used only as a classifier;
+- one fact provider and one response template per supported question; and
+- CE-04 candidate routing as the live conversational architecture.
+
+The old fact renderer may later be ported as an emergency response fallback. It is not the
+new Core Engineer or the normal Qwen response path.
+
+## Implementation order
+
+1. **INT-01 — implemented foundation:** contracts, component protocols, one-turn
+   orchestrator, strict evidence grounding, and scripted coverage of the three architecture
+   proof conversations.
+2. **INT-02 — implemented foundation:** bounded Telemetry Memory with generic normalized
+   signal selectors plus latest, delta, mean, minimum, maximum and trend operations.
+   Session changes/rewinds reset history, ordering failures are rejected, missing or
+   incomplete windows become explicit unknown evidence, and replay time drives windows.
+3. **INT-03 — next:** Context Engineer baseline that selects evidence and supports direct facts,
+   time-window comparisons and explicit unknowns without a spoken command grammar.
+4. **INT-04:** Core Engineer and Qwen generator adapters, prompts and local evaluation.
+5. **INT-05:** live radio integration, delivery-time refresh, cancellation and deterministic
+   critical-call coexistence.
+6. **INT-06:** learned temporal/context candidates and portable/enhanced runtime evaluation.
+
+No old CE-04/05 component is ported merely because it exists. Each migration must satisfy
+one of these new boundaries and have a focused test.

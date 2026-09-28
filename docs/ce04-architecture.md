@@ -1,5 +1,9 @@
 # CE-04 architecture: dialogue sessions and semantic judgment
 
+> **Superseded 2026-09-28.** This is retained as a historical experiment. The
+> [Context/Core Engineer architecture v3](context-core-architecture-v3.md) is the
+> authoritative implementation direction. Do not add new runtime work to this design.
+
 Updated 2026-09-24. Revision 2 of the proposed conversational architecture. This is a
 design for CE-04 and its CE-05 live integration; the current runtime still uses the v1
 conversation path. See the [delivery plan](context-engine-implementation-plan.md) and
