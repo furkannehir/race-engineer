@@ -1,6 +1,6 @@
 # Context/Core Engineer architecture v3
 
-Updated 2026-09-28. This is the authoritative design for the replacement conversational
+Updated 2026-10-03. This is the authoritative design for the replacement conversational
 intelligence path. It supersedes the CE-04 bounded semantic-query design and the associated
 CE-05 plan. The existing conversational prototype remains available only as a migration
 source and fallback reference.
@@ -58,6 +58,11 @@ EvidenceItem
   known item carries a subject, metric, source sequence, timestamp, confidence and source
   fields. Inferences carry a claim; unknowns carry neither a fabricated value nor claim.
 
+CapabilityDescriptor / CapabilityResult
+: A value-free, typed calculation advertised to the Context Engineer and its deterministic
+  execution result. Descriptors publish required inputs, outputs, freshness and uncertainty;
+  results return sourced evidence or an explicit unavailable reason.
+
 ContextPacket
 : The Context Engineer's bounded evidence selection and situation tags for one turn. It
   cannot mix sessions, duplicate evidence IDs or cite future telemetry.
@@ -113,6 +118,39 @@ The implementation is model-agnostic. Laya/MiniLM-style language encoders may he
 language-side relevance, but they are not treated as temporal telemetry models. Candidate
 models must be evaluated against scripted evidence controls and replay data before live use.
 
+INT-03 implements the first model-directed baseline. The planner receives the driver turn
+and a catalog containing normalized numeric selectors, units and availability flags, but no
+telemetry values. Local Qwen selects a bounded set of generic latest/window operations;
+Telemetry Memory executes those operations deterministically and returns provenance-bearing
+evidence. The planner may select no telemetry for a social turn and must name unsupported
+analysis as an explicit unknown instead of substituting a nearby fact. This path contains no
+English or Turkish keyword router and produces no spoken answer.
+
+The INT-07 v4 repair binds raw query IDs to complete selectors from the current catalog;
+the model cannot construct arbitrary source/signal/opponent triples. In the same planner
+call it selects social, factual or mixed purpose independently of factual time scope.
+Application-owned situation tags and missing-information reasons preserve those distinctions
+for the Core Engineer. Stable value-free catalogs precede variable dialogue in the prompt
+to permit prefix reuse; evidence and plans are never cached. One factual time scope per turn
+is still a limitation for cross-scope compound questions. See the
+[development evaluation and limitations](intelligence-evaluation.md).
+
+The v5 planner first marks social content independently and lists bounded, transient requested
+facts before selecting tools, in the same inference. Application code derives conversational
+purpose; the inventory is not evidence and is discarded rather than becoming dialogue or driver
+memory. This helps compound requests and distinguishes requested statistics without adding
+phrase-based routing. Public evidence contracts and delivery-time refresh are unchanged.
+
+The baseline exposes latest, window delta/mean/minimum/maximum/linear trend and current-field
+count/mean/minimum/maximum. INT-06 adds a separate typed capability catalog for calculations
+that need stable race semantics. Qwen selects a capability from its description; the application
+executes it and returns evidence. The baseline calculates classification, fuel range, rolling
+position change, current gaps, relative gap trend and constant-trend catch time. `is_last` and
+relative direction are application-owned relationships, not spoken phrase commands or
+model-authored comparisons. Pit/rejoin contracts remain explicit unavailable outcomes until
+their real strategy inputs exist. Lap/sector comparison, event lookup and learned temporal
+inferences remain schema/tool additions, not new spoken intents.
+
 ## Core Engineer
 
 The Core Engineer answers “what should a good teammate communicate now?” It chooses whether
@@ -122,6 +160,12 @@ hypotheses, considers race phase and radio load, and emits an evidence-backed br
 The first version may use a local general model behind this interface. Later versions may
 use a smaller distilled reasoner or policy model. Critical race-control calls remain on the
 existing deterministic policy path and do not wait for this component.
+
+The portable INT-04 baseline uses one local Qwen inference to produce both the Core decision
+and the conversational response while preserving the two contracts in code. It selects only
+known evidence IDs, chooses the communication goal and calm-teammate tone, and writes short
+English or Turkish speech. Social turns may be evidence-free. Unsupported facts remain
+unknown rather than being replaced with a nearby measurement.
 
 ## Qwen and grounding
 
@@ -147,8 +191,9 @@ telemetry claims and numerical values have a mechanical provenance boundary.
 ## Runtime profiles
 
 Portable
-: Generic telemetry analytics plus a combined Core/Qwen inference. One conversational
-  model call per driver turn.
+: Generic telemetry analytics plus a combined Core/Qwen inference. The current implementation
+  performs one evidence-planning inference and one combined Core/response inference per driver
+  turn.
 
 Enhanced
 : Continuous temporal context model, small Core reasoner and Qwen generator. Context work
@@ -187,12 +232,43 @@ new Core Engineer or the normal Qwen response path.
    signal selectors plus latest, delta, mean, minimum, maximum and trend operations.
    Session changes/rewinds reset history, ordering failures are rejected, missing or
    incomplete windows become explicit unknown evidence, and replay time drives windows.
-3. **INT-03 — next:** Context Engineer baseline that selects evidence and supports direct facts,
-   time-window comparisons and explicit unknowns without a spoken command grammar.
-4. **INT-04:** Core Engineer and Qwen generator adapters, prompts and local evaluation.
-5. **INT-05:** live radio integration, delivery-time refresh, cancellation and deterministic
-   critical-call coexistence.
-6. **INT-06:** learned temporal/context candidates and portable/enhanced runtime evaluation.
+3. **INT-03 — implemented baseline:** model-directed evidence selection over a value-free
+   normalized signal catalog; bounded generic latest/window/field operations; evidence
+   refresh; evidence-free social turns; and explicit unknowns without a spoken command
+   grammar.
+4. **INT-04 — implemented portable baseline, hardening in progress:** one local Qwen inference
+   combines the Core
+   decision and natural English/Turkish response, while application contracts keep their
+   evidence and generation responsibilities separate. Driver-provided numeric claims are
+   verified against current evidence, and unsupported projections produce a direct limitation
+   rather than a request for unrelated telemetry. Driver-supplied numeric tokens are withheld
+   from the generation boundary; application-provided rendering bindings are the only route for
+   spoken telemetry numbers. The prompt receives a metric-aware structural example generated
+   from the selected binding, so scalar signals do not need per-question response templates.
+   Deterministic classification relationships protect ranking math, and one bounded repair
+   inference is permitted only after an invalid draft. Broad real-model bilingual evaluation is
+   still pending.
+5. **INT-05 — integrated baseline, hardening in progress:** `voice-iracing` continuously feeds
+   Telemetry Memory,
+   uses the new Context/Core/Qwen path, refreshes selected evidence in the radio delivery
+   slot, and retains existing cancellation, expiry and deterministic critical-call behavior.
+   Replay diagnostics now distinguish an unreachable model from timeout and reachable HTTP
+   failure. Typed temporal scope mechanically blocks current measurements from answering a
+   future hypothetical when no projection capability exists. A real iRacing shakedown is pending.
+6. **INT-06 — implemented baseline:** the typed deterministic race-capability registry is wired
+   through planning, execution and delivery-time evidence refresh. Classification, fuel range,
+   rolling position change, current gaps, relative gap trend and constant-trend catch time are
+   implemented with explicit availability, provenance, freshness and uncertainty. Pit loss,
+   stop duration and rejoin position are typed future capabilities that remain unavailable until
+   their real strategy inputs exist. There are no phrase-specific answer branches and no
+   model-authored race arithmetic.
+7. **INT-07 — evaluation foundation in progress:** a versioned bilingual workload and
+   content-free runner now compare temporal scope, typed capability/query selection,
+   evidence availability and latency at the Context Engineer boundary. Qwen is the runnable
+   portable baseline. The initial MiniLM/Laya adapters were screened and not promoted.
+   Broader locked/multi-turn testing, a provenance-bearing temporal adapter, the enhanced
+   profile and a measured promotion decision remain. See
+   [INT-07 Context Engineer evaluation](intelligence-evaluation.md).
 
 No old CE-04/05 component is ported merely because it exists. Each migration must satisfy
 one of these new boundaries and have a focused test.

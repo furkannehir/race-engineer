@@ -1,0 +1,127 @@
+{
+  "schema_version": "intelligence-baseline-summary.v1",
+  "recorded_at": "2026-10-04",
+  "raw_reports_committed": false,
+  "candidate": {
+    "candidate_id": "qwen-context-v2",
+    "model": "Qwen3-4B-Instruct-2507",
+    "model_revision": "a06e946bb6b655725eafa393f4a9745d460374c9",
+    "quantization": "Q4_K_M",
+    "adapter": "llama-cpp",
+    "runtime_revision": "b10964"
+  },
+  "runtime": {
+    "profile": "portable",
+    "effective_compute": "cpu",
+    "threads": 8,
+    "context_size": 8192,
+    "parallel": 1,
+    "gpu_layers": 0,
+    "timeout_ms": 30000
+  },
+  "machine": {
+    "os": "Windows-11",
+    "cpu": "AMD Ryzen 7 9800X3D 8-Core Processor",
+    "logical_cpus": 16,
+    "memory_bytes": 66145669120,
+    "display_adapters": [
+      {
+        "name": "NVIDIA GeForce RTX 5080",
+        "driver_version": "32.0.15.9186"
+      },
+      {
+        "name": "AMD Radeon(TM) Graphics",
+        "driver_version": "32.0.21030.2001"
+      }
+    ]
+  },
+  "code": {
+    "git_revision": "25114208ecf72e173bf128819ae2f9add2dc8ba1",
+    "working_tree_dirty": true
+  },
+  "runs": [
+    {
+      "run_id": "precompact-development-calibration",
+      "generated_at": "2026-10-04T19:10:46.624383+00:00",
+      "planner_contract": "model-authored-query-and-request-ids",
+      "dataset_splits": [
+        "development",
+        "calibration"
+      ],
+      "dataset_revision": "2026-10-04.seed1",
+      "turns": 24,
+      "languages": {
+        "en": 12,
+        "tr": 12
+      },
+      "input_fingerprint_sha256": "10bbac60b29e79dc219272851d21d27357c6df24f6a053333b0893f841d66ff5",
+      "result": {
+        "passed": 0,
+        "exact_turn_accuracy": 0.0,
+        "exact_plan_accuracy": 0.0,
+        "capability_selection_accuracy": 0.125,
+        "query_selection_accuracy": 0.041667,
+        "temporal_scope_accuracy": 0.291667,
+        "evidence_outcome_accuracy": 0.291667,
+        "supported_coverage": 0.318182,
+        "accepted_plan_accuracy": 0.0,
+        "model_errors": 17,
+        "failure_reasons": {
+          "context_model_timeout": 17,
+          "expectation_mismatch": 7
+        }
+      },
+      "latency_ms": {
+        "planner_mean": 29478.06,
+        "planner_p50": 30002.194,
+        "planner_p95": 30005.448,
+        "planner_max": 30005.577,
+        "execution_p95": 1.468
+      }
+    },
+    {
+      "run_id": "compact-development",
+      "generated_at": "2026-10-04T19:20:36.802653+00:00",
+      "planner_contract": "application-owned-ids-and-compact-catalog",
+      "dataset_splits": [
+        "development"
+      ],
+      "dataset_revision": "2026-10-04.seed1",
+      "turns": 12,
+      "languages": {
+        "en": 6,
+        "tr": 6
+      },
+      "input_fingerprint_sha256": "ee446c87a1ecaaf266bfd34d90d18bd463a8948839d5ead33be8a0de7054a805",
+      "result": {
+        "passed": 0,
+        "exact_turn_accuracy": 0.0,
+        "exact_plan_accuracy": 0.083333,
+        "capability_selection_accuracy": 0.5,
+        "query_selection_accuracy": 0.25,
+        "temporal_scope_accuracy": 0.666667,
+        "evidence_outcome_accuracy": 0.666667,
+        "supported_coverage": 0.7,
+        "accepted_plan_accuracy": 0.0,
+        "model_errors": 3,
+        "failure_reasons": {
+          "planner_selected_unknown_signal": 3,
+          "expectation_mismatch": 9
+        }
+      },
+      "latency_ms": {
+        "planner_mean": 11805.739,
+        "planner_p50": 11282.253,
+        "planner_p95": 14773.981,
+        "planner_max": 17175.146,
+        "execution_p95": 2.025
+      }
+    }
+  ],
+  "conclusion": {
+    "promoted": false,
+    "reason": "Qwen failed semantic accuracy and latency gates on the seed workload.",
+    "compact_contract_retained": true,
+    "locked_split_run": false
+  }
+}

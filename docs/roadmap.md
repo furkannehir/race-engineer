@@ -1,6 +1,6 @@
 # Working roadmap
 
-Updated 2026-09-28. This is the current progress/backlog companion to the original
+Updated 2026-10-04. This is the current progress/backlog companion to the original
 [implementation plan](personalized-ai-race-engineer-implementation-plan.docx), not a claim
 that every original milestone exit criterion has been formally validated.
 
@@ -25,7 +25,7 @@ remain reusable; the old CE-04/05 design is historical rather than the next task
 | M0: Foundation | Contracts, configuration, logging, fixtures, and tests implemented | Maintain compatibility as new domains are added |
 | M1: iRacing telemetry | Live reading, normalization, recording, reconnect handling, and the IR-001 source-level fix implemented | Genuine-blue live validation; broader scenario validation |
 | M2: Strict policy | Core policy, SQLite-backed preferences, and durable content-free decision/outcome history implemented | Broader scenario and real-race validation remain |
-| M3: Speech / conversational increment | Automatic calls and local English/Turkish live voice conversation plus CE-01 runtime and CE-02 evaluation foundation implemented; driver accepts the current prototype | CE-04/05 planner/context work; speech quality and extended live validation |
+| M3: Speech / conversational increment | Automatic calls, local English/Turkish voice, and the new evidence-driven Context/Core/Qwen path are connected to `voice-iracing` | Real-model bilingual evaluation, real-race shakedown, latency measurement, and speech quality |
 | M4: Adaptive personalization | SQLite profile/preferences plus observational policy-decision and radio-outcome history implemented; no inferred learning yet | CE-06/07 feedback definitions, local shadow ranker, small-model evaluation; no hosted Jev in current scope |
 | M5: Driver controls / UI | Basic PySide6 radio desk implemented early: lifecycle, audio checks, press-to-bind keyboard/mouse/wheel PTT, mute, tray and driver preferences | CE-03/08 CPU/GPU controls and hardware validation; real-race shakedown, later voice preference commands/session review |
 | M6: Second simulator | Not started | Another adapter and cross-simulator contract validation |
@@ -78,18 +78,91 @@ should share the validated service later. CONV-004 is scheduled in CE-05, not ye
 2. **Done — INT-02 foundation:** bounded Telemetry Memory now exposes generic normalized
    signal selectors and replay-deterministic current/window operations. Missing signals or
    incomplete history produce explicit unknown evidence instead of fabricated values.
-3. **Next — INT-03:** implement a Context Engineer baseline that selects measurements,
-   deterministic derivations, learned inferences and explicit unknowns without a spoken
-   command grammar.
-4. **INT-04:** implement Core Engineer and Qwen conversational generation adapters plus
-   evidence-aware English/Turkish evaluation.
-5. **INT-05:** integrate the new path with live radio, delivery-time evidence refresh,
-   cancellation and deterministic critical-call coexistence.
-6. **INT-06:** evaluate temporal/context model candidates and portable/enhanced execution
-   profiles.
-7. Optional CUDA/Vulkan controls and stable combined-workload benchmarks remain after a
+3. **Done — INT-03 baseline:** a local model selects generic telemetry operations from the
+   driver turn and a value-free normalized signal catalog. Bounded Telemetry Memory executes
+   the plan, permits bounded re-execution of approved evidence queries, allows evidence-free
+   social turns and represents unsupported or missing information explicitly. No spoken
+   keyword grammar or answer template is part of this path. Current-field aggregates support
+   ranking questions without a dedicated phrase intent. Learned inference and richer
+   comparison/event tools remain follow-up schema work.
+4. **Hardening — INT-04 portable baseline:** one local Qwen call combines the Core communication
+   decision and conversational English/Turkish response. Evidence IDs and numeric placeholders
+   remain mechanically validated. Unsupported projections now produce an explicit limitation,
+   driver telemetry claims are checked against evidence instead of repeated, and deterministic
+   classification relationships prevent the model from reversing ranking math. Canonical,
+   metric-aware rendering examples cover generic scalar evidence such as fuel, speed and laps
+   without spoken-question routing. A bounded repair inference runs only after a structurally
+   invalid draft. Broad real-model bilingual evaluation and broader claim/correction coverage
+   are still pending.
+5. **Hardening — INT-05 integration baseline:** `voice-iracing` now feeds continuous telemetry to
+   the new path and grounds refreshed evidence in the existing radio delivery slot. Critical
+   deterministic calls, cancellation, expiry and TTS freshness behavior remain in place.
+   The typed replay path now distinguishes an unreachable model, timeout, and a reachable
+   server-side structured-response failure. Typed temporal scope prevents a future hypothetical
+   from being answered with current measurements, and Windows replay output is UTF-8 safe.
+   Real-race validation is pending.
+6. **Done — INT-06 deterministic capability baseline:** the typed registry, value-free planner
+   catalog, deterministic execution, delivery-time refresh and explicit unavailable results are
+   implemented. Tested calculations cover classification, fuel range, 30-second net position
+   movement, current same-lap gaps, 10-second relative gap trends, and constant-trend catch time.
+   Pit loss, service duration, and rejoin position have stable future-capability contracts but
+   remain authoritatively unavailable until real strategy-model inputs exist. Qwen selects
+   semantically; tested application code owns arithmetic, provenance, freshness and uncertainty.
+   See [race capabilities](race-capabilities.md).
+7. **In progress — INT-07 evaluation foundation:** versioned bilingual development,
+   calibration and locked seed workloads now exercise every INT-06 capability, generic raw
+   queries, social abstention, temporal scope and authoritative unavailable results. A
+   content-free runner reports exact plan/evidence scores, first/subsequent-call latency,
+   optional server prompt/generation timings, model errors, candidate revisions, input and
+   implementation fingerprints, and machine metadata. `qwen-context-v5` is the
+   runnable portable baseline; the enhanced profile fails closed until a learned temporal
+   adapter exists. The first CPU Qwen report is recorded: the original contract timed out on
+   17/24 turns, while a compact development-only iteration cut mean planning from 29.5 to
+   11.8 seconds but still passed 0/12 exact turns. Qwen is therefore an unpromoted baseline.
+   The pinned dynamic-catalog MiniLM and Laya portable candidates scored 1/12 and 3/12 exact
+   development turns respectively, with both at 0/6 Turkish; neither is promoted or connected
+   live. Promotion-grade dataset expansion, any domain-trained/calibrated retry, robust compound/
+   multi-turn coverage and a provenance-bearing enhanced temporal candidate remain. See
+   [INT-07 evaluation](intelligence-evaluation.md).
+   The October 6 first repair slice binds raw queries to catalog IDs (including operation
+   constraints) and adds report-v2 partial-selection diagnostics, extra-request counts and
+   separate failure stages. Rejected plans never execute or earn accepted-plan credit;
+   exact scoring is unchanged. The v4 repair also separates social/factual/mixed purpose from
+   factual time scope, replaces arbitrary unknown text with application-owned reasons and
+   places stable catalogs before dialogue for prompt reuse. Eighteen bilingual development
+   controls exercise mixed/compound requests, authored follow-ups and changing catalog availability.
+   The v4 real-Qwen development run passes 24/30 (12/15 per language), including all original
+   12 cases, with no transport/validation/execution errors. Six failures remain in mixed-purpose,
+   compound and historical raw-speed interpretation; these are not marked fixed. Planner median
+   is 2.21 s in sequential synthetic replay, not end-to-end radio latency. Locked evaluation,
+   actual sequential dialogue, multi-scope requests and real-race acceptance remain pending.
+   Integration checks also hardened silent Core output and added bilingual social output-shape
+   examples. Four final synthetic text-pipeline checks completed without errors (roughly 5–14 s);
+   this does not validate microphone/TTS behavior or broad conversation quality.
+   The v5 continuation adds a bounded request inventory and independent social-content flag
+   within the same planner call, plus 20 bilingual composition/statistic controls. The latest
+   saved run passes 41/50: original 12/12, controls 15/18, composition 14/20. Historical
+   statistic controls now pass and compound retrieval improves, but extra evidence, mixed-purpose
+   mistakes and an English social regression remain. Planner median is 4.06 s on this broader
+   workload; no full-radio latency claim is made. V5 is wired into this development branch's
+   live/replay path, not hidden behind a promotion flag. INT-07 remains open and unpromoted.
+   October 7 integration checks exposed and repaired an over-broad Core dependency check:
+   unrelated retrieved comparisons no longer force their inclusion in an otherwise grounded
+   answer. Used comparisons still require all dependency references. Automated verification:
+   395 tests, Ruff lint and mypy pass. Whole-pipeline naturalness and live acceptance remain open.
+   A standalone full text latency benchmark now runs the same production adapters and
+   orchestration, with per-call provider timings, cache/token metrics, retries and source/input
+   fingerprints. It manages its own local server and preserves existing external servers.
+   The October 7 12-turn CPU baseline completed 11 turns: completed median 12.97 s, max 32.32 s,
+   with one Turkish Core validation failure (INT-007) and 8/12 exact plans. Cache reuse helps,
+   but a nearly fully cached compound reply still spent 13.75 s generating structured output.
+   No prompt, model, runtime acceleration or live behavior was changed for this measurement.
+   Automated verification now passes 404 tests, Ruff and mypy. Voice and game-load timing remain.
+8. **Follow-up — strategy models:** normalize track/car pit loss, requested service and field
+   trajectory inputs before enabling the existing pit/rejoin capability contracts.
+9. Optional CUDA/Vulkan controls and stable combined-workload benchmarks remain after a
    stable intelligence workload; AMD support still requires an actual AMD test.
-8. Proactive usefulness learning remains separate and shadow-only until independently
+10. Proactive usefulness learning remains separate and shadow-only until independently
    labeled evidence justifies promotion.
 
 ## Constraints carried forward

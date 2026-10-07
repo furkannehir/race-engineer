@@ -13,13 +13,18 @@ from race_engineer.core.contracts import (
 )
 from race_engineer.core.conversation import ConversationPlan, ConversationReply, ConversationRequest
 from race_engineer.core.intelligence import (
+    CapabilityDescriptor,
+    CapabilityRequest,
+    CapabilityResult,
     ContextPacket,
+    ContextPlan,
     DriverTurn,
     EngineerBrief,
     EvidenceItem,
     EvidenceQuery,
     GeneratedResponse,
     GroundedResponse,
+    SignalDescriptor,
 )
 from race_engineer.core.speech_input import AudioClip, Transcription
 from race_engineer.core.speech_output import SpeechOutputResult
@@ -73,12 +78,33 @@ class ContextEngineer(Protocol):
     ) -> ContextPacket: ...
 
 
+class ContextQueryPlanner(Protocol):
+    async def plan(
+        self,
+        turn: DriverTurn,
+        signals: Sequence[SignalDescriptor],
+        capabilities: Sequence[CapabilityDescriptor],
+    ) -> ContextPlan: ...
+
+
 class TelemetryMemory(Protocol):
     def update(self, context: RaceContext) -> None: ...
 
     def query(self, request: EvidenceQuery) -> EvidenceItem: ...
 
     def query_many(self, requests: Sequence[EvidenceQuery]) -> tuple[EvidenceItem, ...]: ...
+
+    def latest_context(self) -> RaceContext: ...
+
+    def signal_catalog(self) -> tuple[SignalDescriptor, ...]: ...
+
+
+class RaceCapabilityRegistry(Protocol):
+    def catalog(self) -> tuple[CapabilityDescriptor, ...]: ...
+
+    def evidence_ids(self, request: CapabilityRequest) -> tuple[str, ...]: ...
+
+    def execute(self, request: CapabilityRequest) -> CapabilityResult: ...
 
 
 class CoreEngineer(Protocol):

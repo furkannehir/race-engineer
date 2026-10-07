@@ -15,6 +15,33 @@ Use the existing [conversation](conversation.md), [STT](speech-to-text.md), and
 [Piper](conversational-speech.md) installations. No new model download is required.
 Start with a practice/test session, not a competitive race.
 
+## Test without iRacing
+
+The bundled intelligence fixture exercises the same new Context/Core/Qwen/grounding path
+without iRacing, microphone capture or TTS. Start the local conversation server in one
+terminal:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\start_conversation_model.py
+```
+
+Then run in another terminal:
+
+```powershell
+.\.venv\Scripts\python.exe -m race_engineer intelligence-replay --fixture fixtures\synthetic\intelligence --question "Am I last?"
+```
+
+The latest fixture frame is P6 of 6. Frame zero is P5 of 6 and can check the opposite result:
+
+```powershell
+.\.venv\Scripts\python.exe -m race_engineer intelligence-replay --fixture fixtures\synthetic\intelligence --frame-index 0 --question "Am I last?"
+```
+
+Add `--json` to inspect the ContextPacket evidence, Core brief, generated placeholder template
+and final grounded response. Use `--language tr` for a Turkish response. The command still runs
+the real local Qwen model twice; only telemetry, speech recognition and synthesis are replaced
+by deterministic test inputs.
+
 Terminal 1, unless the local conversation server is already running:
 
 ```powershell
@@ -29,8 +56,10 @@ Terminal 2, from the repository root:
 
 Start/join iRacing. Wait for both `telemetry ready` and `Radio ready`, then hold F8, speak,
 and release. Ask questions freely in English or Turkish. Telemetry keeps updating during
-recognition, model inference, and playback; the model interprets the question but never
-supplies numeric race facts.
+recognition, model inference, and playback. The Context Engineer selects generic telemetry
+operations, deterministic memory computes their values, and a second local Qwen inference
+decides what to communicate and writes the natural response. Numeric race values are inserted
+only by the grounding gate from refreshed evidence.
 
 **Do not run `read-iracing` or `voice-replay` alongside this command.** The live command
 already runs the automatic policy/speech pipeline. Separate processes cannot coordinate
@@ -95,8 +124,9 @@ Live snapshots use current UTC, not a replay clock. There is no placeholder/fabr
 frame before the first valid telemetry update. Replay frames are rejected in live mode
 even if the general telemetry configuration allows them.
 
-The latest accepted context replaces the previous one. Conversation retrieves facts
-after model inference and refreshes them again when its audio slot opens. Piper then
+The latest accepted context also feeds a bounded two-minute telemetry window. The Context
+Engineer executes its selected evidence plan after inference and re-executes every cited
+query when the answer's audio slot opens. Piper then
 prepares audio in memory and waits for an explicit freshness acknowledgement before
 opening playback. An expired prepared answer is discarded, not played as current data.
 
@@ -113,23 +143,31 @@ a guarantee that a moving gap or position cannot change while a sentence is spok
 
 ## First combined test
 
-1. Start stationary in a practice session. Ask about position and fuel; compare with
+1. Start stationary in a practice session. Ask about position, whether you are last, and
+   fuel; compare with
    iRacing's displayed data. Missing/unreliable fields must produce an explicit unavailable
    answer, not an invented number.
-2. Drive a few laps. Ask about gaps, lap, and fuel, then use contextual follow-ups. Check
-   that the answers follow changing telemetry rather than the old P6 replay fixture.
-3. Try English and Turkish. Evaluate actual microphone accuracy and voice intelligibility.
+2. Drive for at least 30 seconds. Ask about positions gained/lost, gaps, whether the car ahead or
+   behind is closing, estimated catch time, lap, and fuel. Gap trend needs a complete 10-second
+   window and position movement needs a complete 30-second window. Check that answers follow live
+   telemetry rather than the old P6 replay fixture.
+3. Make a frustrated/social remark such as "He has no idea about racing." Confirm that the
+   engineer acknowledges and refocuses without pretending it witnessed the incident.
+4. Try English and Turkish. Evaluate actual microphone accuracy and voice intelligibility.
    Replacing the Turkish voice remains deferred; this integration does not change it.
-4. Observe naturally occurring automatic calls. Listen for overlap, interrupted questions,
+5. Observe naturally occurring automatic calls. Listen for overlap, interrupted questions,
    or repeated answers. Do not create incidents solely to trigger a critical call.
-5. Leave the session, wait for the unavailable message, and rejoin. Old-session speech and
+6. Leave the session, wait for the unavailable message, and rejoin. Old-session speech and
    follow-up context must not leak into the new session.
-6. Check game frame-time/FPS and telemetry warnings (`telemetry_sample_gap`,
+7. Check game frame-time/FPS and telemetry warnings (`telemetry_sample_gap`,
    `sampling_deadline_missed`, slow reads). Report questions, expected/actual answers,
    approximate delay, and any radio outcome/error lines.
 
-Fuel-to-finish strategy and gap trends are still unsupported. Existing conversation
-interpretation issues and the blue-flag defect are unchanged; see [known-issues.md](known-issues.md).
+Fuel-to-finish strategy, pit/rejoin strategy, sector/lap-time diagnosis, tire state and setup
+advice remain unsupported by the current normalized schema. Pit/rejoin questions must report the
+typed unavailable reason rather than substitute current classification. Legacy conversation
+interpretation defects must be re-evaluated on this path, and genuine-blue validation remains
+open; see [known-issues.md](known-issues.md).
 
 ## Validation status
 

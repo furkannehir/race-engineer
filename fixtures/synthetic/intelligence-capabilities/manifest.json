@@ -1,0 +1,6 @@
+{
+  "fixture_version": "race-fixture.v1",
+  "fixture_id": "synthetic:intelligence-capabilities:1",
+  "description": "Thirty-second identity-stable position, fuel, gap, relative-pace, and catch-time capability replay.",
+  "frames_file": "frames.jsonl"
+}

@@ -179,6 +179,34 @@ def test_direct_fact_uses_refreshed_evidence_not_the_initial_value():
     assert context.refresh_requests == [("position",)]
 
 
+def test_prepared_response_waits_until_delivery_to_refresh_evidence():
+    initial = packet(evidence("position", "position", 6, unit="position"))
+    latest = packet(evidence("position", "position", 5, sequence=11, unit="position"), sequence=11)
+    context = ScriptedContextEngineer(initial, latest)
+    engine = EngineerOrchestrator(
+        context,
+        ScriptedCoreEngineer(brief("inform", "position")),
+        ScriptedGenerator(
+            response(
+                "P{{position}}.",
+                EvidenceReference(
+                    placeholder="position",
+                    evidence_id="position",
+                    field="value",
+                ),
+            )
+        ),
+        StrictEvidenceGrounder(),
+    )
+
+    prepared = asyncio.run(engine.prepare(turn("Position?")))
+    assert context.refresh_requests == []
+    result = asyncio.run(engine.ground(prepared))
+
+    assert result.text == "P5."
+    assert context.refresh_requests == [("position",)]
+
+
 def test_analytical_question_uses_derived_time_series_evidence():
     loss = evidence("sector-loss", "sector_two_delta", 0.4, kind="derived", unit="s")
     context = ScriptedContextEngineer(packet(loss))

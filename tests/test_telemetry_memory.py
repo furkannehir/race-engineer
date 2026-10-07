@@ -105,6 +105,29 @@ def test_latest_query_reads_any_normalized_numeric_signal():
     assert opponent.source_fields == ("opponent:car-ahead.gap_to_player_s",)
 
 
+def test_signal_catalog_advertises_numeric_schema_without_raw_values():
+    memory = BoundedTelemetryMemory()
+    memory.update(context(1, 0, position=None))
+
+    catalog = memory.signal_catalog()
+    by_key = {
+        (
+            item.selector.source,
+            item.selector.subject_id,
+            item.selector.signal,
+        ): item
+        for item in catalog
+    }
+
+    assert by_key[("player", None, "position")].available is False
+    assert by_key[("player", None, "speed_mps")].unit == "m/s"
+    assert by_key[("context", None, "gap_ahead_s")].unit == "s"
+    assert by_key[("opponent", "car-ahead", "gap_to_player_s")].available is True
+    assert by_key[("field", None, "position")].available is True
+    assert ("player", None, "in_pit_lane") not in by_key
+    assert all("value" not in item.model_dump() for item in catalog)
+
+
 def test_window_operations_are_generic_and_replay_deterministic():
     memory = populated_memory()
 
@@ -118,6 +141,17 @@ def test_window_operations_are_generic_and_replay_deterministic():
     assert all(item.kind == "derived" for item in (delta, mean, trend))
     assert all(item.source_sequence == 3 for item in (delta, mean, trend))
     assert all(item.confidence == 1 for item in (delta, mean, trend))
+
+
+def test_current_field_aggregates_support_ranking_without_a_spoken_intent():
+    memory = populated_memory()
+
+    last_position = memory.query(query("last-position", "position", "maximum", source="field"))
+    classified = memory.query(query("classified", "position", "count", source="field"))
+
+    assert (last_position.value, last_position.unit) == (6, "position")
+    assert (classified.value, classified.unit) == (2, "cars")
+    assert last_position.source_fields == ("field.position",)
 
 
 def test_missing_signal_or_incomplete_window_returns_explicit_unknown():

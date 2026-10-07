@@ -1,0 +1,111 @@
+{
+  "schema_version": "intelligence-candidate-comparison-summary.v1",
+  "recorded_at": "2026-10-04",
+  "raw_reports_committed": false,
+  "dataset": {
+    "dataset_id": "intelligence-development",
+    "revision": "2026-10-04.seed1",
+    "turns": 12,
+    "languages": {
+      "en": 6,
+      "tr": 6
+    },
+    "input_fingerprint_sha256": "ee446c87a1ecaaf266bfd34d90d18bd463a8948839d5ead33be8a0de7054a805"
+  },
+  "adapter_strategy": {
+    "name": "dynamic-catalog-single-topic-argmax",
+    "description": "Score value-free capability descriptions, normalized signals, and a social option; emit the highest-scoring typed plan.",
+    "phrase_router": false,
+    "known_limitations": [
+      "single-topic only",
+      "raw signals use current latest/field maximum",
+      "no compound multi-label composition",
+      "zero-shot scores are not calibrated acceptance probabilities"
+    ]
+  },
+  "runtime": {
+    "effective_compute": "cpu",
+    "threads": 8,
+    "worker_python": "data/stt-prototype/runtime/Scripts/python.exe",
+    "python_version": "3.12.10",
+    "torch_version": "2.14.0+cpu",
+    "transformers_version": "5.17.0",
+    "laya_version": "0.3.20",
+    "network_or_downloads": false
+  },
+  "machine": {
+    "os": "Windows-11",
+    "cpu": "AMD Ryzen 7 9800X3D 8-Core Processor",
+    "logical_cpus": 16,
+    "memory_bytes": 66145669120
+  },
+  "code": {
+    "git_revision": "25114208ecf72e173bf128819ae2f9add2dc8ba1",
+    "working_tree_dirty": true
+  },
+  "candidates": [
+    {
+      "candidate_id": "minilm-nli-v1",
+      "generated_at": "2026-10-04T19:27:01.645764+00:00",
+      "model": "MoritzLaurer/multilingual-MiniLMv2-L6-mnli-xnli",
+      "model_revision": "0a71e92a985b6e1ad1828cf67ce9c459639c1dca",
+      "adapter": "transformers-nli-worker",
+      "result": {
+        "passed": 1,
+        "exact_turn_accuracy": 0.083333,
+        "exact_plan_accuracy": 0.083333,
+        "capability_selection_accuracy": 0.416667,
+        "query_selection_accuracy": 0.416667,
+        "temporal_scope_accuracy": 0.666667,
+        "evidence_outcome_accuracy": 0.833333,
+        "supported_coverage": 1.0,
+        "accepted_plan_accuracy": 0.1,
+        "model_errors": 0,
+        "english_exact_turn_accuracy": 0.166667,
+        "turkish_exact_turn_accuracy": 0.0
+      },
+      "latency_ms": {
+        "cold_planner": 7647.659,
+        "warm_p50": 92.669,
+        "warm_p95": 104.898,
+        "warm_max": 107.75
+      },
+      "promoted": false
+    },
+    {
+      "candidate_id": "laya-multilingual-v1",
+      "generated_at": "2026-10-04T19:27:39.373863+00:00",
+      "model": "convaiinnovations/laya-multilingual",
+      "model_revision": "e4e9ddf21a7b1903b7acffd8814ad4307bf63a67",
+      "adapter": "laya-0.3.20-worker",
+      "result": {
+        "passed": 3,
+        "exact_turn_accuracy": 0.25,
+        "exact_plan_accuracy": 0.25,
+        "capability_selection_accuracy": 0.25,
+        "query_selection_accuracy": 0.833333,
+        "temporal_scope_accuracy": 0.333333,
+        "evidence_outcome_accuracy": 0.583333,
+        "supported_coverage": 1.0,
+        "accepted_plan_accuracy": 0.3,
+        "model_errors": 0,
+        "english_exact_turn_accuracy": 0.5,
+        "turkish_exact_turn_accuracy": 0.0
+      },
+      "latency_ms": {
+        "cold_planner": 9238.481,
+        "warm_p50": 1198.992,
+        "warm_p95": 1246.78,
+        "warm_max": 1247.877
+      },
+      "promoted": false
+    }
+  ],
+  "conclusion": {
+    "promoted_candidate": null,
+    "reason": "Neither zero-shot classifier satisfies semantic accuracy, Turkish, compound-plan, or calibration requirements.",
+    "live_routing_changed": false,
+    "calibration_split_run": false,
+    "locked_split_run": false
+  }
+}

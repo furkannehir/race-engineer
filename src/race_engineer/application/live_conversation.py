@@ -3,6 +3,7 @@
 import asyncio
 import logging
 import time
+from collections import deque
 from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
@@ -15,8 +16,22 @@ from race_engineer.conversation.session import ConversationSession
 from race_engineer.core.contracts import PlaybackResult, RaceContext, SpeechIntent, Utterance
 from race_engineer.core.conversation import ConversationReply, RadioLanguage
 from race_engineer.core.enums import PlaybackStatus
+from race_engineer.core.intelligence import DriverTurn
 from race_engineer.core.interfaces import ConversationSpeaker, SpeechRecognizer
 from race_engineer.core.speech_input import AudioClip, SpeechInputError
+from race_engineer.intelligence.context_engine import ContextEngineerError
+from race_engineer.intelligence.factory import live_intelligence
+from race_engineer.intelligence.grounding import GroundingError
+from race_engineer.intelligence.local_model import LocalIntelligenceError
+from race_engineer.intelligence.orchestrator import (
+    EngineerOrchestrator,
+    IntelligenceBoundaryError,
+    PreparedEngineerResponse,
+)
+from race_engineer.intelligence.telemetry_memory import (
+    BoundedTelemetryMemory,
+    TelemetryMemoryError,
+)
 from race_engineer.memory import DurableHistory
 from race_engineer.observability import configure_logging
 from race_engineer.stt.buttons import binding_label, legacy_binding
@@ -36,11 +51,13 @@ class LiveBridge:
         radio: LiveRadio,
         control: LiveControl | None = None,
         result_sink: Callable[[PlaybackResult], None] | None = None,
+        telemetry_memory: BoundedTelemetryMemory | None = None,
     ) -> None:
         self.state = state
         self.radio = radio
         self.control = control
         self.result_sink = result_sink
+        self.telemetry_memory = telemetry_memory
         self._reported_available = False
 
     def _report_availability(self) -> None:
@@ -59,6 +76,8 @@ class LiveBridge:
             epoch = self.state.epoch
             self.state.invalidate()
             if epoch != self.state.epoch:
+                if self.telemetry_memory is not None:
+                    self.telemetry_memory.clear()
                 self.radio.reset(self.state.epoch)
                 print(
                     "Live telemetry unavailable; old answers and pending calls discarded.",
@@ -69,6 +88,23 @@ class LiveBridge:
     def update(self, context: RaceContext) -> None:
         available, epoch = self.available, self.state.epoch
         self.state.update(context)
+        if self.telemetry_memory is not None:
+            if self.state.epoch != epoch:
+                self.telemetry_memory.clear()
+            if self.state.available:
+                try:
+                    self.telemetry_memory.update(context)
+                except TelemetryMemoryError as error:
+                    self.telemetry_memory.clear()
+                    _LOGGER.warning(
+                        "intelligence telemetry memory reset; strict policy continues",
+                        extra={
+                            "event": "intelligence_memory_reset",
+                            "reason": str(error),
+                            "session_id": context.frame.session_id,
+                            "source_sequence": context.frame.sequence,
+                        },
+                    )
         if self.state.epoch != epoch or not available:
             self.radio.reset(self.state.epoch)
             if self.available:
@@ -141,15 +177,22 @@ async def live_dialogue(
     speaker: ConversationSpeaker | None,
     reply_language: RadioLanguage | None,
     control: LiveControl | None = None,
+    intelligence: EngineerOrchestrator | None = None,
 ) -> None:
     from race_engineer.core.speech_output import SpeechOutputError
 
-    session = ConversationSession(
-        conversation_planner(config.conversation),
-        state.snapshot,
-        config.conversation,
-        generation=lambda: state.epoch,
+    session = (
+        ConversationSession(
+            conversation_planner(config.conversation),
+            state.snapshot,
+            config.conversation,
+            generation=lambda: state.epoch,
+        )
+        if intelligence is None
+        else None
     )
+    recent_dialogue: deque[str] = deque(maxlen=config.conversation.history_turns * 2)
+    turn_sequence = 0
     microphone: PushToTalkMicrophone | None = None
     try:
         print("Loading local speech models. Telemetry continues independently.", flush=True)
@@ -214,17 +257,70 @@ async def live_dialogue(
                 print(f"You ({transcript.language}): {transcript.text}", flush=True)
                 if control:
                     control.emit("phase", "thinking")
-                reply = await session.ask(
-                    transcript.text, reply_language=reply_language or transcript.language
-                )
+                assert transcript.language is not None
+                answer: ConversationReply | None = None
+                prepared: PreparedEngineerResponse | None = None
+                if intelligence is None:
+                    assert session is not None
+                    answer = await session.ask(
+                        transcript.text,
+                        reply_language=reply_language or transcript.language,
+                    )
+                else:
+                    snapshot = state.snapshot()
+                    frame = snapshot.context.frame
+                    turn_sequence += 1
+                    turn = DriverTurn(
+                        turn_id=(
+                            f"{frame.session_id}:{state.epoch}:{frame.sequence}:"
+                            f"driver:{turn_sequence}"
+                        ),
+                        transcript=transcript.text,
+                        received_at=datetime.now(UTC),
+                        session_id=frame.session_id,
+                        generation=state.epoch,
+                        asr_language=transcript.language,
+                        reply_language=reply_language or transcript.language,
+                        recent_dialogue=tuple(recent_dialogue),
+                    )
+                    prepared = await intelligence.prepare(turn)
                 if epoch != state.epoch or not state.available:
                     raise LiveTelemetryUnavailable()
                 print(f"ASR + reply processing: {time.perf_counter() - started:.2f}s")
 
                 async def deliver(
-                    answer: ConversationReply = reply, answer_epoch: int = epoch
+                    queued_answer: ConversationReply | None = answer,
+                    queued_response: PreparedEngineerResponse | None = prepared,
+                    answer_epoch: int = epoch,
+                    question: str = transcript.text,
                 ) -> None:
-                    refreshed = state.refresh(answer, answer_epoch)
+                    if queued_response is not None:
+                        if state.epoch != answer_epoch or not state.available:
+                            raise LiveTelemetryUnavailable("live_session_changed")
+                        assert intelligence is not None
+                        grounded = await intelligence.ground(queued_response)
+                        if state.epoch != answer_epoch or not state.available:
+                            raise LiveTelemetryUnavailable("live_session_changed")
+                        if grounded.action == "silence":
+                            recent_dialogue.extend((f"driver: {question}", "engineer: [silence]"))
+                            return
+                        assert grounded.text is not None
+                        refreshed = ConversationReply(
+                            language=grounded.language,
+                            text=grounded.text,
+                            status=(
+                                "clarification" if grounded.action == "clarify" else "answered"
+                            ),
+                            session_id=grounded.session_id,
+                            source_sequence=grounded.source_sequence,
+                            mode="live",
+                        )
+                        recent_dialogue.extend(
+                            (f"driver: {question}", f"engineer: {grounded.text}")
+                        )
+                    else:
+                        assert queued_answer is not None
+                        refreshed = state.refresh(queued_answer, answer_epoch)
                     observed_at = state.snapshot().context.frame.observed_at
                     print(f"Engineer ({refreshed.language}): {refreshed.text}", flush=True)
                     if speaker is not None:
@@ -247,8 +343,22 @@ async def live_dialogue(
                     flush=True,
                 )
             except LiveTelemetryUnavailable:
-                session.reset()
+                if session is not None:
+                    session.reset()
+                recent_dialogue.clear()
                 print("Telemetry/session changed; that question was discarded. Please ask again.")
+            except (
+                ContextEngineerError,
+                GroundingError,
+                IntelligenceBoundaryError,
+                LocalIntelligenceError,
+                TelemetryMemoryError,
+            ) as error:
+                _LOGGER.warning(
+                    "local intelligence failed; live telemetry continues",
+                    extra={"event": "live_intelligence_failed", "reason": str(error)},
+                )
+                print("The local engineer couldn't process that safely. Please ask again.")
             except SpeechInputError as error:
                 print(f"Speech input: {error}. Release the key before trying again.")
                 if control:
@@ -293,6 +403,8 @@ async def voice_iracing(
         output_settings["output_device"] = output_device
     radio_tts = RadioTtsConfig.model_validate(output_settings)
     state = LiveRaceState(config.conversation.max_snapshot_age_s)
+    telemetry_memory = BoundedTelemetryMemory()
+    intelligence = live_intelligence(config.conversation, telemetry_memory)
     history = None
     if persist_history and config.history.enabled:
         history = DurableHistory.try_open(
@@ -328,6 +440,7 @@ async def voice_iracing(
         radio,
         control,
         result_sink=(history.record_playback_result if history is not None else None),
+        telemetry_memory=telemetry_memory,
     )
     recognizer = QwenSpeechRecognizer(stt)
     speaker = PiperConversationSpeaker(radio_tts) if radio_tts.enabled and not text_only else None
@@ -356,7 +469,17 @@ async def voice_iracing(
             )
         )
         dialogue = asyncio.create_task(
-            live_dialogue(config, stt, state, radio, recognizer, speaker, reply_language, control)
+            live_dialogue(
+                config,
+                stt,
+                state,
+                radio,
+                recognizer,
+                speaker,
+                reply_language,
+                control,
+                intelligence,
+            )
         )
         watchdog = asyncio.create_task(bridge.watch_freshness())
         tasks.extend((telemetry, dialogue, watchdog))

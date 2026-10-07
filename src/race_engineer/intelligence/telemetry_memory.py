@@ -4,9 +4,16 @@ from collections import deque
 from collections.abc import Iterable
 from datetime import timedelta
 from statistics import fmean
+from typing import get_args
 
-from race_engineer.core.contracts import RaceContext
-from race_engineer.core.intelligence import EvidenceItem, EvidenceQuery, SignalSelector
+from race_engineer.core.contracts import ContractModel, OpponentState, PlayerState, RaceContext
+from race_engineer.core.intelligence import (
+    EvidenceItem,
+    EvidenceQuery,
+    SignalDescriptor,
+    SignalSelector,
+    TelemetrySource,
+)
 
 
 class TelemetryMemoryError(Exception):
@@ -50,9 +57,35 @@ def _signal(context: RaceContext, selector: SignalSelector) -> int | float | Non
 
 
 def _source_path(selector: SignalSelector) -> str:
+    if selector.source == "field":
+        return f"field.{selector.signal}"
     if selector.source != "opponent":
         return f"{selector.source}.{selector.signal}"
     return f"opponent:{selector.subject_id}.{selector.signal}"
+
+
+def _is_numeric_annotation(annotation: object) -> bool:
+    if annotation in {int, float}:
+        return True
+    return any(_is_numeric_annotation(argument) for argument in get_args(annotation))
+
+
+def _numeric_fields(model: type[ContractModel]) -> set[str]:
+    return {
+        name
+        for name, field in model.model_fields.items()
+        if _is_numeric_annotation(field.annotation)
+    }
+
+
+def _field_values(context: RaceContext, signal: str) -> tuple[int | float, ...]:
+    owners: tuple[ContractModel, ...] = (context.frame.player, *context.frame.opponents)
+    return tuple(
+        value
+        for owner in owners
+        if isinstance((value := getattr(owner, signal, None)), (int, float))
+        and not isinstance(value, bool)
+    )
 
 
 class BoundedTelemetryMemory:
@@ -81,6 +114,63 @@ class BoundedTelemetryMemory:
 
     def clear(self) -> None:
         self._frames.clear()
+
+    def latest_context(self) -> RaceContext:
+        if not self._frames:
+            raise TelemetryMemoryError("telemetry_memory_empty")
+        return self._frames[-1]
+
+    def signal_catalog(self) -> tuple[SignalDescriptor, ...]:
+        current = self.latest_context()
+        descriptors: list[SignalDescriptor] = []
+
+        def add(
+            source: TelemetrySource,
+            owner: ContractModel,
+            subject_id: str | None = None,
+        ) -> None:
+            fields = type(owner).model_fields
+            for name, field in fields.items():
+                if not _is_numeric_annotation(field.annotation):
+                    continue
+                value = getattr(owner, name)
+                descriptors.append(
+                    SignalDescriptor.model_validate(
+                        {
+                            "selector": {
+                                "source": source,
+                                "signal": name,
+                                "subject_id": subject_id,
+                            },
+                            "unit": _unit(name),
+                            "available": isinstance(value, (int, float))
+                            and not isinstance(value, bool),
+                        }
+                    )
+                )
+
+        add("player", current.frame.player)
+        add("context", current)
+        for opponent in current.frame.opponents:
+            add("opponent", opponent, opponent.driver_id)
+        for name in sorted(_numeric_fields(PlayerState) & _numeric_fields(OpponentState)):
+            descriptors.append(
+                SignalDescriptor(
+                    selector=SignalSelector(source="field", signal=name),
+                    unit=_unit(name),
+                    available=bool(_field_values(current, name)),
+                )
+            )
+        return tuple(
+            sorted(
+                descriptors,
+                key=lambda item: (
+                    item.selector.source,
+                    item.selector.subject_id or "",
+                    item.selector.signal,
+                ),
+            )
+        )
 
     def update(self, context: RaceContext) -> None:
         frame = context.frame
@@ -128,7 +218,7 @@ class BoundedTelemetryMemory:
         coverage: float,
     ) -> EvidenceItem:
         frame = current.frame
-        unit = _unit(request.selector.signal)
+        unit = "cars" if request.operation == "count" else _unit(request.selector.signal)
         if request.operation == "trend" and unit is not None:
             unit = f"{unit}/s"
         return EvidenceItem(
@@ -150,6 +240,25 @@ class BoundedTelemetryMemory:
         if not self._frames:
             raise TelemetryMemoryError("telemetry_memory_empty")
         current = self._frames[-1]
+        if request.selector.source == "field":
+            values = _field_values(current, request.selector.signal)
+            if not values:
+                return self._unknown(request, current)
+            owner_count = len(current.frame.opponents) + 1
+            if request.operation == "count":
+                aggregate_result: int | float = len(values)
+            elif request.operation == "mean":
+                aggregate_result = fmean(values)
+            elif request.operation == "minimum":
+                aggregate_result = min(values)
+            else:
+                aggregate_result = max(values)
+            return self._known(
+                request,
+                current,
+                aggregate_result,
+                coverage=len(values) / owner_count,
+            )
         if request.operation == "latest":
             value = _signal(current, request.selector)
             return (

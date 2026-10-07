@@ -10,9 +10,14 @@ from race_engineer.conversation.live import LiveRaceState, LiveTelemetryUnavaila
 from race_engineer.conversation.replay import ReplayRaceState
 from race_engineer.conversation.session import ConversationSession
 from race_engineer.core.conversation import ConversationPlan
+from race_engineer.core.intelligence import GroundedResponse
 from race_engineer.core.speech_input import Transcription
 from race_engineer.core.speech_output import SpeechOutputResult
 from race_engineer.fixtures import load_fixture
+from race_engineer.intelligence.telemetry_memory import (
+    BoundedTelemetryMemory,
+    TelemetryMemoryError,
+)
 from race_engineer.tts.live_radio import LiveRadio
 
 ROOT = Path(__file__).parents[1]
@@ -187,6 +192,94 @@ def test_live_dialogue_refreshes_facts_and_closes_microphone(monkeypatch, capsys
     assert "Engineer (tr)" in capsys.readouterr().out
 
 
+def test_live_dialogue_uses_new_intelligence_path_when_supplied(monkeypatch, capsys):
+    from test_stt_audio import tone
+
+    state = LiveRaceState(3)
+    state.update(context())
+    captured = []
+    prepared_turns = []
+
+    class Microphone:
+        def __init__(self, config):
+            self.clips = iter((tone(), None))
+
+        async def next_clip(self, *, before_capture):
+            before_capture()
+            return next(self.clips)
+
+        async def aclose(self):
+            pass
+
+    class Recognizer:
+        async def start(self):
+            pass
+
+        async def transcribe(self, audio):
+            return Transcription(
+                status="transcribed",
+                text="Am I last?",
+                language="en",
+                audio_duration_s=1,
+            )
+
+    class Intelligence:
+        async def prepare(self, turn):
+            prepared_turns.append(turn)
+            return turn
+
+        async def ground(self, prepared):
+            return GroundedResponse(
+                response_id=f"{prepared.turn_id}:response",
+                turn_id=prepared.turn_id,
+                session_id=prepared.session_id,
+                generation=prepared.generation,
+                source_sequence=state.snapshot().context.frame.sequence,
+                language="en",
+                action="speak",
+                text="Yes, you're last right now.",
+            )
+
+    class Speaker:
+        async def start(self):
+            pass
+
+        async def speak(self, reply, *, before_playback):
+            assert before_playback()
+            captured.append(reply)
+            return SpeechOutputResult(
+                language="en",
+                played=True,
+                audio_duration_s=1,
+                synthesis_ms=1,
+                playback_ms=1,
+            )
+
+    monkeypatch.setattr(
+        "race_engineer.application.live_conversation.PushToTalkMicrophone",
+        Microphone,
+    )
+
+    async def run():
+        radio = LiveRadio(None)
+        await live_dialogue(
+            AppConfig(),
+            SttConfig(),
+            state,
+            radio,
+            Recognizer(),
+            Speaker(),
+            None,
+            intelligence=Intelligence(),
+        )
+        await radio.aclose()
+
+    asyncio.run(run())
+    assert prepared_turns[0].transcript == "Am I last?"
+    assert captured[0].text == "Yes, you're last right now."
+    assert "Engineer (en)" in capsys.readouterr().out
+
+
 def test_live_recording_continues_while_conversation_is_blocked(tmp_path, monkeypatch):
     from race_engineer.cli import _read_iracing
 
@@ -282,6 +375,45 @@ def test_stale_watchdog_invalidates_pending_radio_and_does_not_repeat():
         await radio.aclose()
 
     asyncio.run(run())
+
+
+def test_live_bridge_feeds_and_clears_intelligence_telemetry_memory():
+    async def run():
+        state = LiveRaceState(3)
+        radio = LiveRadio(None)
+        memory = BoundedTelemetryMemory()
+        bridge = LiveBridge(state, radio, telemetry_memory=memory)
+
+        bridge.update(context())
+        bridge.update(context(1))
+        assert memory.sample_count == 2
+
+        bridge.availability_changed(False)
+        assert memory.sample_count == 0
+        await radio.aclose()
+
+    asyncio.run(run())
+
+
+def test_intelligence_memory_failure_does_not_stop_live_strict_path():
+    class FailingMemory:
+        def __init__(self):
+            self.clears = 0
+
+        def update(self, current):
+            raise TelemetryMemoryError("telemetry_sequence_not_increasing")
+
+        def clear(self):
+            self.clears += 1
+
+    state = LiveRaceState(3)
+    memory = FailingMemory()
+    bridge = LiveBridge(state, LiveRadio(None), telemetry_memory=memory)
+
+    bridge.update(context())
+
+    assert state.available
+    assert memory.clears == 1
 
 
 def test_live_dialogue_survives_critical_capture_interrupt_without_submitting_audio(monkeypatch):

@@ -1,5 +1,7 @@
 """One-turn orchestration across Context Engineer, Core Engineer, Qwen, and grounding."""
 
+from dataclasses import dataclass
+
 from race_engineer.core.intelligence import (
     ContextPacket,
     DriverTurn,
@@ -17,6 +19,16 @@ from race_engineer.core.interfaces import (
 
 class IntelligenceBoundaryError(Exception):
     """A component returned a valid shape with invalid cross-component scope."""
+
+
+@dataclass(frozen=True)
+class PreparedEngineerResponse:
+    """A validated response awaiting final evidence refresh and grounding."""
+
+    turn: DriverTurn
+    context: ContextPacket
+    brief: EngineerBrief
+    response: GeneratedResponse
 
 
 def _validate_context(turn: DriverTurn, context: ContextPacket) -> None:
@@ -73,16 +85,26 @@ class EngineerOrchestrator:
         self._generator = generator
         self._grounder = grounder
 
-    async def respond(self, turn: DriverTurn) -> GroundedResponse:
+    async def prepare(self, turn: DriverTurn) -> PreparedEngineerResponse:
         context = await self._context.analyze(turn)
         _validate_context(turn, context)
         brief = await self._core.decide(turn, context)
         _validate_brief(turn, context, brief)
         response = await self._generator.generate(turn, context, brief)
         _validate_generated(turn, brief, response)
-        evidence_ids = tuple(reference.evidence_id for reference in response.references)
-        refreshed = await self._context.refresh(context, evidence_ids)
-        _validate_context(turn, refreshed)
-        if refreshed.source_sequence < context.source_sequence:
+        return PreparedEngineerResponse(turn, context, brief, response)
+
+    async def ground(self, prepared: PreparedEngineerResponse) -> GroundedResponse:
+        evidence_ids = tuple(reference.evidence_id for reference in prepared.response.references)
+        refreshed = await self._context.refresh(prepared.context, evidence_ids)
+        _validate_context(prepared.turn, refreshed)
+        if refreshed.source_sequence < prepared.context.source_sequence:
             raise IntelligenceBoundaryError("refreshed_context_moved_backwards")
-        return self._grounder.ground(response, refreshed, brief)
+        return self._grounder.ground(
+            prepared.response,
+            refreshed,
+            prepared.brief,
+        )
+
+    async def respond(self, turn: DriverTurn) -> GroundedResponse:
+        return await self.ground(await self.prepare(turn))

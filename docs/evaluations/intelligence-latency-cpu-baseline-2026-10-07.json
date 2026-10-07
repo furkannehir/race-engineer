@@ -1,0 +1,783 @@
+{
+  "schema_version": "intelligence-latency-report.v1",
+  "generated_at": "2026-10-07T10:37:28.786380+00:00",
+  "evaluation_scope": "typed_context_core_refresh_grounding",
+  "excluded_stages": [
+    "microphone",
+    "stt",
+    "radio_queue",
+    "tts",
+    "audio_playback"
+  ],
+  "candidate_id": "qwen-context-v5",
+  "model": "Qwen3-4B-Instruct-2507",
+  "configured_runtime": {
+    "mode": "cpu",
+    "cpu_executable_path": "data\\conversation-prototype\\llama-b10964-cpu\\llama-server.exe",
+    "accelerated_executable_path": null,
+    "accelerated_backend": null,
+    "device": null,
+    "model_path": "data\\conversation-prototype\\Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+    "runtime_revision": "b10964",
+    "model_revision": "a06e946bb6b655725eafa393f4a9745d460374c9",
+    "quantization": "Q4_K_M",
+    "threads": 8,
+    "context_size": 8192,
+    "parallel": 1,
+    "gpu_layers": -1,
+    "fallback_to_cpu": true,
+    "probe_timeout_s": 5,
+    "startup_timeout_s": 120,
+    "shutdown_timeout_s": 5
+  },
+  "model_request_timeout_s": 30,
+  "runtime": {
+    "ownership": "benchmark",
+    "effective_mode": "cpu",
+    "effective_backend": "cpu",
+    "effective_gpu_layers": 0,
+    "startup_or_healthcheck_ms": 3068.753
+  },
+  "dataset_id": "intelligence-development-controls",
+  "dataset_revision": "2026-10-06.seed1",
+  "seed": 7,
+  "requested_repeats": 2,
+  "selected_cases": [
+    "compound-en",
+    "compound-tr",
+    "historical-raw-en",
+    "historical-raw-tr",
+    "vent-en",
+    "vent-tr"
+  ],
+  "expected_turns": 12,
+  "privacy": {
+    "contains_questions": false,
+    "contains_model_replies": false
+  },
+  "reproducibility": {
+    "git_revision": "25114208ecf72e173bf128819ae2f9add2dc8ba1",
+    "git_dirty": true,
+    "machine": {
+      "os": "Windows-11",
+      "architecture": "AMD64",
+      "cpu": "AMD Ryzen 7 9800X3D 8-Core Processor",
+      "logical_cpus": 16,
+      "memory_bytes": 66145669120,
+      "gpus": [
+        {
+          "name": "NVIDIA GeForce RTX 5080",
+          "driver_version": "32.0.15.9186"
+        },
+        {
+          "name": "AMD Radeon(TM) Graphics",
+          "driver_version": "32.0.21030.2001"
+        }
+      ]
+    },
+    "implementation_fingerprint_sha256": "dc89198cba985190eca5c63b516bc465bbc6b71e286ba717a9b3bfca6870a2f2",
+    "implementation_changed_during_run": false,
+    "input_fingerprint_sha256": "ee7a43206b79e281fa2c52fcdd1b6d65157e65fff1e3bf5a01f57f8b757575ba",
+    "inputs_changed_during_run": false
+  },
+  "summary": {
+    "turns": 12,
+    "pipeline_completed": 11,
+    "pipeline_failed": 1,
+    "planner_exact_matches": 8,
+    "evidence_expectation_matches": 11,
+    "core_retries": 1,
+    "all_turn_latency_ms": {
+      "count": 12,
+      "min": 6319.898,
+      "mean": 14906.559,
+      "p50": 13056.958,
+      "p95": 27624.446,
+      "max": 32323.644
+    },
+    "completed_turn_latency_ms": {
+      "count": 11,
+      "min": 6319.898,
+      "mean": 14270.494,
+      "p50": 12966.546,
+      "p95": 28051.645,
+      "max": 32323.644
+    },
+    "completed_under_5s": 0,
+    "completed_under_10s": 5,
+    "completed_at_least_30s": 1,
+    "stage_latency_ms": {
+      "context": {
+        "count": 12,
+        "min": 2416.155,
+        "mean": 6549.373,
+        "p50": 5620.498,
+        "p95": 14668.871,
+        "max": 22697.209
+      },
+      "core": {
+        "count": 12,
+        "min": 3702.533,
+        "mean": 8356.844,
+        "p50": 6339.483,
+        "p95": 16430.38,
+        "max": 17349.274
+      },
+      "materialize": {
+        "count": 11,
+        "min": 0.008,
+        "mean": 0.01,
+        "p50": 0.01,
+        "p95": 0.011,
+        "max": 0.011
+      },
+      "refresh": {
+        "count": 11,
+        "min": 0.03,
+        "mean": 0.303,
+        "p50": 0.08,
+        "p95": 0.823,
+        "max": 0.841
+      },
+      "grounding": {
+        "count": 11,
+        "min": 0.014,
+        "mean": 0.022,
+        "p50": 0.023,
+        "p95": 0.029,
+        "max": 0.031
+      }
+    },
+    "first_in_run_latency_ms": {
+      "count": 1,
+      "min": 32323.644,
+      "mean": 32323.644,
+      "p50": 32323.644,
+      "p95": 32323.644,
+      "max": 32323.644
+    },
+    "subsequent_in_run_latency_ms": {
+      "count": 11,
+      "min": 6319.898,
+      "mean": 13323.187,
+      "p50": 12966.546,
+      "p95": 23414.919,
+      "max": 23779.647
+    },
+    "automatic_reply_accuracy": null
+  },
+  "results": [
+    {
+      "case_id": "historical-raw-en",
+      "language": "en",
+      "question_id": "1a29a9df2e1c04b7",
+      "run_index": 1,
+      "repetition": 1,
+      "call_state": "first_in_run",
+      "pipeline_completed": true,
+      "planner_exact_match": true,
+      "evidence_expectation_match": true,
+      "manual_reply_review_required": true,
+      "failure": null,
+      "core_retries": 0,
+      "model_requests": [
+        {
+          "role": "context",
+          "attempt": 1,
+          "wall_ms": 22693.258,
+          "status": "completed",
+          "reason": null,
+          "prompt_ms": 18843.664,
+          "generation_ms": 3825.293,
+          "prompt_tokens": 3147,
+          "cached_prompt_tokens": 0,
+          "completion_tokens": 54
+        },
+        {
+          "role": "core",
+          "attempt": 1,
+          "wall_ms": 9625.043,
+          "status": "completed",
+          "reason": null,
+          "prompt_ms": 5640.931,
+          "generation_ms": 3876.932,
+          "prompt_tokens": 1097,
+          "cached_prompt_tokens": 3,
+          "completion_tokens": 67
+        }
+      ],
+      "timing_ms": {
+        "context": 22697.209,
+        "core": 9626.297,
+        "materialize": 0.011,
+        "refresh": 0.076,
+        "grounding": 0.023,
+        "total": 32323.644
+      },
+      "reply_action": "speak",
+      "reply_word_count": 13
+    },
+    {
+      "case_id": "vent-en",
+      "language": "en",
+      "question_id": "943796b7c295b9ba",
+      "run_index": 2,
+      "repetition": 1,
+      "call_state": "subsequent_in_run",
+      "pipeline_completed": true,
+      "planner_exact_match": true,
+      "evidence_expectation_match": true,
+      "manual_reply_review_required": true,
+      "failure": null,
+      "core_retries": 0,
+      "model_requests": [
+        {
+          "role": "context",
+          "attempt": 1,
+          "wall_ms": 2615.325,
+          "status": "completed",
+          "reason": null,
+          "prompt_ms": 289.952,
+          "generation_ms": 2217.935,
+          "prompt_tokens": 3143,
+          "cached_prompt_tokens": 3130,
+          "completion_tokens": 30
+        },
+        {
+          "role": "core",
+          "attempt": 1,
+          "wall_ms": 3701.356,
+          "status": "completed",
+          "reason": null,
+          "prompt_ms": 1342.753,
+          "generation_ms": 2262.164,
+          "prompt_tokens": 1012,
+          "cached_prompt_tokens": 760,
+          "completion_tokens": 40
+        }
+      ],
+      "timing_ms": {
+        "context": 2617.269,
+        "core": 3702.533,
+        "materialize": 0.011,
+        "refresh": 0.038,
+        "grounding": 0.018,
+        "total": 6319.898
+      },
+      "reply_action": "speak",
+      "reply_word_count": 6
+    },
+    {
+      "case_id": "historical-raw-tr",
+      "language": "tr",
+      "question_id": "dfd75e5501d650e6",
+      "run_index": 3,
+      "repetition": 1,
+      "call_state": "subsequent_in_run",
+      "pipeline_completed": true,
+      "planner_exact_match": true,
+      "evidence_expectation_match": true,
+      "manual_reply_review_required": true,
+      "failure": null,
+      "core_retries": 0,
+      "model_requests": [
+        {
+          "role": "context",
+          "attempt": 1,
+          "wall_ms": 6745.701,
+          "status": "completed",
+          "reason": null,
+          "prompt_ms": 613.727,
+          "generation_ms": 6039.539,
+          "prompt_tokens": 3153,
+          "cached_prompt_tokens": 3120,
+          "completion_tokens": 85
+        },
+        {
+          "role": "core",
+          "attempt": 1,
+          "wall_ms": 6398.666,
+          "status": "completed",
+          "reason": null,
+          "prompt_ms": 1921.878,
+          "generation_ms": 4382.346,
+          "prompt_tokens": 1103,
+          "cached_prompt_tokens": 760,
+          "completion_tokens": 75
+        }
+      ],
+      "timing_ms": {
+        "context": 6747.474,
+        "core": 6399.755,
+        "materialize": 0.01,
+        "refresh": 0.081,
+        "grounding": 0.031,
+        "total": 13147.37
+      },
+      "reply_action": "speak",
+      "reply_word_count": 10
+    },
+    {
+      "case_id": "compound-tr",
+      "language": "tr",
+      "question_id": "3acc9796a8d8588b",
+      "run_index": 4,
+      "repetition": 1,
+      "call_state": "subsequent_in_run",
+      "pipeline_completed": true,
+      "planner_exact_match": false,
+      "evidence_expectation_match": true,
+      "manual_reply_review_required": true,
+      "failure": null,
+      "core_retries": 0,
+      "model_requests": [
+        {
+          "role": "context",
+          "attempt": 1,
+          "wall_ms": 7680.389,
+          "status": "completed",
+          "reason": null,
+          "prompt_ms": 359.14,
+          "generation_ms": 7223.204,
+          "prompt_tokens": 3150,
+          "cached_prompt_tokens": 3130,
+          "completion_tokens": 102
+        },
+        {
+          "role": "core",
+          "attempt": 1,
+          "wall_ms": 15365.01,
+          "status": "completed",
+          "reason": null,
+          "prompt_ms": 8638.487,
+          "generation_ms": 6615.544,
+          "prompt_tokens": 2246,
+          "cached_prompt_tokens": 798,
+          "completion_tokens": 101
+        }
+      ],
+      "timing_ms": {
+        "context": 7682.966,
+        "core": 15366.325,
+        "materialize": 0.011,
+        "refresh": 0.841,
+        "grounding": 0.027,
+        "total": 23050.191
+      },
+      "reply_action": "speak",
+      "reply_word_count": 9
+    },
+    {
+      "case_id": "vent-tr",
+      "language": "tr",
+      "question_id": "71e71d397d26dfe4",
+      "run_index": 5,
+      "repetition": 1,
+      "call_state": "subsequent_in_run",
+      "pipeline_completed": true,
+      "planner_exact_match": true,
+      "evidence_expectation_match": true,
+      "manual_reply_review_required": true,
+      "failure": null,
+      "core_retries": 0,
+      "model_requests": [
+        {
+          "role": "context",
+          "attempt": 1,
+          "wall_ms": 2572.949,
+          "status": "completed",
+          "reason": null,
+          "prompt_ms": 311.123,
+          "generation_ms": 2130.647,
+          "prompt_tokens": 3145,
+          "cached_prompt_tokens": 3130,
+          "completion_tokens": 30
+        },
+        {
+          "role": "core",
+          "attempt": 1,
+          "wall_ms": 4264.227,
+          "status": "completed",
+          "reason": null,
+          "prompt_ms": 1533.276,
+          "generation_ms": 2574.185,
+          "prompt_tokens": 1015,
+          "cached_prompt_tokens": 760,
+          "completion_tokens": 45
+        }
+      ],
+      "timing_ms": {
+        "context": 2574.732,
+        "core": 4265.252,
+        "materialize": 0.01,
+        "refresh": 0.036,
+        "grounding": 0.014,
+        "total": 6840.061
+      },
+      "reply_action": "speak",
+      "reply_word_count": 4
+    },
+    {
+      "case_id": "compound-en",
+      "language": "en",
+      "question_id": "8303582eca9d66e8",
+      "run_index": 6,
+      "repetition": 1,
+      "call_state": "subsequent_in_run",
+      "pipeline_completed": true,
+      "planner_exact_match": false,
+      "evidence_expectation_match": true,
+      "manual_reply_review_required": true,
+      "failure": null,
+      "core_retries": 0,
+      "model_requests": [
+        {
+          "role": "context",
+          "attempt": 1,
+          "wall_ms": 8097.746,
+          "status": "completed",
+          "reason": null,
+          "prompt_ms": 530.701,
+          "generation_ms": 7466.427,
+          "prompt_tokens": 3146,
+          "cached_prompt_tokens": 3120,
+          "completion_tokens": 102
+        },
+        {
+          "role": "core",
+          "attempt": 1,
+          "wall_ms": 15677.547,
+          "status": "completed",
+          "reason": null,
+          "prompt_ms": 8928.429,
+          "generation_ms": 6645.345,
+          "prompt_tokens": 2241,
+          "cached_prompt_tokens": 760,
+          "completion_tokens": 97
+        }
+      ],
+      "timing_ms": {
+        "context": 8100.23,
+        "core": 15678.558,
+        "materialize": 0.01,
+        "refresh": 0.804,
+        "grounding": 0.026,
+        "total": 23779.647
+      },
+      "reply_action": "speak",
+      "reply_word_count": 10
+    },
+    {
+      "case_id": "compound-en",
+      "language": "en",
+      "question_id": "8303582eca9d66e8",
+      "run_index": 7,
+      "repetition": 2,
+      "call_state": "subsequent_in_run",
+      "pipeline_completed": true,
+      "planner_exact_match": false,
+      "evidence_expectation_match": true,
+      "manual_reply_review_required": true,
+      "failure": null,
+      "core_retries": 0,
+      "model_requests": [
+        {
+          "role": "context",
+          "attempt": 1,
+          "wall_ms": 7567.797,
+          "status": "completed",
+          "reason": null,
+          "prompt_ms": 77.026,
+          "generation_ms": 7351.76,
+          "prompt_tokens": 3146,
+          "cached_prompt_tokens": 3145,
+          "completion_tokens": 102
+        },
+        {
+          "role": "core",
+          "attempt": 1,
+          "wall_ms": 6593.118,
+          "status": "completed",
+          "reason": null,
+          "prompt_ms": 68.578,
+          "generation_ms": 6403.138,
+          "prompt_tokens": 2241,
+          "cached_prompt_tokens": 2240,
+          "completion_tokens": 97
+        }
+      ],
+      "timing_ms": {
+        "context": 7570.277,
+        "core": 6594.099,
+        "materialize": 0.009,
+        "refresh": 0.742,
+        "grounding": 0.023,
+        "total": 14165.17
+      },
+      "reply_action": "speak",
+      "reply_word_count": 10
+    },
+    {
+      "case_id": "compound-tr",
+      "language": "tr",
+      "question_id": "3acc9796a8d8588b",
+      "run_index": 8,
+      "repetition": 2,
+      "call_state": "subsequent_in_run",
+      "pipeline_completed": false,
+      "planner_exact_match": true,
+      "evidence_expectation_match": true,
+      "manual_reply_review_required": true,
+      "failure": {
+        "stage": "core",
+        "reason": "engineer_model_response_invalid"
+      },
+      "core_retries": 1,
+      "model_requests": [
+        {
+          "role": "context",
+          "attempt": 1,
+          "wall_ms": 4551.364,
+          "status": "completed",
+          "reason": null,
+          "prompt_ms": 534.188,
+          "generation_ms": 3906.302,
+          "prompt_tokens": 3150,
+          "cached_prompt_tokens": 3120,
+          "completion_tokens": 56
+        },
+        {
+          "role": "core",
+          "attempt": 1,
+          "wall_ms": 8960.942,
+          "status": "completed",
+          "reason": null,
+          "prompt_ms": 2729.425,
+          "generation_ms": 6115.112,
+          "prompt_tokens": 1299,
+          "cached_prompt_tokens": 829,
+          "completion_tokens": 101
+        },
+        {
+          "role": "core",
+          "attempt": 2,
+          "wall_ms": 8386.155,
+          "status": "completed",
+          "reason": null,
+          "prompt_ms": 2536.919,
+          "generation_ms": 5838.624,
+          "prompt_tokens": 1391,
+          "cached_prompt_tokens": 915,
+          "completion_tokens": 100
+        }
+      ],
+      "timing_ms": {
+        "context": 4553.791,
+        "core": 17349.274,
+        "total": 21903.276
+      },
+      "reply_action": null,
+      "reply_word_count": 0
+    },
+    {
+      "case_id": "vent-tr",
+      "language": "tr",
+      "question_id": "71e71d397d26dfe4",
+      "run_index": 9,
+      "repetition": 2,
+      "call_state": "subsequent_in_run",
+      "pipeline_completed": true,
+      "planner_exact_match": true,
+      "evidence_expectation_match": true,
+      "manual_reply_review_required": true,
+      "failure": null,
+      "core_retries": 0,
+      "model_requests": [
+        {
+          "role": "context",
+          "attempt": 1,
+          "wall_ms": 2414.322,
+          "status": "completed",
+          "reason": null,
+          "prompt_ms": 297.69,
+          "generation_ms": 2031.564,
+          "prompt_tokens": 3145,
+          "cached_prompt_tokens": 3130,
+          "completion_tokens": 30
+        },
+        {
+          "role": "core",
+          "attempt": 1,
+          "wall_ms": 4166.274,
+          "status": "completed",
+          "reason": null,
+          "prompt_ms": 1369.147,
+          "generation_ms": 2707.892,
+          "prompt_tokens": 1015,
+          "cached_prompt_tokens": 760,
+          "completion_tokens": 45
+        }
+      ],
+      "timing_ms": {
+        "context": 2416.155,
+        "core": 4167.573,
+        "materialize": 0.009,
+        "refresh": 0.03,
+        "grounding": 0.014,
+        "total": 6583.795
+      },
+      "reply_action": "speak",
+      "reply_word_count": 4
+    },
+    {
+      "case_id": "historical-raw-tr",
+      "language": "tr",
+      "question_id": "dfd75e5501d650e6",
+      "run_index": 10,
+      "repetition": 2,
+      "call_state": "subsequent_in_run",
+      "pipeline_completed": true,
+      "planner_exact_match": true,
+      "evidence_expectation_match": true,
+      "manual_reply_review_required": true,
+      "failure": null,
+      "core_retries": 0,
+      "model_requests": [
+        {
+          "role": "context",
+          "attempt": 1,
+          "wall_ms": 6685.468,
+          "status": "completed",
+          "reason": null,
+          "prompt_ms": 397.103,
+          "generation_ms": 6211.85,
+          "prompt_tokens": 3153,
+          "cached_prompt_tokens": 3130,
+          "completion_tokens": 89
+        },
+        {
+          "role": "core",
+          "attempt": 1,
+          "wall_ms": 6278.308,
+          "status": "completed",
+          "reason": null,
+          "prompt_ms": 1776.522,
+          "generation_ms": 4407.559,
+          "prompt_tokens": 1103,
+          "cached_prompt_tokens": 760,
+          "completion_tokens": 75
+        }
+      ],
+      "timing_ms": {
+        "context": 6687.205,
+        "core": 6279.211,
+        "materialize": 0.009,
+        "refresh": 0.08,
+        "grounding": 0.024,
+        "total": 12966.546
+      },
+      "reply_action": "speak",
+      "reply_word_count": 10
+    },
+    {
+      "case_id": "historical-raw-en",
+      "language": "en",
+      "question_id": "1a29a9df2e1c04b7",
+      "run_index": 11,
+      "repetition": 2,
+      "call_state": "subsequent_in_run",
+      "pipeline_completed": true,
+      "planner_exact_match": true,
+      "evidence_expectation_match": true,
+      "manual_reply_review_required": true,
+      "failure": null,
+      "core_retries": 0,
+      "model_requests": [
+        {
+          "role": "context",
+          "attempt": 1,
+          "wall_ms": 4230.177,
+          "status": "completed",
+          "reason": null,
+          "prompt_ms": 469.069,
+          "generation_ms": 3673.234,
+          "prompt_tokens": 3147,
+          "cached_prompt_tokens": 3120,
+          "completion_tokens": 54
+        },
+        {
+          "role": "core",
+          "attempt": 1,
+          "wall_ms": 5082.409,
+          "status": "completed",
+          "reason": null,
+          "prompt_ms": 1192.909,
+          "generation_ms": 3797.375,
+          "prompt_tokens": 1097,
+          "cached_prompt_tokens": 894,
+          "completion_tokens": 67
+        }
+      ],
+      "timing_ms": {
+        "context": 4232.063,
+        "core": 5083.275,
+        "materialize": 0.008,
+        "refresh": 0.069,
+        "grounding": 0.019,
+        "total": 9315.45
+      },
+      "reply_action": "speak",
+      "reply_word_count": 13
+    },
+    {
+      "case_id": "vent-en",
+      "language": "en",
+      "question_id": "943796b7c295b9ba",
+      "run_index": 12,
+      "repetition": 2,
+      "call_state": "subsequent_in_run",
+      "pipeline_completed": true,
+      "planner_exact_match": false,
+      "evidence_expectation_match": false,
+      "manual_reply_review_required": true,
+      "failure": null,
+      "core_retries": 0,
+      "model_requests": [
+        {
+          "role": "context",
+          "attempt": 1,
+          "wall_ms": 2711.277,
+          "status": "completed",
+          "reason": null,
+          "prompt_ms": 240.616,
+          "generation_ms": 2382.261,
+          "prompt_tokens": 3143,
+          "cached_prompt_tokens": 3130,
+          "completion_tokens": 35
+        },
+        {
+          "role": "core",
+          "attempt": 1,
+          "wall_ms": 5769.048,
+          "status": "completed",
+          "reason": null,
+          "prompt_ms": 1829.848,
+          "generation_ms": 3844.383,
+          "prompt_tokens": 1124,
+          "cached_prompt_tokens": 777,
+          "completion_tokens": 67
+        }
+      ],
+      "timing_ms": {
+        "context": 2713.103,
+        "core": 5769.974,
+        "materialize": 0.009,
+        "refresh": 0.537,
+        "grounding": 0.018,
+        "total": 8483.658
+      },
+      "reply_action": "speak",
+      "reply_word_count": 5
+    }
+  ]
+}

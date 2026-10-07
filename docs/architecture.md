@@ -218,6 +218,11 @@ telemetry as continuous evidence, lets a Context Engineer select and derive rele
 information, lets a Core Engineer decide what a teammate should communicate, and uses Qwen
 to generate the actual response.
 
+INT-06 now also gives the Context Engineer a value-free catalog of typed deterministic
+[race capabilities](race-capabilities.md). Qwen selects calculations semantically, while
+application code owns the arithmetic and returns fresh sourced evidence or an explicit
+unavailable result.
+
 Versioned contracts now separate driver turns, evidence packets, engineer briefs,
 Qwen-authored templates and final grounded responses. Numeric telemetry must cross the
 language boundary through refreshed evidence placeholders. Session scope, evidence
@@ -225,6 +230,31 @@ provenance, freshness and radio limits remain deterministic. The initial orchest
 scripted coverage for direct facts, analytical questions and evidence-free human
 interaction. The existing v1 conversation path remains operational until the replacement
 earns live integration.
+
+INT-03 adds a model-directed Context Engineer baseline. Local Qwen sees the driver turn and
+a value-free catalog of normalized numeric signals, then selects bounded generic telemetry
+operations. Deterministic memory executes the plan and returns sourced evidence or explicit
+unknowns; social turns may require no telemetry. Current-field aggregation allows generic
+ranking comparisons without adding a spoken `is_last` intent.
+
+The INT-07 repair makes raw queries catalog-bound and separates social/factual/mixed purpose
+from factual time scope in that same planner inference. Missing-information reasons are
+application-owned; rejected plans never execute. Stable catalogs precede dialogue for local
+prompt-prefix reuse, without caching telemetry or bypassing delivery-time refresh. These
+development improvements do not constitute a model-promotion or full-radio quality result.
+
+The current v5 planner first emits a bounded factual-request inventory and an independent
+social-content flag, then selects catalog-bound evidence in that same inference. Purpose is
+derived from the social flag and factual time scope; the inventory is discarded, not exposed
+as evidence or persisted to driver memory. This changes neither deterministic arithmetic nor
+the two-inference composition. V5 is wired into this development branch, but remains
+unpromoted: extra evidence and social-purpose regressions are documented in INT-004.
+
+The portable INT-04/05 baseline is now the production `voice-iracing` conversation path.
+A second local Qwen inference combines the Core Engineer decision and natural response,
+then selected evidence is re-executed and grounded only when the existing radio scheduler
+delivers the answer. The legacy bounded query/template session remains available to replay
+and tests during migration, but is no longer the normal live composition.
 
 ## Post-M3 improvement: Jev-assisted policy ranking
 
@@ -239,6 +269,11 @@ After the M3 speech path is complete, evaluate Jev as an optional ranking adapte
 ambiguous, noncritical communication decisions. Jev may score whether a candidate is worth
 announcing, rank simultaneous candidates, or classify a bounded message type. It does not
 create race facts, generate wording, or own the final scheduling decision.
+
+Context Engineer candidate evaluation is defined separately in
+[INT-07 Context Engineer evaluation](intelligence-evaluation.md). It compares typed evidence
+plans and deterministic execution outcomes; it does not treat a single-label classifier or a
+temporal model as a drop-in conversational answer generator.
 
 The integration must preserve these constraints:
 

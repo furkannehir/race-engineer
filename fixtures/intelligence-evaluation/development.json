@@ -1,0 +1,88 @@
+{
+  "schema_version": "intelligence-eval.v1",
+  "dataset_id": "intelligence-development",
+  "revision": "2026-10-04.seed1",
+  "split": "development",
+  "fixture": "fixtures/synthetic/intelligence-capabilities",
+  "groups": [
+    {
+      "id": "dev-classification-en",
+      "family": "dev-classification-en-family",
+      "category": "classification",
+      "language": "en",
+      "questions": ["Am I last?", "Where are we in the classification?"],
+      "expected": {
+        "temporal_scope": "current",
+        "capability_ids": ["current_classification"],
+        "evidence_outcome": "available"
+      },
+      "tags": ["capability", "relationship"]
+    },
+    {
+      "id": "dev-fuel-tr",
+      "family": "dev-fuel-tr-family",
+      "category": "fuel",
+      "language": "tr",
+      "questions": ["Yakıtla kaç tur daha gideriz?", "Depodaki yakıt kaç turluk?"],
+      "expected": {
+        "temporal_scope": "current",
+        "capability_ids": ["fuel_range"],
+        "evidence_outcome": "available"
+      },
+      "tags": ["capability", "calculation"]
+    },
+    {
+      "id": "dev-position-change-en",
+      "family": "dev-position-change-en-family",
+      "category": "position-change",
+      "language": "en",
+      "questions": ["How many places have I gained recently?", "Have we lost positions in the last thirty seconds?"],
+      "expected": {
+        "temporal_scope": "historical",
+        "capability_ids": ["position_change"],
+        "evidence_outcome": "available"
+      },
+      "tags": ["capability", "window"]
+    },
+    {
+      "id": "dev-gap-ahead-tr",
+      "family": "dev-gap-ahead-tr-family",
+      "category": "gap",
+      "language": "tr",
+      "questions": ["Öndeki araca fark ne?", "Önümdeki araç kaç saniye uzakta?"],
+      "expected": {
+        "temporal_scope": "current",
+        "capability_ids": ["gap_ahead"],
+        "evidence_outcome": "available"
+      },
+      "tags": ["capability", "opponent"]
+    },
+    {
+      "id": "dev-speed-raw-en",
+      "family": "dev-speed-raw-en-family",
+      "category": "raw-signal",
+      "language": "en",
+      "questions": ["What's my speed right now?", "Current speed?"],
+      "expected": {
+        "temporal_scope": "current",
+        "queries": [
+          {"source": "player", "signal": "speed_mps", "operation": "latest"}
+        ],
+        "evidence_outcome": "available"
+      },
+      "tags": ["raw-query", "latest"]
+    },
+    {
+      "id": "dev-social-tr",
+      "family": "dev-social-tr-family",
+      "category": "social",
+      "language": "tr",
+      "questions": ["Bu adamın yarıştan haberi yok.", "Teşekkürler, iyi iş."],
+      "expected": {
+        "temporal_scope": "social",
+        "evidence_outcome": "no_evidence"
+      },
+      "tags": ["no-telemetry", "teammate"]
+    }
+  ]
+}

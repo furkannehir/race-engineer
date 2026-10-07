@@ -1,0 +1,1155 @@
+{
+  "schema_version": "intelligence-eval-report.v2",
+  "generated_at": "2026-10-06T18:22:36.175262+00:00",
+  "evaluation_scope": "context_planner_and_deterministic_evidence_execution",
+  "candidate": {
+    "schema_version": "intelligence-candidate.v1",
+    "candidate_id": "qwen-context-v3",
+    "runtime_profile": "portable",
+    "candidate_kind": "generative",
+    "adapter": "llama-cpp",
+    "model": "Qwen3-4B-Instruct-2507",
+    "model_revision": "a06e946bb6b655725eafa393f4a9745d460374c9",
+    "local_only": true
+  },
+  "candidate_runtime": {
+    "configured_mode": "cpu",
+    "runtime_revision": "b10964",
+    "quantization": "Q4_K_M",
+    "threads": 8,
+    "context_size": 8192,
+    "gpu_layers": -1
+  },
+  "datasets": [
+    {
+      "dataset_id": "intelligence-development",
+      "revision": "2026-10-04.seed1",
+      "split": "development",
+      "turns": 12,
+      "language_counts": {
+        "en": 6,
+        "tr": 6
+      }
+    }
+  ],
+  "reproducibility": {
+    "input_fingerprint_sha256": "ee446c87a1ecaaf266bfd34d90d18bd463a8948839d5ead33be8a0de7054a805",
+    "implementation_fingerprint_sha256": "53384e4b58245bc4383b29e317dc261bd2745a970b33c3879269cfafcab48693",
+    "git_revision": "25114208ecf72e173bf128819ae2f9add2dc8ba1",
+    "git_dirty": true,
+    "machine": {
+      "os": "Windows-11",
+      "architecture": "AMD64",
+      "cpu": "AMD Ryzen 7 9800X3D 8-Core Processor",
+      "logical_cpus": 16,
+      "memory_bytes": 66145669120,
+      "gpus": [
+        {
+          "name": "NVIDIA GeForce RTX 5080",
+          "driver_version": "32.0.15.9186"
+        },
+        {
+          "name": "AMD Radeon(TM) Graphics",
+          "driver_version": "32.0.21030.2001"
+        }
+      ]
+    }
+  },
+  "privacy": {
+    "local_only": true,
+    "report_contains_transcripts": false,
+    "report_contains_model_replies": false
+  },
+  "summary": {
+    "overall": {
+      "turns": 12,
+      "passed": 0,
+      "exact_turn_accuracy": 0,
+      "exact_plan_accuracy": 0.25,
+      "temporal_scope_accuracy": 0.916667,
+      "capability_selection_accuracy": 0.833333,
+      "query_selection_accuracy": 0.25,
+      "evidence_outcome_accuracy": 0.916667,
+      "unknown_reason_accuracy": 0.25,
+      "supported_turns": 10,
+      "supported_accepted": 10,
+      "supported_coverage": 1,
+      "accepted_plan_accuracy": 0.2,
+      "model_errors": 0,
+      "transport_errors": 0,
+      "response_errors": 0,
+      "plan_validation_errors": 0,
+      "execution_errors": 0,
+      "required_evidence_accuracy": 0.25,
+      "extra_evidence_turns": 9
+    },
+    "by_language": {
+      "en": {
+        "turns": 6,
+        "passed": 0,
+        "exact_turn_accuracy": 0,
+        "exact_plan_accuracy": 0.333333,
+        "temporal_scope_accuracy": 1,
+        "capability_selection_accuracy": 1,
+        "query_selection_accuracy": 0.333333,
+        "evidence_outcome_accuracy": 1,
+        "unknown_reason_accuracy": 0.333333,
+        "supported_turns": 6,
+        "supported_accepted": 6,
+        "supported_coverage": 1,
+        "accepted_plan_accuracy": 0.333333,
+        "model_errors": 0,
+        "transport_errors": 0,
+        "response_errors": 0,
+        "plan_validation_errors": 0,
+        "execution_errors": 0,
+        "required_evidence_accuracy": 0.333333,
+        "extra_evidence_turns": 4
+      },
+      "tr": {
+        "turns": 6,
+        "passed": 0,
+        "exact_turn_accuracy": 0,
+        "exact_plan_accuracy": 0.166667,
+        "temporal_scope_accuracy": 0.833333,
+        "capability_selection_accuracy": 0.666667,
+        "query_selection_accuracy": 0.166667,
+        "evidence_outcome_accuracy": 0.833333,
+        "unknown_reason_accuracy": 0.166667,
+        "supported_turns": 4,
+        "supported_accepted": 4,
+        "supported_coverage": 1,
+        "accepted_plan_accuracy": 0,
+        "model_errors": 0,
+        "transport_errors": 0,
+        "response_errors": 0,
+        "plan_validation_errors": 0,
+        "execution_errors": 0,
+        "required_evidence_accuracy": 0.166667,
+        "extra_evidence_turns": 5
+      }
+    },
+    "by_category": {
+      "classification": {
+        "turns": 2,
+        "passed": 0,
+        "exact_turn_accuracy": 0,
+        "exact_plan_accuracy": 0,
+        "temporal_scope_accuracy": 1,
+        "capability_selection_accuracy": 1,
+        "query_selection_accuracy": 0,
+        "evidence_outcome_accuracy": 1,
+        "unknown_reason_accuracy": 0.5,
+        "supported_turns": 2,
+        "supported_accepted": 2,
+        "supported_coverage": 1,
+        "accepted_plan_accuracy": 0,
+        "model_errors": 0,
+        "transport_errors": 0,
+        "response_errors": 0,
+        "plan_validation_errors": 0,
+        "execution_errors": 0,
+        "required_evidence_accuracy": 0.5,
+        "extra_evidence_turns": 2
+      },
+      "fuel": {
+        "turns": 2,
+        "passed": 0,
+        "exact_turn_accuracy": 0,
+        "exact_plan_accuracy": 0,
+        "temporal_scope_accuracy": 1,
+        "capability_selection_accuracy": 1,
+        "query_selection_accuracy": 0,
+        "evidence_outcome_accuracy": 1,
+        "unknown_reason_accuracy": 0,
+        "supported_turns": 2,
+        "supported_accepted": 2,
+        "supported_coverage": 1,
+        "accepted_plan_accuracy": 0,
+        "model_errors": 0,
+        "transport_errors": 0,
+        "response_errors": 0,
+        "plan_validation_errors": 0,
+        "execution_errors": 0,
+        "required_evidence_accuracy": 0,
+        "extra_evidence_turns": 2
+      },
+      "gap": {
+        "turns": 2,
+        "passed": 0,
+        "exact_turn_accuracy": 0,
+        "exact_plan_accuracy": 0,
+        "temporal_scope_accuracy": 1,
+        "capability_selection_accuracy": 0.5,
+        "query_selection_accuracy": 0,
+        "evidence_outcome_accuracy": 1,
+        "unknown_reason_accuracy": 0.5,
+        "supported_turns": 2,
+        "supported_accepted": 2,
+        "supported_coverage": 1,
+        "accepted_plan_accuracy": 0,
+        "model_errors": 0,
+        "transport_errors": 0,
+        "response_errors": 0,
+        "plan_validation_errors": 0,
+        "execution_errors": 0,
+        "required_evidence_accuracy": 0.5,
+        "extra_evidence_turns": 2
+      },
+      "position-change": {
+        "turns": 2,
+        "passed": 0,
+        "exact_turn_accuracy": 0,
+        "exact_plan_accuracy": 0,
+        "temporal_scope_accuracy": 1,
+        "capability_selection_accuracy": 1,
+        "query_selection_accuracy": 0,
+        "evidence_outcome_accuracy": 1,
+        "unknown_reason_accuracy": 0.5,
+        "supported_turns": 2,
+        "supported_accepted": 2,
+        "supported_coverage": 1,
+        "accepted_plan_accuracy": 0,
+        "model_errors": 0,
+        "transport_errors": 0,
+        "response_errors": 0,
+        "plan_validation_errors": 0,
+        "execution_errors": 0,
+        "required_evidence_accuracy": 0.5,
+        "extra_evidence_turns": 2
+      },
+      "raw-signal": {
+        "turns": 2,
+        "passed": 0,
+        "exact_turn_accuracy": 0,
+        "exact_plan_accuracy": 1,
+        "temporal_scope_accuracy": 1,
+        "capability_selection_accuracy": 1,
+        "query_selection_accuracy": 1,
+        "evidence_outcome_accuracy": 1,
+        "unknown_reason_accuracy": 0,
+        "supported_turns": 2,
+        "supported_accepted": 2,
+        "supported_coverage": 1,
+        "accepted_plan_accuracy": 1,
+        "model_errors": 0,
+        "transport_errors": 0,
+        "response_errors": 0,
+        "plan_validation_errors": 0,
+        "execution_errors": 0,
+        "required_evidence_accuracy": 0,
+        "extra_evidence_turns": 0
+      },
+      "social": {
+        "turns": 2,
+        "passed": 0,
+        "exact_turn_accuracy": 0,
+        "exact_plan_accuracy": 0.5,
+        "temporal_scope_accuracy": 0.5,
+        "capability_selection_accuracy": 0.5,
+        "query_selection_accuracy": 0.5,
+        "evidence_outcome_accuracy": 0.5,
+        "unknown_reason_accuracy": 0,
+        "supported_turns": 0,
+        "supported_accepted": 0,
+        "supported_coverage": null,
+        "accepted_plan_accuracy": null,
+        "model_errors": 0,
+        "transport_errors": 0,
+        "response_errors": 0,
+        "plan_validation_errors": 0,
+        "execution_errors": 0,
+        "required_evidence_accuracy": 0,
+        "extra_evidence_turns": 1
+      }
+    },
+    "failure_reasons": {
+      "expectation_mismatch": 12
+    },
+    "latency_ms": {
+      "planner_all": {
+        "count": 12,
+        "min": 8404.732,
+        "mean": 9884.011,
+        "p50": 9722.961,
+        "p95": 11386.987,
+        "max": 11833.586
+      },
+      "planner_first_call": {
+        "count": 1,
+        "min": 10383.305,
+        "mean": 10383.305,
+        "p50": 10383.305,
+        "p95": 10383.305,
+        "max": 10383.305
+      },
+      "planner_subsequent_calls": {
+        "count": 11,
+        "min": 8404.732,
+        "mean": 9838.621,
+        "p50": 9687.822,
+        "p95": 11427.586,
+        "max": 11833.586
+      },
+      "execution": {
+        "count": 12,
+        "min": 0.392,
+        "mean": 0.683,
+        "p50": 0.717,
+        "p95": 0.913,
+        "max": 0.929
+      },
+      "total": {
+        "count": 12,
+        "min": 8405.167,
+        "mean": 9884.694,
+        "p50": 9723.626,
+        "p95": 11387.871,
+        "max": 11834.415
+      }
+    },
+    "candidate": {
+      "schema_version": "intelligence-candidate.v1",
+      "candidate_id": "qwen-context-v3",
+      "runtime_profile": "portable",
+      "candidate_kind": "generative",
+      "adapter": "llama-cpp",
+      "model": "Qwen3-4B-Instruct-2507",
+      "model_revision": "a06e946bb6b655725eafa393f4a9745d460374c9",
+      "local_only": true
+    }
+  },
+  "results": [
+    {
+      "dataset_id": "intelligence-development",
+      "split": "development",
+      "case_id": "dev-classification-en",
+      "family": "dev-classification-en-family",
+      "category": "classification",
+      "language": "en",
+      "item": 1,
+      "question_id": "a89944d200ad77ac",
+      "tags": [
+        "capability",
+        "relationship"
+      ],
+      "expected_plan": {
+        "temporal_scope": "current",
+        "capability_ids": [
+          "current_classification"
+        ],
+        "queries": []
+      },
+      "observed_plan": {
+        "temporal_scope": "current",
+        "capability_ids": [
+          "current_classification"
+        ],
+        "queries": [
+          {
+            "source": "field",
+            "signal": "position",
+            "subject_id": null,
+            "operation": "maximum",
+            "window_s": null
+          }
+        ]
+      },
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "selection": {
+        "expected_request_count": 1,
+        "matched_request_count": 1,
+        "missing_request_count": 0,
+        "extra_request_count": 1,
+        "required_selection_present": true
+      },
+      "required_evidence_passed": false,
+      "expected_evidence_outcome": "available",
+      "observed_evidence_outcome": "available",
+      "required_unknowns": [],
+      "observed_unknowns": [
+        "unknown"
+      ],
+      "unknown_evidence_count": 0,
+      "temporal_scope_passed": true,
+      "capability_selection_passed": true,
+      "query_selection_passed": false,
+      "plan_passed": false,
+      "outcome_passed": true,
+      "unknowns_passed": false,
+      "passed": false,
+      "reason": null,
+      "failure_stage": null,
+      "planner_call": 0,
+      "call_state": "first",
+      "timing_ms": {
+        "planner": 10383.305,
+        "execution": 0.9,
+        "total": 10384.205
+      }
+    },
+    {
+      "dataset_id": "intelligence-development",
+      "split": "development",
+      "case_id": "dev-classification-en",
+      "family": "dev-classification-en-family",
+      "category": "classification",
+      "language": "en",
+      "item": 2,
+      "question_id": "ac8d72a8e91b83ae",
+      "tags": [
+        "capability",
+        "relationship"
+      ],
+      "expected_plan": {
+        "temporal_scope": "current",
+        "capability_ids": [
+          "current_classification"
+        ],
+        "queries": []
+      },
+      "observed_plan": {
+        "temporal_scope": "current",
+        "capability_ids": [
+          "current_classification"
+        ],
+        "queries": [
+          {
+            "source": "field",
+            "signal": "position",
+            "subject_id": null,
+            "operation": "count",
+            "window_s": null
+          }
+        ]
+      },
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "selection": {
+        "expected_request_count": 1,
+        "matched_request_count": 1,
+        "missing_request_count": 0,
+        "extra_request_count": 1,
+        "required_selection_present": true
+      },
+      "required_evidence_passed": true,
+      "expected_evidence_outcome": "available",
+      "observed_evidence_outcome": "available",
+      "required_unknowns": [],
+      "observed_unknowns": [],
+      "unknown_evidence_count": 0,
+      "temporal_scope_passed": true,
+      "capability_selection_passed": true,
+      "query_selection_passed": false,
+      "plan_passed": false,
+      "outcome_passed": true,
+      "unknowns_passed": true,
+      "passed": false,
+      "reason": null,
+      "failure_stage": null,
+      "planner_call": 1,
+      "call_state": "subsequent",
+      "timing_ms": {
+        "planner": 9304.349,
+        "execution": 0.741,
+        "total": 9305.09
+      }
+    },
+    {
+      "dataset_id": "intelligence-development",
+      "split": "development",
+      "case_id": "dev-fuel-tr",
+      "family": "dev-fuel-tr-family",
+      "category": "fuel",
+      "language": "tr",
+      "item": 1,
+      "question_id": "b514e21306a4ed75",
+      "tags": [
+        "capability",
+        "calculation"
+      ],
+      "expected_plan": {
+        "temporal_scope": "current",
+        "capability_ids": [
+          "fuel_range"
+        ],
+        "queries": []
+      },
+      "observed_plan": {
+        "temporal_scope": "current",
+        "capability_ids": [
+          "fuel_range"
+        ],
+        "queries": [
+          {
+            "source": "context",
+            "signal": "fuel_trend_l_per_lap",
+            "subject_id": null,
+            "operation": "latest",
+            "window_s": null
+          }
+        ]
+      },
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "selection": {
+        "expected_request_count": 1,
+        "matched_request_count": 1,
+        "missing_request_count": 0,
+        "extra_request_count": 1,
+        "required_selection_present": true
+      },
+      "required_evidence_passed": false,
+      "expected_evidence_outcome": "available",
+      "observed_evidence_outcome": "available",
+      "required_unknowns": [],
+      "observed_unknowns": [
+        "unknown"
+      ],
+      "unknown_evidence_count": 0,
+      "temporal_scope_passed": true,
+      "capability_selection_passed": true,
+      "query_selection_passed": false,
+      "plan_passed": false,
+      "outcome_passed": true,
+      "unknowns_passed": false,
+      "passed": false,
+      "reason": null,
+      "failure_stage": null,
+      "planner_call": 2,
+      "call_state": "subsequent",
+      "timing_ms": {
+        "planner": 10007.339,
+        "execution": 0.641,
+        "total": 10007.981
+      }
+    },
+    {
+      "dataset_id": "intelligence-development",
+      "split": "development",
+      "case_id": "dev-fuel-tr",
+      "family": "dev-fuel-tr-family",
+      "category": "fuel",
+      "language": "tr",
+      "item": 2,
+      "question_id": "0a0da608422555ce",
+      "tags": [
+        "capability",
+        "calculation"
+      ],
+      "expected_plan": {
+        "temporal_scope": "current",
+        "capability_ids": [
+          "fuel_range"
+        ],
+        "queries": []
+      },
+      "observed_plan": {
+        "temporal_scope": "current",
+        "capability_ids": [
+          "fuel_range"
+        ],
+        "queries": [
+          {
+            "source": "context",
+            "signal": "fuel_trend_l_per_lap",
+            "subject_id": null,
+            "operation": "latest",
+            "window_s": null
+          }
+        ]
+      },
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "selection": {
+        "expected_request_count": 1,
+        "matched_request_count": 1,
+        "missing_request_count": 0,
+        "extra_request_count": 1,
+        "required_selection_present": true
+      },
+      "required_evidence_passed": false,
+      "expected_evidence_outcome": "available",
+      "observed_evidence_outcome": "available",
+      "required_unknowns": [],
+      "observed_unknowns": [
+        "unknown"
+      ],
+      "unknown_evidence_count": 0,
+      "temporal_scope_passed": true,
+      "capability_selection_passed": true,
+      "query_selection_passed": false,
+      "plan_passed": false,
+      "outcome_passed": true,
+      "unknowns_passed": false,
+      "passed": false,
+      "reason": null,
+      "failure_stage": null,
+      "planner_call": 3,
+      "call_state": "subsequent",
+      "timing_ms": {
+        "planner": 9758.099,
+        "execution": 0.638,
+        "total": 9758.737
+      }
+    },
+    {
+      "dataset_id": "intelligence-development",
+      "split": "development",
+      "case_id": "dev-position-change-en",
+      "family": "dev-position-change-en-family",
+      "category": "position-change",
+      "language": "en",
+      "item": 1,
+      "question_id": "27b465885b7df698",
+      "tags": [
+        "capability",
+        "window"
+      ],
+      "expected_plan": {
+        "temporal_scope": "historical",
+        "capability_ids": [
+          "position_change"
+        ],
+        "queries": []
+      },
+      "observed_plan": {
+        "temporal_scope": "historical",
+        "capability_ids": [
+          "position_change"
+        ],
+        "queries": [
+          {
+            "source": "field",
+            "signal": "position",
+            "subject_id": null,
+            "operation": "mean",
+            "window_s": null
+          }
+        ]
+      },
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "selection": {
+        "expected_request_count": 1,
+        "matched_request_count": 1,
+        "missing_request_count": 0,
+        "extra_request_count": 1,
+        "required_selection_present": true
+      },
+      "required_evidence_passed": true,
+      "expected_evidence_outcome": "available",
+      "observed_evidence_outcome": "available",
+      "required_unknowns": [],
+      "observed_unknowns": [],
+      "unknown_evidence_count": 0,
+      "temporal_scope_passed": true,
+      "capability_selection_passed": true,
+      "query_selection_passed": false,
+      "plan_passed": false,
+      "outcome_passed": true,
+      "unknowns_passed": true,
+      "passed": false,
+      "reason": null,
+      "failure_stage": null,
+      "planner_call": 4,
+      "call_state": "subsequent",
+      "timing_ms": {
+        "planner": 9954.486,
+        "execution": 0.8,
+        "total": 9955.285
+      }
+    },
+    {
+      "dataset_id": "intelligence-development",
+      "split": "development",
+      "case_id": "dev-position-change-en",
+      "family": "dev-position-change-en-family",
+      "category": "position-change",
+      "language": "en",
+      "item": 2,
+      "question_id": "7d0216e2a8f16267",
+      "tags": [
+        "capability",
+        "window"
+      ],
+      "expected_plan": {
+        "temporal_scope": "historical",
+        "capability_ids": [
+          "position_change"
+        ],
+        "queries": []
+      },
+      "observed_plan": {
+        "temporal_scope": "historical",
+        "capability_ids": [
+          "position_change"
+        ],
+        "queries": [
+          {
+            "source": "opponent",
+            "signal": "gap_to_player_s",
+            "subject_id": "car-ahead",
+            "operation": "delta",
+            "window_s": 30
+          },
+          {
+            "source": "opponent",
+            "signal": "gap_to_player_s",
+            "subject_id": "car-behind",
+            "operation": "delta",
+            "window_s": 30
+          }
+        ]
+      },
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "selection": {
+        "expected_request_count": 1,
+        "matched_request_count": 1,
+        "missing_request_count": 0,
+        "extra_request_count": 2,
+        "required_selection_present": true
+      },
+      "required_evidence_passed": false,
+      "expected_evidence_outcome": "available",
+      "observed_evidence_outcome": "available",
+      "required_unknowns": [],
+      "observed_unknowns": [
+        "unrecognized_unknown:ed233643ca49f9e3"
+      ],
+      "unknown_evidence_count": 0,
+      "temporal_scope_passed": true,
+      "capability_selection_passed": true,
+      "query_selection_passed": false,
+      "plan_passed": false,
+      "outcome_passed": true,
+      "unknowns_passed": false,
+      "passed": false,
+      "reason": null,
+      "failure_stage": null,
+      "planner_call": 5,
+      "call_state": "subsequent",
+      "timing_ms": {
+        "planner": 11833.586,
+        "execution": 0.829,
+        "total": 11834.415
+      }
+    },
+    {
+      "dataset_id": "intelligence-development",
+      "split": "development",
+      "case_id": "dev-gap-ahead-tr",
+      "family": "dev-gap-ahead-tr-family",
+      "category": "gap",
+      "language": "tr",
+      "item": 1,
+      "question_id": "b43aff09b6353c1a",
+      "tags": [
+        "capability",
+        "opponent"
+      ],
+      "expected_plan": {
+        "temporal_scope": "current",
+        "capability_ids": [
+          "gap_ahead"
+        ],
+        "queries": []
+      },
+      "observed_plan": {
+        "temporal_scope": "current",
+        "capability_ids": [
+          "gap_ahead",
+          "gap_behind"
+        ],
+        "queries": [
+          {
+            "source": "context",
+            "signal": "gap_ahead_s",
+            "subject_id": null,
+            "operation": "latest",
+            "window_s": null
+          },
+          {
+            "source": "context",
+            "signal": "gap_behind_s",
+            "subject_id": null,
+            "operation": "latest",
+            "window_s": null
+          }
+        ]
+      },
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "selection": {
+        "expected_request_count": 1,
+        "matched_request_count": 1,
+        "missing_request_count": 0,
+        "extra_request_count": 3,
+        "required_selection_present": true
+      },
+      "required_evidence_passed": false,
+      "expected_evidence_outcome": "available",
+      "observed_evidence_outcome": "available",
+      "required_unknowns": [],
+      "observed_unknowns": [
+        "unknown"
+      ],
+      "unknown_evidence_count": 0,
+      "temporal_scope_passed": true,
+      "capability_selection_passed": false,
+      "query_selection_passed": false,
+      "plan_passed": false,
+      "outcome_passed": true,
+      "unknowns_passed": false,
+      "passed": false,
+      "reason": null,
+      "failure_stage": null,
+      "planner_call": 6,
+      "call_state": "subsequent",
+      "timing_ms": {
+        "planner": 11021.587,
+        "execution": 0.929,
+        "total": 11022.517
+      }
+    },
+    {
+      "dataset_id": "intelligence-development",
+      "split": "development",
+      "case_id": "dev-gap-ahead-tr",
+      "family": "dev-gap-ahead-tr-family",
+      "category": "gap",
+      "language": "tr",
+      "item": 2,
+      "question_id": "6276a4a7fa4b400e",
+      "tags": [
+        "capability",
+        "opponent"
+      ],
+      "expected_plan": {
+        "temporal_scope": "current",
+        "capability_ids": [
+          "gap_ahead"
+        ],
+        "queries": []
+      },
+      "observed_plan": {
+        "temporal_scope": "current",
+        "capability_ids": [
+          "gap_ahead"
+        ],
+        "queries": [
+          {
+            "source": "context",
+            "signal": "gap_ahead_s",
+            "subject_id": null,
+            "operation": "latest",
+            "window_s": null
+          }
+        ]
+      },
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "selection": {
+        "expected_request_count": 1,
+        "matched_request_count": 1,
+        "missing_request_count": 0,
+        "extra_request_count": 1,
+        "required_selection_present": true
+      },
+      "required_evidence_passed": true,
+      "expected_evidence_outcome": "available",
+      "observed_evidence_outcome": "available",
+      "required_unknowns": [],
+      "observed_unknowns": [],
+      "unknown_evidence_count": 0,
+      "temporal_scope_passed": true,
+      "capability_selection_passed": true,
+      "query_selection_passed": false,
+      "plan_passed": false,
+      "outcome_passed": true,
+      "unknowns_passed": true,
+      "passed": false,
+      "reason": null,
+      "failure_stage": null,
+      "planner_call": 7,
+      "call_state": "subsequent",
+      "timing_ms": {
+        "planner": 9687.822,
+        "execution": 0.693,
+        "total": 9688.515
+      }
+    },
+    {
+      "dataset_id": "intelligence-development",
+      "split": "development",
+      "case_id": "dev-speed-raw-en",
+      "family": "dev-speed-raw-en-family",
+      "category": "raw-signal",
+      "language": "en",
+      "item": 1,
+      "question_id": "e270a72fb4461d7f",
+      "tags": [
+        "raw-query",
+        "latest"
+      ],
+      "expected_plan": {
+        "temporal_scope": "current",
+        "capability_ids": [],
+        "queries": [
+          {
+            "source": "player",
+            "signal": "speed_mps",
+            "subject_id": null,
+            "operation": "latest",
+            "window_s": null
+          }
+        ]
+      },
+      "observed_plan": {
+        "temporal_scope": "current",
+        "capability_ids": [],
+        "queries": [
+          {
+            "source": "player",
+            "signal": "speed_mps",
+            "subject_id": null,
+            "operation": "latest",
+            "window_s": null
+          }
+        ]
+      },
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "selection": {
+        "expected_request_count": 1,
+        "matched_request_count": 1,
+        "missing_request_count": 0,
+        "extra_request_count": 0,
+        "required_selection_present": true
+      },
+      "required_evidence_passed": false,
+      "expected_evidence_outcome": "available",
+      "observed_evidence_outcome": "available",
+      "required_unknowns": [],
+      "observed_unknowns": [
+        "unknown"
+      ],
+      "unknown_evidence_count": 0,
+      "temporal_scope_passed": true,
+      "capability_selection_passed": true,
+      "query_selection_passed": true,
+      "plan_passed": true,
+      "outcome_passed": true,
+      "unknowns_passed": false,
+      "passed": false,
+      "reason": null,
+      "failure_stage": null,
+      "planner_call": 8,
+      "call_state": "subsequent",
+      "timing_ms": {
+        "planner": 9374.183,
+        "execution": 0.392,
+        "total": 9374.575
+      }
+    },
+    {
+      "dataset_id": "intelligence-development",
+      "split": "development",
+      "case_id": "dev-speed-raw-en",
+      "family": "dev-speed-raw-en-family",
+      "category": "raw-signal",
+      "language": "en",
+      "item": 2,
+      "question_id": "70883dd2f7f5e29b",
+      "tags": [
+        "raw-query",
+        "latest"
+      ],
+      "expected_plan": {
+        "temporal_scope": "current",
+        "capability_ids": [],
+        "queries": [
+          {
+            "source": "player",
+            "signal": "speed_mps",
+            "subject_id": null,
+            "operation": "latest",
+            "window_s": null
+          }
+        ]
+      },
+      "observed_plan": {
+        "temporal_scope": "current",
+        "capability_ids": [],
+        "queries": [
+          {
+            "source": "player",
+            "signal": "speed_mps",
+            "subject_id": null,
+            "operation": "latest",
+            "window_s": null
+          }
+        ]
+      },
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "selection": {
+        "expected_request_count": 1,
+        "matched_request_count": 1,
+        "missing_request_count": 0,
+        "extra_request_count": 0,
+        "required_selection_present": true
+      },
+      "required_evidence_passed": false,
+      "expected_evidence_outcome": "available",
+      "observed_evidence_outcome": "available",
+      "required_unknowns": [],
+      "observed_unknowns": [
+        "unknown"
+      ],
+      "unknown_evidence_count": 0,
+      "temporal_scope_passed": true,
+      "capability_selection_passed": true,
+      "query_selection_passed": true,
+      "plan_passed": true,
+      "outcome_passed": true,
+      "unknowns_passed": false,
+      "passed": false,
+      "reason": null,
+      "failure_stage": null,
+      "planner_call": 9,
+      "call_state": "subsequent",
+      "timing_ms": {
+        "planner": 9340.223,
+        "execution": 0.44,
+        "total": 9340.663
+      }
+    },
+    {
+      "dataset_id": "intelligence-development",
+      "split": "development",
+      "case_id": "dev-social-tr",
+      "family": "dev-social-tr-family",
+      "category": "social",
+      "language": "tr",
+      "item": 1,
+      "question_id": "362c8bc51a1d072c",
+      "tags": [
+        "no-telemetry",
+        "teammate"
+      ],
+      "expected_plan": {
+        "temporal_scope": "social",
+        "capability_ids": [],
+        "queries": []
+      },
+      "observed_plan": {
+        "temporal_scope": "current",
+        "capability_ids": [
+          "current_classification"
+        ],
+        "queries": [
+          {
+            "source": "field",
+            "signal": "position",
+            "subject_id": null,
+            "operation": "mean",
+            "window_s": null
+          }
+        ]
+      },
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "selection": {
+        "expected_request_count": 0,
+        "matched_request_count": 0,
+        "missing_request_count": 0,
+        "extra_request_count": 2,
+        "required_selection_present": true
+      },
+      "required_evidence_passed": false,
+      "expected_evidence_outcome": "no_evidence",
+      "observed_evidence_outcome": "available",
+      "required_unknowns": [],
+      "observed_unknowns": [
+        "unrecognized_unknown:e4acc9e6ba4b3d9a"
+      ],
+      "unknown_evidence_count": 0,
+      "temporal_scope_passed": false,
+      "capability_selection_passed": false,
+      "query_selection_passed": false,
+      "plan_passed": false,
+      "outcome_passed": false,
+      "unknowns_passed": false,
+      "passed": false,
+      "reason": null,
+      "failure_stage": null,
+      "planner_call": 10,
+      "call_state": "subsequent",
+      "timing_ms": {
+        "planner": 9538.425,
+        "execution": 0.758,
+        "total": 9539.183
+      }
+    },
+    {
+      "dataset_id": "intelligence-development",
+      "split": "development",
+      "case_id": "dev-social-tr",
+      "family": "dev-social-tr-family",
+      "category": "social",
+      "language": "tr",
+      "item": 2,
+      "question_id": "ffb8ddc54e43d406",
+      "tags": [
+        "no-telemetry",
+        "teammate"
+      ],
+      "expected_plan": {
+        "temporal_scope": "social",
+        "capability_ids": [],
+        "queries": []
+      },
+      "observed_plan": {
+        "temporal_scope": "social",
+        "capability_ids": [],
+        "queries": []
+      },
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "selection": {
+        "expected_request_count": 0,
+        "matched_request_count": 0,
+        "missing_request_count": 0,
+        "extra_request_count": 0,
+        "required_selection_present": true
+      },
+      "required_evidence_passed": false,
+      "expected_evidence_outcome": "no_evidence",
+      "observed_evidence_outcome": "no_evidence",
+      "required_unknowns": [],
+      "observed_unknowns": [
+        "unknown"
+      ],
+      "unknown_evidence_count": 0,
+      "temporal_scope_passed": true,
+      "capability_selection_passed": true,
+      "query_selection_passed": true,
+      "plan_passed": true,
+      "outcome_passed": true,
+      "unknowns_passed": false,
+      "passed": false,
+      "reason": null,
+      "failure_stage": null,
+      "planner_call": 11,
+      "call_state": "subsequent",
+      "timing_ms": {
+        "planner": 8404.732,
+        "execution": 0.435,
+        "total": 8405.167
+      }
+    }
+  ]
+}

@@ -1,0 +1,385 @@
+{
+  "schema_version": "intelligence-eval.v1",
+  "dataset_id": "intelligence-development-controls",
+  "revision": "2026-10-06.seed1",
+  "split": "development",
+  "fixture": "fixtures/synthetic/intelligence-capabilities",
+  "groups": [
+    {
+      "id": "vent-en",
+      "family": "vent-en-family",
+      "category": "vent",
+      "language": "en",
+      "questions": [
+        "He has no idea about racing."
+      ],
+      "expected": {
+        "purpose": "social",
+        "temporal_scope": "social",
+        "evidence_outcome": "no_evidence"
+      }
+    },
+    {
+      "id": "vent-tr",
+      "family": "vent-tr-family",
+      "category": "vent",
+      "language": "tr",
+      "questions": [
+        "Böyle sürüş mü olur ya!"
+      ],
+      "expected": {
+        "purpose": "social",
+        "temporal_scope": "social",
+        "evidence_outcome": "no_evidence"
+      }
+    },
+    {
+      "id": "thanks-en",
+      "family": "thanks-en-family",
+      "category": "thanks",
+      "language": "en",
+      "questions": [
+        "Cheers, that helped."
+      ],
+      "expected": {
+        "purpose": "social",
+        "temporal_scope": "social",
+        "evidence_outcome": "no_evidence"
+      }
+    },
+    {
+      "id": "thanks-tr",
+      "family": "thanks-tr-family",
+      "category": "thanks",
+      "language": "tr",
+      "questions": [
+        "Sağ ol, çok yardımcı oldun."
+      ],
+      "expected": {
+        "purpose": "social",
+        "temporal_scope": "social",
+        "evidence_outcome": "no_evidence"
+      }
+    },
+    {
+      "id": "mixed-en",
+      "family": "mixed-en-family",
+      "category": "mixed",
+      "language": "en",
+      "questions": [
+        "That was dirty. How far is the car behind?"
+      ],
+      "expected": {
+        "purpose": "mixed",
+        "temporal_scope": "current",
+        "capability_ids": [
+          "gap_behind"
+        ],
+        "queries": [],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "mixed-tr",
+      "family": "mixed-tr-family",
+      "category": "mixed",
+      "language": "tr",
+      "questions": [
+        "Bu adam beni çıldırtıyor. Şu an kaçıncıyım?"
+      ],
+      "expected": {
+        "purpose": "mixed",
+        "temporal_scope": "current",
+        "capability_ids": [
+          "current_classification"
+        ],
+        "queries": [],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "compound-en",
+      "family": "compound-en-family",
+      "category": "compound",
+      "language": "en",
+      "questions": [
+        "Give me our remaining fuel laps and current speed."
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": [
+          "fuel_range"
+        ],
+        "queries": [
+          {
+            "source": "player",
+            "signal": "speed_mps",
+            "operation": "latest"
+          }
+        ],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "compound-tr",
+      "family": "compound-tr-family",
+      "category": "compound",
+      "language": "tr",
+      "questions": [
+        "Yakıt kaç tur yeter ve şu an hızımız ne?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": [
+          "fuel_range"
+        ],
+        "queries": [
+          {
+            "source": "player",
+            "signal": "speed_mps",
+            "operation": "latest"
+          }
+        ],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "future-en",
+      "family": "future-en-family",
+      "category": "future",
+      "language": "en",
+      "questions": [
+        "If we pit this lap, what position will we rejoin in?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "future_counterfactual",
+        "capability_ids": [
+          "projected_rejoin_position"
+        ],
+        "queries": [],
+        "evidence_outcome": "unavailable",
+        "required_unknowns": [
+          "projected_rejoin_position:missing_rejoin_projection_model"
+        ]
+      }
+    },
+    {
+      "id": "future-tr",
+      "family": "future-tr-family",
+      "category": "future",
+      "language": "tr",
+      "questions": [
+        "Bu tur pite girersem kaçıncı sırada dönerim?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "future_counterfactual",
+        "capability_ids": [
+          "projected_rejoin_position"
+        ],
+        "queries": [],
+        "evidence_outcome": "unavailable",
+        "required_unknowns": [
+          "projected_rejoin_position:missing_rejoin_projection_model"
+        ]
+      }
+    },
+    {
+      "id": "historical-raw-en",
+      "family": "historical-raw-en-family",
+      "category": "historical-raw",
+      "language": "en",
+      "questions": [
+        "What was my average speed over the last thirty seconds?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "historical",
+        "capability_ids": [],
+        "queries": [
+          {
+            "source": "player",
+            "signal": "speed_mps",
+            "operation": "mean",
+            "window_s": 30
+          }
+        ],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "historical-raw-tr",
+      "family": "historical-raw-tr-family",
+      "category": "historical-raw",
+      "language": "tr",
+      "questions": [
+        "Son otuz saniyedeki ortalama hızım neydi?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "historical",
+        "capability_ids": [],
+        "queries": [
+          {
+            "source": "player",
+            "signal": "speed_mps",
+            "operation": "mean",
+            "window_s": 30
+          }
+        ],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "followup-en",
+      "family": "followup-en-family",
+      "category": "followup",
+      "language": "en",
+      "questions": [
+        "And behind?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": [
+          "gap_behind"
+        ],
+        "queries": [],
+        "evidence_outcome": "available"
+      },
+      "recent_dialogue": [
+        "Driver: How far ahead is the next car?",
+        "Engineer: The car ahead is one second up the road."
+      ],
+      "tags": [
+        "authored-history"
+      ]
+    },
+    {
+      "id": "followup-tr",
+      "family": "followup-tr-family",
+      "category": "followup",
+      "language": "tr",
+      "questions": [
+        "Peki arkamdaki?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": [
+          "gap_behind"
+        ],
+        "queries": [],
+        "evidence_outcome": "available"
+      },
+      "recent_dialogue": [
+        "Driver: Öndeki araca fark ne?",
+        "Engineer: Önündeki araç bir saniye uzakta."
+      ],
+      "tags": [
+        "authored-history"
+      ]
+    },
+    {
+      "id": "catalog-early-en",
+      "family": "catalog-early-en-family",
+      "category": "catalog-early",
+      "language": "en",
+      "questions": [
+        "How many laps does the remaining fuel cover?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": [
+          "fuel_range"
+        ],
+        "queries": [],
+        "evidence_outcome": "unavailable",
+        "required_unknowns": [
+          "fuel_range:missing_fuel_burn_per_lap"
+        ]
+      },
+      "frame_index": 0,
+      "tags": [
+        "changed-catalog",
+        "insufficient-history"
+      ]
+    },
+    {
+      "id": "catalog-later-en",
+      "family": "catalog-later-en-family",
+      "category": "catalog-later",
+      "language": "en",
+      "questions": [
+        "How many laps can we run on this fuel now?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": [
+          "fuel_range"
+        ],
+        "queries": [],
+        "evidence_outcome": "available"
+      },
+      "frame_index": 3,
+      "tags": [
+        "changed-catalog",
+        "available-history"
+      ]
+    },
+    {
+      "id": "catalog-early-tr",
+      "family": "catalog-early-tr-family",
+      "category": "catalog-early",
+      "language": "tr",
+      "questions": [
+        "Kalan yakıtla kaç tur atabilirim?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": [
+          "fuel_range"
+        ],
+        "queries": [],
+        "evidence_outcome": "unavailable",
+        "required_unknowns": [
+          "fuel_range:missing_fuel_burn_per_lap"
+        ]
+      },
+      "frame_index": 0,
+      "tags": [
+        "changed-catalog",
+        "insufficient-history"
+      ]
+    },
+    {
+      "id": "catalog-later-tr",
+      "family": "catalog-later-tr-family",
+      "category": "catalog-later",
+      "language": "tr",
+      "questions": [
+        "Şimdi bu yakıt bizi kaç tur götürür?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": [
+          "fuel_range"
+        ],
+        "queries": [],
+        "evidence_outcome": "available"
+      },
+      "frame_index": 3,
+      "tags": [
+        "changed-catalog",
+        "available-history"
+      ]
+    }
+  ]
+}

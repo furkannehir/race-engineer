@@ -19,8 +19,24 @@ type EngineerGoal = Literal[
 ]
 type ResponseAction = Literal["speak", "clarify", "silence"]
 type ReferenceField = Literal["value", "claim"]
-type TelemetrySource = Literal["player", "context", "opponent"]
-type TelemetryOperation = Literal["latest", "delta", "mean", "minimum", "maximum", "trend"]
+type TelemetrySource = Literal["player", "context", "opponent", "field"]
+type TelemetryOperation = Literal[
+    "latest",
+    "delta",
+    "mean",
+    "minimum",
+    "maximum",
+    "trend",
+    "count",
+]
+type CapabilityTemporalScope = Literal["current", "historical", "future_counterfactual"]
+type ContextTemporalScope = Literal[
+    "current",
+    "historical",
+    "future_counterfactual",
+    "social",
+]
+type CapabilityStatus = Literal["available", "unavailable"]
 
 _PLACEHOLDER = re.compile(r"\{\{([a-z][a-z0-9_]*)\}\}")
 _RAW_NUMBER = re.compile(r"\d")
@@ -64,10 +80,91 @@ class EvidenceQuery(ContractModel):
 
     @model_validator(mode="after")
     def validate_window(self) -> "EvidenceQuery":
+        if self.selector.source == "field":
+            if self.operation not in {"count", "mean", "minimum", "maximum"}:
+                raise ValueError("field selectors require an aggregate operation")
+            if self.window_s is not None:
+                raise ValueError("field aggregates operate on the current frame")
+            return self
         if self.operation == "latest" and self.window_s is not None:
             raise ValueError("latest queries do not use a window")
+        if self.operation == "count":
+            raise ValueError("count requires a field selector")
         if self.operation != "latest" and self.window_s is None:
             raise ValueError("window operations require a duration")
+        return self
+
+
+class SignalDescriptor(ContractModel):
+    """One normalized numeric signal exposed to a Context Engineer planner."""
+
+    selector: SignalSelector
+    unit: str | None = Field(default=None, min_length=1, max_length=40)
+    available: bool
+
+
+class CapabilityOutputDescriptor(ContractModel):
+    """One stable output produced by a deterministic race capability."""
+
+    output_id: str = Field(pattern=r"^[a-z][a-z0-9_]*$", max_length=80)
+    description: str = Field(min_length=1, max_length=300)
+    unit: str | None = Field(default=None, min_length=1, max_length=40)
+    speakable: bool = True
+
+
+class CapabilityDescriptor(ContractModel):
+    """Value-free catalog entry that a Context Engineer may select semantically."""
+
+    schema_version: Literal["race-capability.v1"] = "race-capability.v1"
+    capability_id: str = Field(pattern=r"^[a-z][a-z0-9_]*$", max_length=80)
+    description: str = Field(min_length=1, max_length=500)
+    temporal_scope: CapabilityTemporalScope
+    required_inputs: tuple[str, ...] = Field(default=(), max_length=16)
+    outputs: tuple[CapabilityOutputDescriptor, ...] = Field(min_length=1, max_length=16)
+    freshness_s: float = Field(gt=0, le=30, allow_inf_nan=False)
+    uncertainty: str = Field(min_length=1, max_length=300)
+    available: bool
+    unavailable_reason: str | None = Field(default=None, min_length=1, max_length=160)
+
+    @model_validator(mode="after")
+    def validate_descriptor(self) -> "CapabilityDescriptor":
+        output_ids = tuple(output.output_id for output in self.outputs)
+        if len(set(output_ids)) != len(output_ids):
+            raise ValueError("capability output IDs must be unique")
+        if self.available == (self.unavailable_reason is not None):
+            raise ValueError("only unavailable capabilities require an unavailable reason")
+        return self
+
+
+class CapabilityRequest(ContractModel):
+    """Model-selected deterministic calculation, separate from spoken phrasing."""
+
+    request_id: str = Field(pattern=r"^[a-z][a-z0-9_-]*$", max_length=80)
+    capability_id: str = Field(pattern=r"^[a-z][a-z0-9_]*$", max_length=80)
+    arguments: dict[str, JsonValue] = Field(default_factory=dict, max_length=16)
+
+
+class ContextPlan(ContractModel):
+    """A model-selected set of generic evidence operations, never a spoken answer."""
+
+    schema_version: Literal["context-plan.v2"] = "context-plan.v2"
+    turn_id: str = Field(min_length=1, max_length=160)
+    planner_id: str = Field(min_length=1, max_length=160)
+    temporal_scope: ContextTemporalScope = "current"
+    queries: tuple[EvidenceQuery, ...] = Field(default=(), max_length=24)
+    capability_requests: tuple[CapabilityRequest, ...] = Field(default=(), max_length=8)
+    situation: tuple[str, ...] = Field(default=(), max_length=16)
+    unknowns: tuple[str, ...] = Field(default=(), max_length=16)
+
+    @model_validator(mode="after")
+    def validate_plan(self) -> "ContextPlan":
+        if len({query.query_id for query in self.queries}) != len(self.queries):
+            raise ValueError("context-plan query IDs must be unique")
+        request_ids = tuple(request.request_id for request in self.capability_requests)
+        if len(set(request_ids)) != len(request_ids):
+            raise ValueError("capability request IDs must be unique")
+        if set(request_ids) & {query.query_id for query in self.queries}:
+            raise ValueError("query and capability request IDs must not collide")
         return self
 
 
@@ -106,6 +203,33 @@ class EvidenceItem(ContractModel):
         return self
 
 
+class CapabilityResult(ContractModel):
+    """Deterministic execution result with evidence or an explicit unavailable reason."""
+
+    schema_version: Literal["capability-result.v1"] = "capability-result.v1"
+    request_id: str = Field(min_length=1, max_length=80)
+    capability_id: str = Field(min_length=1, max_length=80)
+    status: CapabilityStatus
+    evidence: tuple[EvidenceItem, ...] = Field(default=(), max_length=16)
+    unavailable_reason: str | None = Field(default=None, min_length=1, max_length=160)
+
+    @model_validator(mode="after")
+    def validate_result(self) -> "CapabilityResult":
+        evidence_ids = tuple(item.evidence_id for item in self.evidence)
+        if len(set(evidence_ids)) != len(evidence_ids):
+            raise ValueError("capability evidence IDs must be unique")
+        if self.status == "available":
+            if not self.evidence or self.unavailable_reason is not None:
+                raise ValueError("available capability results require evidence only")
+            if any(item.kind == "unknown" for item in self.evidence):
+                raise ValueError("available capability results cannot contain unknown evidence")
+        elif self.unavailable_reason is None or not self.evidence:
+            raise ValueError("unavailable capability results require a reason and evidence")
+        elif any(item.kind != "unknown" for item in self.evidence):
+            raise ValueError("unavailable capability results contain only unknown evidence")
+        return self
+
+
 class ContextPacket(ContractModel):
     """The Context Engineer's evidence selection for one driver turn."""
 
@@ -117,7 +241,7 @@ class ContextPacket(ContractModel):
     assembled_at: UtcDatetime
     situation: tuple[str, ...] = Field(default=(), max_length=16)
     evidence: tuple[EvidenceItem, ...] = Field(default=(), max_length=64)
-    unknowns: tuple[str, ...] = Field(default=(), max_length=16)
+    unknowns: tuple[str, ...] = Field(default=(), max_length=64)
 
     @model_validator(mode="after")
     def validate_scope(self) -> "ContextPacket":

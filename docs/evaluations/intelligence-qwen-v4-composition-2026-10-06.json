@@ -1,0 +1,1958 @@
+{
+  "candidate": {
+    "adapter": "llama-cpp",
+    "candidate_id": "qwen-context-v4",
+    "candidate_kind": "generative",
+    "local_only": true,
+    "model": "Qwen3-4B-Instruct-2507",
+    "model_revision": "a06e946bb6b655725eafa393f4a9745d460374c9",
+    "runtime_profile": "portable",
+    "schema_version": "intelligence-candidate.v1"
+  },
+  "candidate_runtime": {
+    "configured_mode": "cpu",
+    "context_size": 8192,
+    "gpu_layers": -1,
+    "quantization": "Q4_K_M",
+    "runtime_revision": "b10964",
+    "threads": 8
+  },
+  "datasets": [
+    {
+      "dataset_id": "intelligence-development-composition",
+      "language_counts": {
+        "en": 10,
+        "tr": 10
+      },
+      "revision": "2026-10-06.seed1",
+      "split": "development",
+      "turns": 20
+    }
+  ],
+  "evaluation_scope": "context_planner_and_deterministic_evidence_execution",
+  "generated_at": "2026-10-06T19:31:13.223083+00:00",
+  "privacy": {
+    "local_only": true,
+    "report_contains_model_replies": false,
+    "report_contains_transcripts": false
+  },
+  "reproducibility": {
+    "git_dirty": true,
+    "git_revision": "25114208ecf72e173bf128819ae2f9add2dc8ba1",
+    "implementation_fingerprint_sha256": "0c196e590bbc0d23443b57fec55f788ccb047d0b83e82922f7f7cdbb33c325ef",
+    "input_fingerprint_sha256": "9eb9ec7cb7ce7f63e9d14b4506d451a0da4bbdfd8aedad589469409c11600bfd",
+    "machine": {
+      "architecture": "AMD64",
+      "cpu": "AMD Ryzen 7 9800X3D 8-Core Processor",
+      "gpus": [
+        {
+          "driver_version": "32.0.15.9186",
+          "name": "NVIDIA GeForce RTX 5080"
+        },
+        {
+          "driver_version": "32.0.21030.2001",
+          "name": "AMD Radeon(TM) Graphics"
+        }
+      ],
+      "logical_cpus": 16,
+      "memory_bytes": 66145669120,
+      "os": "Windows-11"
+    }
+  },
+  "results": [
+    {
+      "call_state": "first",
+      "capability_selection_passed": false,
+      "case_id": "composition-gap-speed-en",
+      "category": "gap-speed",
+      "dataset_id": "intelligence-development-composition",
+      "expected_evidence_outcome": "available",
+      "expected_plan": {
+        "capability_ids": [
+          "gap_ahead"
+        ],
+        "queries": [
+          {
+            "operation": "latest",
+            "signal": "speed_mps",
+            "source": "player",
+            "subject_id": null,
+            "window_s": null
+          }
+        ],
+        "temporal_scope": "current"
+      },
+      "expected_purpose": "race_information",
+      "failure_stage": null,
+      "family": "composition-gap-speed-en-family",
+      "item": 1,
+      "language": "en",
+      "model_requests": [
+        {
+          "cached_prompt_tokens": 2249,
+          "completion_tokens": 33,
+          "generation_ms": 2205.162,
+          "prompt_ms": 385.518,
+          "prompt_tokens": 2274
+        }
+      ],
+      "observed_evidence_outcome": "available",
+      "observed_plan": {
+        "capability_ids": [
+          "gap_ahead",
+          "relative_pace_ahead"
+        ],
+        "queries": [],
+        "temporal_scope": "current"
+      },
+      "observed_purpose": "mixed",
+      "observed_unknowns": [],
+      "outcome_passed": true,
+      "passed": false,
+      "plan_passed": false,
+      "planner_call": 0,
+      "purpose_passed": false,
+      "query_selection_passed": false,
+      "question_id": "cb2947695a5a9890",
+      "reason": null,
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "required_evidence_passed": false,
+      "required_unknowns": [],
+      "selection": {
+        "expected_request_count": 2,
+        "extra_request_count": 1,
+        "matched_request_count": 1,
+        "missing_request_count": 1,
+        "required_selection_present": false
+      },
+      "split": "development",
+      "tags": [],
+      "temporal_scope_passed": true,
+      "timing_ms": {
+        "execution": 1.046,
+        "planner": 2608.789,
+        "total": 2609.835
+      },
+      "unknown_evidence_count": 0,
+      "unknowns_passed": true
+    },
+    {
+      "call_state": "subsequent",
+      "capability_selection_passed": false,
+      "case_id": "composition-gap-speed-tr",
+      "category": "gap-speed",
+      "dataset_id": "intelligence-development-composition",
+      "expected_evidence_outcome": "available",
+      "expected_plan": {
+        "capability_ids": [
+          "gap_ahead"
+        ],
+        "queries": [
+          {
+            "operation": "latest",
+            "signal": "speed_mps",
+            "source": "player",
+            "subject_id": null,
+            "window_s": null
+          }
+        ],
+        "temporal_scope": "current"
+      },
+      "expected_purpose": "race_information",
+      "failure_stage": null,
+      "family": "composition-gap-speed-tr-family",
+      "item": 1,
+      "language": "tr",
+      "model_requests": [
+        {
+          "cached_prompt_tokens": 2249,
+          "completion_tokens": 29,
+          "generation_ms": 1879.764,
+          "prompt_ms": 460.753,
+          "prompt_tokens": 2280
+        }
+      ],
+      "observed_evidence_outcome": "available",
+      "observed_plan": {
+        "capability_ids": [
+          "relative_pace_ahead"
+        ],
+        "queries": [],
+        "temporal_scope": "current"
+      },
+      "observed_purpose": "mixed",
+      "observed_unknowns": [],
+      "outcome_passed": true,
+      "passed": false,
+      "plan_passed": false,
+      "planner_call": 1,
+      "purpose_passed": false,
+      "query_selection_passed": false,
+      "question_id": "af9e21dc969d8041",
+      "reason": null,
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "required_evidence_passed": false,
+      "required_unknowns": [],
+      "selection": {
+        "expected_request_count": 2,
+        "extra_request_count": 1,
+        "matched_request_count": 0,
+        "missing_request_count": 2,
+        "required_selection_present": false
+      },
+      "split": "development",
+      "tags": [],
+      "temporal_scope_passed": true,
+      "timing_ms": {
+        "execution": 0.716,
+        "planner": 2363.165,
+        "total": 2363.881
+      },
+      "unknown_evidence_count": 0,
+      "unknowns_passed": true
+    },
+    {
+      "call_state": "subsequent",
+      "capability_selection_passed": false,
+      "case_id": "composition-classification-lap-en",
+      "category": "classification-lap",
+      "dataset_id": "intelligence-development-composition",
+      "expected_evidence_outcome": "available",
+      "expected_plan": {
+        "capability_ids": [
+          "current_classification"
+        ],
+        "queries": [
+          {
+            "operation": "latest",
+            "signal": "lap_number",
+            "source": "player",
+            "subject_id": null,
+            "window_s": null
+          }
+        ],
+        "temporal_scope": "current"
+      },
+      "expected_purpose": "race_information",
+      "failure_stage": null,
+      "family": "composition-classification-lap-en-family",
+      "item": 1,
+      "language": "en",
+      "model_requests": [
+        {
+          "cached_prompt_tokens": 2249,
+          "completion_tokens": 29,
+          "generation_ms": 1834.684,
+          "prompt_ms": 418.223,
+          "prompt_tokens": 2278
+        }
+      ],
+      "observed_evidence_outcome": "available",
+      "observed_plan": {
+        "capability_ids": [
+          "current_classification",
+          "fuel_range"
+        ],
+        "queries": [],
+        "temporal_scope": "current"
+      },
+      "observed_purpose": "mixed",
+      "observed_unknowns": [],
+      "outcome_passed": true,
+      "passed": false,
+      "plan_passed": false,
+      "planner_call": 2,
+      "purpose_passed": false,
+      "query_selection_passed": false,
+      "question_id": "41b73cfedfb38118",
+      "reason": null,
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "required_evidence_passed": false,
+      "required_unknowns": [],
+      "selection": {
+        "expected_request_count": 2,
+        "extra_request_count": 1,
+        "matched_request_count": 1,
+        "missing_request_count": 1,
+        "required_selection_present": false
+      },
+      "split": "development",
+      "tags": [],
+      "temporal_scope_passed": true,
+      "timing_ms": {
+        "execution": 0.956,
+        "planner": 2268.62,
+        "total": 2269.577
+      },
+      "unknown_evidence_count": 0,
+      "unknowns_passed": true
+    },
+    {
+      "call_state": "subsequent",
+      "capability_selection_passed": true,
+      "case_id": "composition-classification-lap-tr",
+      "category": "classification-lap",
+      "dataset_id": "intelligence-development-composition",
+      "expected_evidence_outcome": "available",
+      "expected_plan": {
+        "capability_ids": [
+          "current_classification"
+        ],
+        "queries": [
+          {
+            "operation": "latest",
+            "signal": "lap_number",
+            "source": "player",
+            "subject_id": null,
+            "window_s": null
+          }
+        ],
+        "temporal_scope": "current"
+      },
+      "expected_purpose": "race_information",
+      "failure_stage": null,
+      "family": "composition-classification-lap-tr-family",
+      "item": 1,
+      "language": "tr",
+      "model_requests": [
+        {
+          "cached_prompt_tokens": 2249,
+          "completion_tokens": 27,
+          "generation_ms": 1675.992,
+          "prompt_ms": 453.711,
+          "prompt_tokens": 2280
+        }
+      ],
+      "observed_evidence_outcome": "available",
+      "observed_plan": {
+        "capability_ids": [
+          "current_classification"
+        ],
+        "queries": [],
+        "temporal_scope": "current"
+      },
+      "observed_purpose": "race_information",
+      "observed_unknowns": [],
+      "outcome_passed": true,
+      "passed": false,
+      "plan_passed": false,
+      "planner_call": 3,
+      "purpose_passed": true,
+      "query_selection_passed": false,
+      "question_id": "9066a1b690a81c08",
+      "reason": null,
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "required_evidence_passed": false,
+      "required_unknowns": [],
+      "selection": {
+        "expected_request_count": 2,
+        "extra_request_count": 0,
+        "matched_request_count": 1,
+        "missing_request_count": 1,
+        "required_selection_present": false
+      },
+      "split": "development",
+      "tags": [],
+      "temporal_scope_passed": true,
+      "timing_ms": {
+        "execution": 0.746,
+        "planner": 2146.037,
+        "total": 2146.783
+      },
+      "unknown_evidence_count": 0,
+      "unknowns_passed": true
+    },
+    {
+      "call_state": "subsequent",
+      "capability_selection_passed": true,
+      "case_id": "composition-three-facts-en",
+      "category": "three-facts",
+      "dataset_id": "intelligence-development-composition",
+      "expected_evidence_outcome": "available",
+      "expected_plan": {
+        "capability_ids": [
+          "fuel_range",
+          "gap_behind"
+        ],
+        "queries": [
+          {
+            "operation": "latest",
+            "signal": "lap_number",
+            "source": "player",
+            "subject_id": null,
+            "window_s": null
+          }
+        ],
+        "temporal_scope": "current"
+      },
+      "expected_purpose": "race_information",
+      "failure_stage": null,
+      "family": "composition-three-facts-en-family",
+      "item": 1,
+      "language": "en",
+      "model_requests": [
+        {
+          "cached_prompt_tokens": 2249,
+          "completion_tokens": 30,
+          "generation_ms": 1860.309,
+          "prompt_ms": 425.425,
+          "prompt_tokens": 2279
+        }
+      ],
+      "observed_evidence_outcome": "available",
+      "observed_plan": {
+        "capability_ids": [
+          "fuel_range",
+          "gap_behind"
+        ],
+        "queries": [],
+        "temporal_scope": "current"
+      },
+      "observed_purpose": "mixed",
+      "observed_unknowns": [],
+      "outcome_passed": true,
+      "passed": false,
+      "plan_passed": false,
+      "planner_call": 4,
+      "purpose_passed": false,
+      "query_selection_passed": false,
+      "question_id": "77d6c860b3aa2391",
+      "reason": null,
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "required_evidence_passed": false,
+      "required_unknowns": [],
+      "selection": {
+        "expected_request_count": 3,
+        "extra_request_count": 0,
+        "matched_request_count": 2,
+        "missing_request_count": 1,
+        "required_selection_present": false
+      },
+      "split": "development",
+      "tags": [],
+      "temporal_scope_passed": true,
+      "timing_ms": {
+        "execution": 1.053,
+        "planner": 2307.871,
+        "total": 2308.924
+      },
+      "unknown_evidence_count": 0,
+      "unknowns_passed": true
+    },
+    {
+      "call_state": "subsequent",
+      "capability_selection_passed": true,
+      "case_id": "composition-three-facts-tr",
+      "category": "three-facts",
+      "dataset_id": "intelligence-development-composition",
+      "expected_evidence_outcome": "available",
+      "expected_plan": {
+        "capability_ids": [
+          "fuel_range",
+          "gap_behind"
+        ],
+        "queries": [
+          {
+            "operation": "latest",
+            "signal": "lap_number",
+            "source": "player",
+            "subject_id": null,
+            "window_s": null
+          }
+        ],
+        "temporal_scope": "current"
+      },
+      "expected_purpose": "race_information",
+      "failure_stage": null,
+      "family": "composition-three-facts-tr-family",
+      "item": 1,
+      "language": "tr",
+      "model_requests": [
+        {
+          "cached_prompt_tokens": 2249,
+          "completion_tokens": 30,
+          "generation_ms": 1962.123,
+          "prompt_ms": 559.978,
+          "prompt_tokens": 2291
+        }
+      ],
+      "observed_evidence_outcome": "available",
+      "observed_plan": {
+        "capability_ids": [
+          "fuel_range",
+          "gap_behind"
+        ],
+        "queries": [],
+        "temporal_scope": "current"
+      },
+      "observed_purpose": "mixed",
+      "observed_unknowns": [],
+      "outcome_passed": true,
+      "passed": false,
+      "plan_passed": false,
+      "planner_call": 5,
+      "purpose_passed": false,
+      "query_selection_passed": false,
+      "question_id": "64bfd672c9e8cd63",
+      "reason": null,
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "required_evidence_passed": false,
+      "required_unknowns": [],
+      "selection": {
+        "expected_request_count": 3,
+        "extra_request_count": 0,
+        "matched_request_count": 2,
+        "missing_request_count": 1,
+        "required_selection_present": false
+      },
+      "split": "development",
+      "tags": [],
+      "temporal_scope_passed": true,
+      "timing_ms": {
+        "execution": 0.792,
+        "planner": 2545.809,
+        "total": 2546.601
+      },
+      "unknown_evidence_count": 0,
+      "unknowns_passed": true
+    },
+    {
+      "call_state": "subsequent",
+      "capability_selection_passed": true,
+      "case_id": "composition-average-en",
+      "category": "average",
+      "dataset_id": "intelligence-development-composition",
+      "expected_evidence_outcome": "available",
+      "expected_plan": {
+        "capability_ids": [],
+        "queries": [
+          {
+            "operation": "mean",
+            "signal": "speed_mps",
+            "source": "player",
+            "subject_id": null,
+            "window_s": 20
+          }
+        ],
+        "temporal_scope": "historical"
+      },
+      "expected_purpose": "race_information",
+      "failure_stage": null,
+      "family": "composition-average-en-family",
+      "item": 1,
+      "language": "en",
+      "model_requests": [
+        {
+          "cached_prompt_tokens": 2249,
+          "completion_tokens": 44,
+          "generation_ms": 2882.369,
+          "prompt_ms": 387.205,
+          "prompt_tokens": 2277
+        }
+      ],
+      "observed_evidence_outcome": "available",
+      "observed_plan": {
+        "capability_ids": [],
+        "queries": [
+          {
+            "operation": "mean",
+            "signal": "speed_mps",
+            "source": "player",
+            "subject_id": null,
+            "window_s": 20
+          }
+        ],
+        "temporal_scope": "historical"
+      },
+      "observed_purpose": "race_information",
+      "observed_unknowns": [],
+      "outcome_passed": true,
+      "passed": true,
+      "plan_passed": true,
+      "planner_call": 6,
+      "purpose_passed": true,
+      "query_selection_passed": true,
+      "question_id": "3a852fe08db196ca",
+      "reason": null,
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "required_evidence_passed": true,
+      "required_unknowns": [],
+      "selection": {
+        "expected_request_count": 1,
+        "extra_request_count": 0,
+        "matched_request_count": 1,
+        "missing_request_count": 0,
+        "required_selection_present": true
+      },
+      "split": "development",
+      "tags": [],
+      "temporal_scope_passed": true,
+      "timing_ms": {
+        "execution": 0.38,
+        "planner": 3292.936,
+        "total": 3293.316
+      },
+      "unknown_evidence_count": 0,
+      "unknowns_passed": true
+    },
+    {
+      "call_state": "subsequent",
+      "capability_selection_passed": false,
+      "case_id": "composition-average-tr",
+      "category": "average",
+      "dataset_id": "intelligence-development-composition",
+      "expected_evidence_outcome": "available",
+      "expected_plan": {
+        "capability_ids": [],
+        "queries": [
+          {
+            "operation": "mean",
+            "signal": "speed_mps",
+            "source": "player",
+            "subject_id": null,
+            "window_s": 20
+          }
+        ],
+        "temporal_scope": "historical"
+      },
+      "expected_purpose": "race_information",
+      "failure_stage": null,
+      "family": "composition-average-tr-family",
+      "item": 1,
+      "language": "tr",
+      "model_requests": [
+        {
+          "cached_prompt_tokens": 2249,
+          "completion_tokens": 28,
+          "generation_ms": 1872.402,
+          "prompt_ms": 487.814,
+          "prompt_tokens": 2282
+        }
+      ],
+      "observed_evidence_outcome": "available",
+      "observed_plan": {
+        "capability_ids": [
+          "position_change"
+        ],
+        "queries": [],
+        "temporal_scope": "historical"
+      },
+      "observed_purpose": "race_information",
+      "observed_unknowns": [],
+      "outcome_passed": true,
+      "passed": false,
+      "plan_passed": false,
+      "planner_call": 7,
+      "purpose_passed": true,
+      "query_selection_passed": false,
+      "question_id": "23dc74f71a131d22",
+      "reason": null,
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "required_evidence_passed": false,
+      "required_unknowns": [],
+      "selection": {
+        "expected_request_count": 1,
+        "extra_request_count": 1,
+        "matched_request_count": 0,
+        "missing_request_count": 1,
+        "required_selection_present": false
+      },
+      "split": "development",
+      "tags": [],
+      "temporal_scope_passed": true,
+      "timing_ms": {
+        "execution": 0.88,
+        "planner": 2375.393,
+        "total": 2376.273
+      },
+      "unknown_evidence_count": 0,
+      "unknowns_passed": true
+    },
+    {
+      "call_state": "subsequent",
+      "capability_selection_passed": true,
+      "case_id": "composition-peak-en",
+      "category": "peak",
+      "dataset_id": "intelligence-development-composition",
+      "expected_evidence_outcome": "available",
+      "expected_plan": {
+        "capability_ids": [],
+        "queries": [
+          {
+            "operation": "maximum",
+            "signal": "speed_mps",
+            "source": "player",
+            "subject_id": null,
+            "window_s": 20
+          }
+        ],
+        "temporal_scope": "historical"
+      },
+      "expected_purpose": "race_information",
+      "failure_stage": null,
+      "family": "composition-peak-en-family",
+      "item": 1,
+      "language": "en",
+      "model_requests": [
+        {
+          "cached_prompt_tokens": 2249,
+          "completion_tokens": 44,
+          "generation_ms": 2845.867,
+          "prompt_ms": 390.835,
+          "prompt_tokens": 2276
+        }
+      ],
+      "observed_evidence_outcome": "available",
+      "observed_plan": {
+        "capability_ids": [],
+        "queries": [
+          {
+            "operation": "maximum",
+            "signal": "speed_mps",
+            "source": "player",
+            "subject_id": null,
+            "window_s": 20
+          }
+        ],
+        "temporal_scope": "historical"
+      },
+      "observed_purpose": "race_information",
+      "observed_unknowns": [],
+      "outcome_passed": true,
+      "passed": true,
+      "plan_passed": true,
+      "planner_call": 8,
+      "purpose_passed": true,
+      "query_selection_passed": true,
+      "question_id": "49b127694b1869f2",
+      "reason": null,
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "required_evidence_passed": true,
+      "required_unknowns": [],
+      "selection": {
+        "expected_request_count": 1,
+        "extra_request_count": 0,
+        "matched_request_count": 1,
+        "missing_request_count": 0,
+        "required_selection_present": true
+      },
+      "split": "development",
+      "tags": [],
+      "temporal_scope_passed": true,
+      "timing_ms": {
+        "execution": 0.42,
+        "planner": 3253.532,
+        "total": 3253.952
+      },
+      "unknown_evidence_count": 0,
+      "unknowns_passed": true
+    },
+    {
+      "call_state": "subsequent",
+      "capability_selection_passed": true,
+      "case_id": "composition-peak-tr",
+      "category": "peak",
+      "dataset_id": "intelligence-development-composition",
+      "expected_evidence_outcome": "available",
+      "expected_plan": {
+        "capability_ids": [],
+        "queries": [
+          {
+            "operation": "maximum",
+            "signal": "speed_mps",
+            "source": "player",
+            "subject_id": null,
+            "window_s": 20
+          }
+        ],
+        "temporal_scope": "historical"
+      },
+      "expected_purpose": "race_information",
+      "failure_stage": null,
+      "family": "composition-peak-tr-family",
+      "item": 1,
+      "language": "tr",
+      "model_requests": [
+        {
+          "cached_prompt_tokens": 2249,
+          "completion_tokens": 44,
+          "generation_ms": 2908.271,
+          "prompt_ms": 487.142,
+          "prompt_tokens": 2284
+        }
+      ],
+      "observed_evidence_outcome": "available",
+      "observed_plan": {
+        "capability_ids": [],
+        "queries": [
+          {
+            "operation": "maximum",
+            "signal": "speed_mps",
+            "source": "player",
+            "subject_id": null,
+            "window_s": 20
+          }
+        ],
+        "temporal_scope": "historical"
+      },
+      "observed_purpose": "race_information",
+      "observed_unknowns": [],
+      "outcome_passed": true,
+      "passed": true,
+      "plan_passed": true,
+      "planner_call": 9,
+      "purpose_passed": true,
+      "query_selection_passed": true,
+      "question_id": "75b1ca4b9f19dfaf",
+      "reason": null,
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "required_evidence_passed": true,
+      "required_unknowns": [],
+      "selection": {
+        "expected_request_count": 1,
+        "extra_request_count": 0,
+        "matched_request_count": 1,
+        "missing_request_count": 0,
+        "required_selection_present": true
+      },
+      "split": "development",
+      "tags": [],
+      "temporal_scope_passed": true,
+      "timing_ms": {
+        "execution": 0.483,
+        "planner": 3408.413,
+        "total": 3408.896
+      },
+      "unknown_evidence_count": 0,
+      "unknowns_passed": true
+    },
+    {
+      "call_state": "subsequent",
+      "capability_selection_passed": true,
+      "case_id": "composition-minimum-en",
+      "category": "minimum",
+      "dataset_id": "intelligence-development-composition",
+      "expected_evidence_outcome": "available",
+      "expected_plan": {
+        "capability_ids": [],
+        "queries": [
+          {
+            "operation": "minimum",
+            "signal": "speed_mps",
+            "source": "player",
+            "subject_id": null,
+            "window_s": 20
+          }
+        ],
+        "temporal_scope": "historical"
+      },
+      "expected_purpose": "race_information",
+      "failure_stage": null,
+      "family": "composition-minimum-en-family",
+      "item": 1,
+      "language": "en",
+      "model_requests": [
+        {
+          "cached_prompt_tokens": 2249,
+          "completion_tokens": 44,
+          "generation_ms": 2896.277,
+          "prompt_ms": 391.566,
+          "prompt_tokens": 2276
+        }
+      ],
+      "observed_evidence_outcome": "available",
+      "observed_plan": {
+        "capability_ids": [],
+        "queries": [
+          {
+            "operation": "minimum",
+            "signal": "speed_mps",
+            "source": "player",
+            "subject_id": null,
+            "window_s": 20
+          }
+        ],
+        "temporal_scope": "historical"
+      },
+      "observed_purpose": "race_information",
+      "observed_unknowns": [],
+      "outcome_passed": true,
+      "passed": true,
+      "plan_passed": true,
+      "planner_call": 10,
+      "purpose_passed": true,
+      "query_selection_passed": true,
+      "question_id": "760211ad65180d19",
+      "reason": null,
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "required_evidence_passed": true,
+      "required_unknowns": [],
+      "selection": {
+        "expected_request_count": 1,
+        "extra_request_count": 0,
+        "matched_request_count": 1,
+        "missing_request_count": 0,
+        "required_selection_present": true
+      },
+      "split": "development",
+      "tags": [],
+      "temporal_scope_passed": true,
+      "timing_ms": {
+        "execution": 0.551,
+        "planner": 3301.318,
+        "total": 3301.869
+      },
+      "unknown_evidence_count": 0,
+      "unknowns_passed": true
+    },
+    {
+      "call_state": "subsequent",
+      "capability_selection_passed": true,
+      "case_id": "composition-minimum-tr",
+      "category": "minimum",
+      "dataset_id": "intelligence-development-composition",
+      "expected_evidence_outcome": "available",
+      "expected_plan": {
+        "capability_ids": [],
+        "queries": [
+          {
+            "operation": "minimum",
+            "signal": "speed_mps",
+            "source": "player",
+            "subject_id": null,
+            "window_s": 20
+          }
+        ],
+        "temporal_scope": "historical"
+      },
+      "expected_purpose": "race_information",
+      "failure_stage": null,
+      "family": "composition-minimum-tr-family",
+      "item": 1,
+      "language": "tr",
+      "model_requests": [
+        {
+          "cached_prompt_tokens": 2249,
+          "completion_tokens": 44,
+          "generation_ms": 2897.724,
+          "prompt_ms": 455.904,
+          "prompt_tokens": 2282
+        }
+      ],
+      "observed_evidence_outcome": "available",
+      "observed_plan": {
+        "capability_ids": [],
+        "queries": [
+          {
+            "operation": "minimum",
+            "signal": "speed_mps",
+            "source": "player",
+            "subject_id": null,
+            "window_s": 20
+          }
+        ],
+        "temporal_scope": "historical"
+      },
+      "observed_purpose": "race_information",
+      "observed_unknowns": [],
+      "outcome_passed": true,
+      "passed": true,
+      "plan_passed": true,
+      "planner_call": 11,
+      "purpose_passed": true,
+      "query_selection_passed": true,
+      "question_id": "161d0db9c8662cc4",
+      "reason": null,
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "required_evidence_passed": true,
+      "required_unknowns": [],
+      "selection": {
+        "expected_request_count": 1,
+        "extra_request_count": 0,
+        "matched_request_count": 1,
+        "missing_request_count": 0,
+        "required_selection_present": true
+      },
+      "split": "development",
+      "tags": [],
+      "temporal_scope_passed": true,
+      "timing_ms": {
+        "execution": 0.472,
+        "planner": 3379.111,
+        "total": 3379.583
+      },
+      "unknown_evidence_count": 0,
+      "unknowns_passed": true
+    },
+    {
+      "call_state": "subsequent",
+      "capability_selection_passed": false,
+      "case_id": "composition-delta-en",
+      "category": "delta",
+      "dataset_id": "intelligence-development-composition",
+      "expected_evidence_outcome": "available",
+      "expected_plan": {
+        "capability_ids": [],
+        "queries": [
+          {
+            "operation": "delta",
+            "signal": "speed_mps",
+            "source": "player",
+            "subject_id": null,
+            "window_s": 20
+          }
+        ],
+        "temporal_scope": "historical"
+      },
+      "expected_purpose": "race_information",
+      "failure_stage": null,
+      "family": "composition-delta-en-family",
+      "item": 1,
+      "language": "en",
+      "model_requests": [
+        {
+          "cached_prompt_tokens": 2249,
+          "completion_tokens": 46,
+          "generation_ms": 3227.935,
+          "prompt_ms": 401.319,
+          "prompt_tokens": 2277
+        }
+      ],
+      "observed_evidence_outcome": "available",
+      "observed_plan": {
+        "capability_ids": [
+          "position_change"
+        ],
+        "queries": [
+          {
+            "operation": "maximum",
+            "signal": "speed_mps",
+            "source": "player",
+            "subject_id": null,
+            "window_s": 20
+          }
+        ],
+        "temporal_scope": "historical"
+      },
+      "observed_purpose": "race_information",
+      "observed_unknowns": [],
+      "outcome_passed": true,
+      "passed": false,
+      "plan_passed": false,
+      "planner_call": 12,
+      "purpose_passed": true,
+      "query_selection_passed": false,
+      "question_id": "7eb5281f3bdcda20",
+      "reason": null,
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "required_evidence_passed": false,
+      "required_unknowns": [],
+      "selection": {
+        "expected_request_count": 1,
+        "extra_request_count": 2,
+        "matched_request_count": 0,
+        "missing_request_count": 1,
+        "required_selection_present": false
+      },
+      "split": "development",
+      "tags": [],
+      "temporal_scope_passed": true,
+      "timing_ms": {
+        "execution": 1.149,
+        "planner": 3654.793,
+        "total": 3655.942
+      },
+      "unknown_evidence_count": 0,
+      "unknowns_passed": true
+    },
+    {
+      "call_state": "subsequent",
+      "capability_selection_passed": false,
+      "case_id": "composition-delta-tr",
+      "category": "delta",
+      "dataset_id": "intelligence-development-composition",
+      "expected_evidence_outcome": "available",
+      "expected_plan": {
+        "capability_ids": [],
+        "queries": [
+          {
+            "operation": "delta",
+            "signal": "speed_mps",
+            "source": "player",
+            "subject_id": null,
+            "window_s": 20
+          }
+        ],
+        "temporal_scope": "historical"
+      },
+      "expected_purpose": "race_information",
+      "failure_stage": null,
+      "family": "composition-delta-tr-family",
+      "item": 1,
+      "language": "tr",
+      "model_requests": [
+        {
+          "cached_prompt_tokens": 2249,
+          "completion_tokens": 28,
+          "generation_ms": 1857.113,
+          "prompt_ms": 435.369,
+          "prompt_tokens": 2280
+        }
+      ],
+      "observed_evidence_outcome": "available",
+      "observed_plan": {
+        "capability_ids": [
+          "position_change"
+        ],
+        "queries": [],
+        "temporal_scope": "historical"
+      },
+      "observed_purpose": "race_information",
+      "observed_unknowns": [],
+      "outcome_passed": true,
+      "passed": false,
+      "plan_passed": false,
+      "planner_call": 13,
+      "purpose_passed": true,
+      "query_selection_passed": false,
+      "question_id": "23518072b457e09c",
+      "reason": null,
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "required_evidence_passed": false,
+      "required_unknowns": [],
+      "selection": {
+        "expected_request_count": 1,
+        "extra_request_count": 1,
+        "matched_request_count": 0,
+        "missing_request_count": 1,
+        "required_selection_present": false
+      },
+      "split": "development",
+      "tags": [],
+      "temporal_scope_passed": true,
+      "timing_ms": {
+        "execution": 0.742,
+        "planner": 2305.495,
+        "total": 2306.237
+      },
+      "unknown_evidence_count": 0,
+      "unknowns_passed": true
+    },
+    {
+      "call_state": "subsequent",
+      "capability_selection_passed": true,
+      "case_id": "composition-mixed-fuel-en",
+      "category": "mixed-fuel",
+      "dataset_id": "intelligence-development-composition",
+      "expected_evidence_outcome": "available",
+      "expected_plan": {
+        "capability_ids": [
+          "fuel_range"
+        ],
+        "queries": [],
+        "temporal_scope": "current"
+      },
+      "expected_purpose": "mixed",
+      "failure_stage": null,
+      "family": "composition-mixed-fuel-en-family",
+      "item": 1,
+      "language": "en",
+      "model_requests": [
+        {
+          "cached_prompt_tokens": 2249,
+          "completion_tokens": 26,
+          "generation_ms": 1697.101,
+          "prompt_ms": 406.876,
+          "prompt_tokens": 2276
+        }
+      ],
+      "observed_evidence_outcome": "available",
+      "observed_plan": {
+        "capability_ids": [
+          "fuel_range"
+        ],
+        "queries": [],
+        "temporal_scope": "current"
+      },
+      "observed_purpose": "mixed",
+      "observed_unknowns": [],
+      "outcome_passed": true,
+      "passed": true,
+      "plan_passed": true,
+      "planner_call": 14,
+      "purpose_passed": true,
+      "query_selection_passed": true,
+      "question_id": "5f7b1dd0e80dd128",
+      "reason": null,
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "required_evidence_passed": true,
+      "required_unknowns": [],
+      "selection": {
+        "expected_request_count": 1,
+        "extra_request_count": 0,
+        "matched_request_count": 1,
+        "missing_request_count": 0,
+        "required_selection_present": true
+      },
+      "split": "development",
+      "tags": [],
+      "temporal_scope_passed": true,
+      "timing_ms": {
+        "execution": 0.885,
+        "planner": 2128.138,
+        "total": 2129.023
+      },
+      "unknown_evidence_count": 0,
+      "unknowns_passed": true
+    },
+    {
+      "call_state": "subsequent",
+      "capability_selection_passed": true,
+      "case_id": "composition-mixed-fuel-tr",
+      "category": "mixed-fuel",
+      "dataset_id": "intelligence-development-composition",
+      "expected_evidence_outcome": "available",
+      "expected_plan": {
+        "capability_ids": [
+          "fuel_range"
+        ],
+        "queries": [],
+        "temporal_scope": "current"
+      },
+      "expected_purpose": "mixed",
+      "failure_stage": null,
+      "family": "composition-mixed-fuel-tr-family",
+      "item": 1,
+      "language": "tr",
+      "model_requests": [
+        {
+          "cached_prompt_tokens": 2249,
+          "completion_tokens": 26,
+          "generation_ms": 1633.036,
+          "prompt_ms": 432.708,
+          "prompt_tokens": 2280
+        }
+      ],
+      "observed_evidence_outcome": "available",
+      "observed_plan": {
+        "capability_ids": [
+          "fuel_range"
+        ],
+        "queries": [],
+        "temporal_scope": "current"
+      },
+      "observed_purpose": "mixed",
+      "observed_unknowns": [],
+      "outcome_passed": true,
+      "passed": true,
+      "plan_passed": true,
+      "planner_call": 15,
+      "purpose_passed": true,
+      "query_selection_passed": true,
+      "question_id": "fcd9cf13ee971ab5",
+      "reason": null,
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "required_evidence_passed": true,
+      "required_unknowns": [],
+      "selection": {
+        "expected_request_count": 1,
+        "extra_request_count": 0,
+        "matched_request_count": 1,
+        "missing_request_count": 0,
+        "required_selection_present": true
+      },
+      "split": "development",
+      "tags": [],
+      "temporal_scope_passed": true,
+      "timing_ms": {
+        "execution": 0.663,
+        "planner": 2090.131,
+        "total": 2090.794
+      },
+      "unknown_evidence_count": 0,
+      "unknowns_passed": true
+    },
+    {
+      "call_state": "subsequent",
+      "capability_selection_passed": false,
+      "case_id": "composition-mixed-speed-en",
+      "category": "mixed-speed",
+      "dataset_id": "intelligence-development-composition",
+      "expected_evidence_outcome": "available",
+      "expected_plan": {
+        "capability_ids": [],
+        "queries": [
+          {
+            "operation": "latest",
+            "signal": "speed_mps",
+            "source": "player",
+            "subject_id": null,
+            "window_s": null
+          }
+        ],
+        "temporal_scope": "current"
+      },
+      "expected_purpose": "mixed",
+      "failure_stage": null,
+      "family": "composition-mixed-speed-en-family",
+      "item": 1,
+      "language": "en",
+      "model_requests": [
+        {
+          "cached_prompt_tokens": 2249,
+          "completion_tokens": 27,
+          "generation_ms": 1744.315,
+          "prompt_ms": 375.573,
+          "prompt_tokens": 2274
+        }
+      ],
+      "observed_evidence_outcome": "available",
+      "observed_plan": {
+        "capability_ids": [
+          "current_classification"
+        ],
+        "queries": [],
+        "temporal_scope": "current"
+      },
+      "observed_purpose": "race_information",
+      "observed_unknowns": [],
+      "outcome_passed": true,
+      "passed": false,
+      "plan_passed": false,
+      "planner_call": 16,
+      "purpose_passed": false,
+      "query_selection_passed": false,
+      "question_id": "32f792b8c1c5733f",
+      "reason": null,
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "required_evidence_passed": false,
+      "required_unknowns": [],
+      "selection": {
+        "expected_request_count": 1,
+        "extra_request_count": 1,
+        "matched_request_count": 0,
+        "missing_request_count": 1,
+        "required_selection_present": false
+      },
+      "split": "development",
+      "tags": [],
+      "temporal_scope_passed": true,
+      "timing_ms": {
+        "execution": 1.174,
+        "planner": 2133.897,
+        "total": 2135.071
+      },
+      "unknown_evidence_count": 0,
+      "unknowns_passed": true
+    },
+    {
+      "call_state": "subsequent",
+      "capability_selection_passed": false,
+      "case_id": "composition-mixed-speed-tr",
+      "category": "mixed-speed",
+      "dataset_id": "intelligence-development-composition",
+      "expected_evidence_outcome": "available",
+      "expected_plan": {
+        "capability_ids": [],
+        "queries": [
+          {
+            "operation": "latest",
+            "signal": "speed_mps",
+            "source": "player",
+            "subject_id": null,
+            "window_s": null
+          }
+        ],
+        "temporal_scope": "current"
+      },
+      "expected_purpose": "mixed",
+      "failure_stage": null,
+      "family": "composition-mixed-speed-tr-family",
+      "item": 1,
+      "language": "tr",
+      "model_requests": [
+        {
+          "cached_prompt_tokens": 2249,
+          "completion_tokens": 27,
+          "generation_ms": 1820.026,
+          "prompt_ms": 367.45,
+          "prompt_tokens": 2275
+        }
+      ],
+      "observed_evidence_outcome": "available",
+      "observed_plan": {
+        "capability_ids": [
+          "current_classification"
+        ],
+        "queries": [],
+        "temporal_scope": "current"
+      },
+      "observed_purpose": "race_information",
+      "observed_unknowns": [],
+      "outcome_passed": true,
+      "passed": false,
+      "plan_passed": false,
+      "planner_call": 17,
+      "purpose_passed": false,
+      "query_selection_passed": false,
+      "question_id": "c1473b760c3109ae",
+      "reason": null,
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "required_evidence_passed": false,
+      "required_unknowns": [],
+      "selection": {
+        "expected_request_count": 1,
+        "extra_request_count": 1,
+        "matched_request_count": 0,
+        "missing_request_count": 1,
+        "required_selection_present": false
+      },
+      "split": "development",
+      "tags": [],
+      "temporal_scope_passed": true,
+      "timing_ms": {
+        "execution": 0.735,
+        "planner": 2211.751,
+        "total": 2212.486
+      },
+      "unknown_evidence_count": 0,
+      "unknowns_passed": true
+    },
+    {
+      "call_state": "subsequent",
+      "capability_selection_passed": true,
+      "case_id": "composition-social-only-en",
+      "category": "social-only",
+      "dataset_id": "intelligence-development-composition",
+      "expected_evidence_outcome": "no_evidence",
+      "expected_plan": {
+        "capability_ids": [],
+        "queries": [],
+        "temporal_scope": "social"
+      },
+      "expected_purpose": "social",
+      "failure_stage": null,
+      "family": "composition-social-only-en-family",
+      "item": 1,
+      "language": "en",
+      "model_requests": [
+        {
+          "cached_prompt_tokens": 2249,
+          "completion_tokens": 24,
+          "generation_ms": 1625.526,
+          "prompt_ms": 305.503,
+          "prompt_tokens": 2271
+        }
+      ],
+      "observed_evidence_outcome": "no_evidence",
+      "observed_plan": {
+        "capability_ids": [],
+        "queries": [],
+        "temporal_scope": "social"
+      },
+      "observed_purpose": "social",
+      "observed_unknowns": [],
+      "outcome_passed": true,
+      "passed": true,
+      "plan_passed": true,
+      "planner_call": 18,
+      "purpose_passed": true,
+      "query_selection_passed": true,
+      "question_id": "9667985b5560baff",
+      "reason": null,
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "required_evidence_passed": true,
+      "required_unknowns": [],
+      "selection": {
+        "expected_request_count": 0,
+        "extra_request_count": 0,
+        "matched_request_count": 0,
+        "missing_request_count": 0,
+        "required_selection_present": true
+      },
+      "split": "development",
+      "tags": [],
+      "temporal_scope_passed": true,
+      "timing_ms": {
+        "execution": 0.343,
+        "planner": 1954.268,
+        "total": 1954.611
+      },
+      "unknown_evidence_count": 0,
+      "unknowns_passed": true
+    },
+    {
+      "call_state": "subsequent",
+      "capability_selection_passed": true,
+      "case_id": "composition-social-only-tr",
+      "category": "social-only",
+      "dataset_id": "intelligence-development-composition",
+      "expected_evidence_outcome": "no_evidence",
+      "expected_plan": {
+        "capability_ids": [],
+        "queries": [],
+        "temporal_scope": "social"
+      },
+      "expected_purpose": "social",
+      "failure_stage": null,
+      "family": "composition-social-only-tr-family",
+      "item": 1,
+      "language": "tr",
+      "model_requests": [
+        {
+          "cached_prompt_tokens": 2249,
+          "completion_tokens": 24,
+          "generation_ms": 1513.231,
+          "prompt_ms": 376.76,
+          "prompt_tokens": 2273
+        }
+      ],
+      "observed_evidence_outcome": "no_evidence",
+      "observed_plan": {
+        "capability_ids": [],
+        "queries": [],
+        "temporal_scope": "social"
+      },
+      "observed_purpose": "social",
+      "observed_unknowns": [],
+      "outcome_passed": true,
+      "passed": true,
+      "plan_passed": true,
+      "planner_call": 19,
+      "purpose_passed": true,
+      "query_selection_passed": true,
+      "question_id": "4b582bdea9a40f71",
+      "reason": null,
+      "rejected_draft": null,
+      "rejected_draft_selection": null,
+      "required_evidence_passed": true,
+      "required_unknowns": [],
+      "selection": {
+        "expected_request_count": 0,
+        "extra_request_count": 0,
+        "matched_request_count": 0,
+        "missing_request_count": 0,
+        "required_selection_present": true
+      },
+      "split": "development",
+      "tags": [],
+      "temporal_scope_passed": true,
+      "timing_ms": {
+        "execution": 0.406,
+        "planner": 1906.112,
+        "total": 1906.518
+      },
+      "unknown_evidence_count": 0,
+      "unknowns_passed": true
+    }
+  ],
+  "schema_version": "intelligence-eval-report.v2",
+  "summary": {
+    "by_category": {
+      "average": {
+        "accepted_plan_accuracy": 0.5,
+        "capability_selection_accuracy": 0.5,
+        "evidence_outcome_accuracy": 1,
+        "exact_plan_accuracy": 0.5,
+        "exact_turn_accuracy": 0.5,
+        "execution_errors": 0,
+        "extra_evidence_turns": 1,
+        "model_errors": 0,
+        "passed": 1,
+        "plan_validation_errors": 0,
+        "purpose_accuracy": 1,
+        "purpose_cases": 2,
+        "query_selection_accuracy": 0.5,
+        "required_evidence_accuracy": 0.5,
+        "response_errors": 0,
+        "supported_accepted": 2,
+        "supported_coverage": 1,
+        "supported_turns": 2,
+        "temporal_scope_accuracy": 1,
+        "transport_errors": 0,
+        "turns": 2,
+        "unknown_reason_accuracy": 1
+      },
+      "classification-lap": {
+        "accepted_plan_accuracy": 0,
+        "capability_selection_accuracy": 0.5,
+        "evidence_outcome_accuracy": 1,
+        "exact_plan_accuracy": 0,
+        "exact_turn_accuracy": 0,
+        "execution_errors": 0,
+        "extra_evidence_turns": 1,
+        "model_errors": 0,
+        "passed": 0,
+        "plan_validation_errors": 0,
+        "purpose_accuracy": 0.5,
+        "purpose_cases": 2,
+        "query_selection_accuracy": 0,
+        "required_evidence_accuracy": 0,
+        "response_errors": 0,
+        "supported_accepted": 2,
+        "supported_coverage": 1,
+        "supported_turns": 2,
+        "temporal_scope_accuracy": 1,
+        "transport_errors": 0,
+        "turns": 2,
+        "unknown_reason_accuracy": 1
+      },
+      "delta": {
+        "accepted_plan_accuracy": 0,
+        "capability_selection_accuracy": 0,
+        "evidence_outcome_accuracy": 1,
+        "exact_plan_accuracy": 0,
+        "exact_turn_accuracy": 0,
+        "execution_errors": 0,
+        "extra_evidence_turns": 2,
+        "model_errors": 0,
+        "passed": 0,
+        "plan_validation_errors": 0,
+        "purpose_accuracy": 1,
+        "purpose_cases": 2,
+        "query_selection_accuracy": 0,
+        "required_evidence_accuracy": 0,
+        "response_errors": 0,
+        "supported_accepted": 2,
+        "supported_coverage": 1,
+        "supported_turns": 2,
+        "temporal_scope_accuracy": 1,
+        "transport_errors": 0,
+        "turns": 2,
+        "unknown_reason_accuracy": 1
+      },
+      "gap-speed": {
+        "accepted_plan_accuracy": 0,
+        "capability_selection_accuracy": 0,
+        "evidence_outcome_accuracy": 1,
+        "exact_plan_accuracy": 0,
+        "exact_turn_accuracy": 0,
+        "execution_errors": 0,
+        "extra_evidence_turns": 2,
+        "model_errors": 0,
+        "passed": 0,
+        "plan_validation_errors": 0,
+        "purpose_accuracy": 0,
+        "purpose_cases": 2,
+        "query_selection_accuracy": 0,
+        "required_evidence_accuracy": 0,
+        "response_errors": 0,
+        "supported_accepted": 2,
+        "supported_coverage": 1,
+        "supported_turns": 2,
+        "temporal_scope_accuracy": 1,
+        "transport_errors": 0,
+        "turns": 2,
+        "unknown_reason_accuracy": 1
+      },
+      "minimum": {
+        "accepted_plan_accuracy": 1,
+        "capability_selection_accuracy": 1,
+        "evidence_outcome_accuracy": 1,
+        "exact_plan_accuracy": 1,
+        "exact_turn_accuracy": 1,
+        "execution_errors": 0,
+        "extra_evidence_turns": 0,
+        "model_errors": 0,
+        "passed": 2,
+        "plan_validation_errors": 0,
+        "purpose_accuracy": 1,
+        "purpose_cases": 2,
+        "query_selection_accuracy": 1,
+        "required_evidence_accuracy": 1,
+        "response_errors": 0,
+        "supported_accepted": 2,
+        "supported_coverage": 1,
+        "supported_turns": 2,
+        "temporal_scope_accuracy": 1,
+        "transport_errors": 0,
+        "turns": 2,
+        "unknown_reason_accuracy": 1
+      },
+      "mixed-fuel": {
+        "accepted_plan_accuracy": 1,
+        "capability_selection_accuracy": 1,
+        "evidence_outcome_accuracy": 1,
+        "exact_plan_accuracy": 1,
+        "exact_turn_accuracy": 1,
+        "execution_errors": 0,
+        "extra_evidence_turns": 0,
+        "model_errors": 0,
+        "passed": 2,
+        "plan_validation_errors": 0,
+        "purpose_accuracy": 1,
+        "purpose_cases": 2,
+        "query_selection_accuracy": 1,
+        "required_evidence_accuracy": 1,
+        "response_errors": 0,
+        "supported_accepted": 2,
+        "supported_coverage": 1,
+        "supported_turns": 2,
+        "temporal_scope_accuracy": 1,
+        "transport_errors": 0,
+        "turns": 2,
+        "unknown_reason_accuracy": 1
+      },
+      "mixed-speed": {
+        "accepted_plan_accuracy": 0,
+        "capability_selection_accuracy": 0,
+        "evidence_outcome_accuracy": 1,
+        "exact_plan_accuracy": 0,
+        "exact_turn_accuracy": 0,
+        "execution_errors": 0,
+        "extra_evidence_turns": 2,
+        "model_errors": 0,
+        "passed": 0,
+        "plan_validation_errors": 0,
+        "purpose_accuracy": 0,
+        "purpose_cases": 2,
+        "query_selection_accuracy": 0,
+        "required_evidence_accuracy": 0,
+        "response_errors": 0,
+        "supported_accepted": 2,
+        "supported_coverage": 1,
+        "supported_turns": 2,
+        "temporal_scope_accuracy": 1,
+        "transport_errors": 0,
+        "turns": 2,
+        "unknown_reason_accuracy": 1
+      },
+      "peak": {
+        "accepted_plan_accuracy": 1,
+        "capability_selection_accuracy": 1,
+        "evidence_outcome_accuracy": 1,
+        "exact_plan_accuracy": 1,
+        "exact_turn_accuracy": 1,
+        "execution_errors": 0,
+        "extra_evidence_turns": 0,
+        "model_errors": 0,
+        "passed": 2,
+        "plan_validation_errors": 0,
+        "purpose_accuracy": 1,
+        "purpose_cases": 2,
+        "query_selection_accuracy": 1,
+        "required_evidence_accuracy": 1,
+        "response_errors": 0,
+        "supported_accepted": 2,
+        "supported_coverage": 1,
+        "supported_turns": 2,
+        "temporal_scope_accuracy": 1,
+        "transport_errors": 0,
+        "turns": 2,
+        "unknown_reason_accuracy": 1
+      },
+      "social-only": {
+        "accepted_plan_accuracy": null,
+        "capability_selection_accuracy": 1,
+        "evidence_outcome_accuracy": 1,
+        "exact_plan_accuracy": 1,
+        "exact_turn_accuracy": 1,
+        "execution_errors": 0,
+        "extra_evidence_turns": 0,
+        "model_errors": 0,
+        "passed": 2,
+        "plan_validation_errors": 0,
+        "purpose_accuracy": 1,
+        "purpose_cases": 2,
+        "query_selection_accuracy": 1,
+        "required_evidence_accuracy": 1,
+        "response_errors": 0,
+        "supported_accepted": 0,
+        "supported_coverage": null,
+        "supported_turns": 0,
+        "temporal_scope_accuracy": 1,
+        "transport_errors": 0,
+        "turns": 2,
+        "unknown_reason_accuracy": 1
+      },
+      "three-facts": {
+        "accepted_plan_accuracy": 0,
+        "capability_selection_accuracy": 1,
+        "evidence_outcome_accuracy": 1,
+        "exact_plan_accuracy": 0,
+        "exact_turn_accuracy": 0,
+        "execution_errors": 0,
+        "extra_evidence_turns": 0,
+        "model_errors": 0,
+        "passed": 0,
+        "plan_validation_errors": 0,
+        "purpose_accuracy": 0,
+        "purpose_cases": 2,
+        "query_selection_accuracy": 0,
+        "required_evidence_accuracy": 0,
+        "response_errors": 0,
+        "supported_accepted": 2,
+        "supported_coverage": 1,
+        "supported_turns": 2,
+        "temporal_scope_accuracy": 1,
+        "transport_errors": 0,
+        "turns": 2,
+        "unknown_reason_accuracy": 1
+      }
+    },
+    "by_language": {
+      "en": {
+        "accepted_plan_accuracy": 0.444444,
+        "capability_selection_accuracy": 0.6,
+        "evidence_outcome_accuracy": 1,
+        "exact_plan_accuracy": 0.5,
+        "exact_turn_accuracy": 0.5,
+        "execution_errors": 0,
+        "extra_evidence_turns": 4,
+        "model_errors": 0,
+        "passed": 5,
+        "plan_validation_errors": 0,
+        "purpose_accuracy": 0.6,
+        "purpose_cases": 10,
+        "query_selection_accuracy": 0.5,
+        "required_evidence_accuracy": 0.5,
+        "response_errors": 0,
+        "supported_accepted": 9,
+        "supported_coverage": 1,
+        "supported_turns": 9,
+        "temporal_scope_accuracy": 1,
+        "transport_errors": 0,
+        "turns": 10,
+        "unknown_reason_accuracy": 1
+      },
+      "tr": {
+        "accepted_plan_accuracy": 0.333333,
+        "capability_selection_accuracy": 0.6,
+        "evidence_outcome_accuracy": 1,
+        "exact_plan_accuracy": 0.4,
+        "exact_turn_accuracy": 0.4,
+        "execution_errors": 0,
+        "extra_evidence_turns": 4,
+        "model_errors": 0,
+        "passed": 4,
+        "plan_validation_errors": 0,
+        "purpose_accuracy": 0.7,
+        "purpose_cases": 10,
+        "query_selection_accuracy": 0.4,
+        "required_evidence_accuracy": 0.4,
+        "response_errors": 0,
+        "supported_accepted": 9,
+        "supported_coverage": 1,
+        "supported_turns": 9,
+        "temporal_scope_accuracy": 1,
+        "transport_errors": 0,
+        "turns": 10,
+        "unknown_reason_accuracy": 1
+      }
+    },
+    "candidate": {
+      "adapter": "llama-cpp",
+      "candidate_id": "qwen-context-v4",
+      "candidate_kind": "generative",
+      "local_only": true,
+      "model": "Qwen3-4B-Instruct-2507",
+      "model_revision": "a06e946bb6b655725eafa393f4a9745d460374c9",
+      "runtime_profile": "portable",
+      "schema_version": "intelligence-candidate.v1"
+    },
+    "failure_reasons": {
+      "expectation_mismatch": 11
+    },
+    "latency_ms": {
+      "execution": {
+        "count": 20,
+        "max": 1.174,
+        "mean": 0.73,
+        "min": 0.343,
+        "p50": 0.738,
+        "p95": 1.15
+      },
+      "model_generation": {
+        "count": 20,
+        "max": 3227.935,
+        "mean": 2141.961,
+        "min": 1513.231,
+        "p50": 1866.356,
+        "p95": 2924.254
+      },
+      "model_prompt_processing": {
+        "count": 20,
+        "max": 559.978,
+        "mean": 420.282,
+        "min": 305.503,
+        "p50": 412.549,
+        "p95": 491.422
+      },
+      "planner_all": {
+        "count": 20,
+        "max": 3654.793,
+        "mean": 2581.779,
+        "min": 1906.112,
+        "p50": 2335.518,
+        "p95": 3420.732
+      },
+      "planner_first_call": {
+        "count": 1,
+        "max": 2608.789,
+        "mean": 2608.789,
+        "min": 2608.789,
+        "p50": 2608.789,
+        "p95": 2608.789
+      },
+      "planner_subsequent_calls": {
+        "count": 19,
+        "max": 3654.793,
+        "mean": 2580.357,
+        "min": 1906.112,
+        "p50": 2307.871,
+        "p95": 3433.051
+      },
+      "total": {
+        "count": 20,
+        "max": 3655.942,
+        "mean": 2582.509,
+        "min": 1906.518,
+        "p50": 2336.403,
+        "p95": 3421.248
+      }
+    },
+    "overall": {
+      "accepted_plan_accuracy": 0.388889,
+      "capability_selection_accuracy": 0.6,
+      "evidence_outcome_accuracy": 1,
+      "exact_plan_accuracy": 0.45,
+      "exact_turn_accuracy": 0.45,
+      "execution_errors": 0,
+      "extra_evidence_turns": 8,
+      "model_errors": 0,
+      "passed": 9,
+      "plan_validation_errors": 0,
+      "purpose_accuracy": 0.65,
+      "purpose_cases": 20,
+      "query_selection_accuracy": 0.45,
+      "required_evidence_accuracy": 0.45,
+      "response_errors": 0,
+      "supported_accepted": 18,
+      "supported_coverage": 1,
+      "supported_turns": 18,
+      "temporal_scope_accuracy": 1,
+      "transport_errors": 0,
+      "turns": 20,
+      "unknown_reason_accuracy": 1
+    }
+  }
+}

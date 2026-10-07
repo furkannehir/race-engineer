@@ -1,0 +1,90 @@
+{
+  "schema_version": "intelligence-eval.v1",
+  "dataset_id": "intelligence-calibration",
+  "revision": "2026-10-04.seed1",
+  "split": "calibration",
+  "fixture": "fixtures/synthetic/intelligence-capabilities",
+  "groups": [
+    {
+      "id": "cal-gap-behind-en",
+      "family": "cal-gap-behind-en-family",
+      "category": "gap",
+      "language": "en",
+      "questions": ["What's the gap behind?", "How far back is the car behind us?"],
+      "expected": {
+        "temporal_scope": "current",
+        "capability_ids": ["gap_behind"],
+        "evidence_outcome": "available"
+      },
+      "tags": ["capability", "opponent"]
+    },
+    {
+      "id": "cal-relative-ahead-tr",
+      "family": "cal-relative-ahead-tr-family",
+      "category": "relative-pace",
+      "language": "tr",
+      "questions": ["Öndekine yaklaşıyor muyuz?", "Öndeki araçla arayı kapatıyor muyum?"],
+      "expected": {
+        "temporal_scope": "historical",
+        "capability_ids": ["relative_pace_ahead"],
+        "evidence_outcome": "available"
+      },
+      "tags": ["capability", "trend"]
+    },
+    {
+      "id": "cal-relative-behind-en",
+      "family": "cal-relative-behind-en-family",
+      "category": "relative-pace",
+      "language": "en",
+      "questions": ["Is the car behind closing on me?", "Are we pulling away from the car behind?"],
+      "expected": {
+        "temporal_scope": "historical",
+        "capability_ids": ["relative_pace_behind"],
+        "evidence_outcome": "available"
+      },
+      "tags": ["capability", "trend"]
+    },
+    {
+      "id": "cal-catch-ahead-tr",
+      "family": "cal-catch-ahead-tr-family",
+      "category": "catch-time",
+      "language": "tr",
+      "questions": ["Öndekini ne zaman yakalarız?", "Bu tempoyla öndeki araca kaç saniyede yetişiriz?"],
+      "expected": {
+        "temporal_scope": "future_counterfactual",
+        "capability_ids": ["catch_time_ahead"],
+        "evidence_outcome": "available"
+      },
+      "tags": ["capability", "projection"]
+    },
+    {
+      "id": "cal-catch-behind-en",
+      "family": "cal-catch-behind-en-family",
+      "category": "catch-time",
+      "language": "en",
+      "questions": ["When will the car behind catch me?", "At this rate, how long until the car behind reaches us?"],
+      "expected": {
+        "temporal_scope": "future_counterfactual",
+        "capability_ids": ["catch_time_behind"],
+        "evidence_outcome": "unavailable",
+        "required_unknowns": ["catch_time_behind:car_behind_not_closing_player"]
+      },
+      "tags": ["capability", "authoritative-unavailable"]
+    },
+    {
+      "id": "cal-lap-raw-tr",
+      "family": "cal-lap-raw-tr-family",
+      "category": "raw-signal",
+      "language": "tr",
+      "questions": ["Kaçıncı turdayız?", "Şu an tur numaramız ne?"],
+      "expected": {
+        "temporal_scope": "current",
+        "queries": [
+          {"source": "player", "signal": "lap_number", "operation": "latest"}
+        ],
+        "evidence_outcome": "available"
+      },
+      "tags": ["raw-query", "latest"]
+    }
+  ]
+}

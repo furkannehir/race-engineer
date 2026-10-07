@@ -1,0 +1,447 @@
+{
+  "schema_version": "intelligence-eval.v1",
+  "dataset_id": "intelligence-development-composition",
+  "revision": "2026-10-06.seed1",
+  "split": "development",
+  "fixture": "fixtures/synthetic/intelligence-capabilities",
+  "groups": [
+    {
+      "id": "composition-gap-speed-en",
+      "family": "composition-gap-speed-en-family",
+      "category": "gap-speed",
+      "language": "en",
+      "questions": [
+        "Tell me the gap ahead and our speed."
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": [
+          "gap_ahead"
+        ],
+        "queries": [
+          {
+            "source": "player",
+            "signal": "speed_mps",
+            "operation": "latest"
+          }
+        ],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "composition-gap-speed-tr",
+      "family": "composition-gap-speed-tr-family",
+      "category": "gap-speed",
+      "language": "tr",
+      "questions": [
+        "Hızımı ve öndekiyle aramdaki farkı söyle."
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": [
+          "gap_ahead"
+        ],
+        "queries": [
+          {
+            "source": "player",
+            "signal": "speed_mps",
+            "operation": "latest"
+          }
+        ],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "composition-classification-lap-en",
+      "family": "composition-classification-lap-en-family",
+      "category": "classification-lap",
+      "language": "en",
+      "questions": [
+        "Which lap are we on, and what place are we running?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": [
+          "current_classification"
+        ],
+        "queries": [
+          {
+            "source": "player",
+            "signal": "lap_number",
+            "operation": "latest"
+          }
+        ],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "composition-classification-lap-tr",
+      "family": "composition-classification-lap-tr-family",
+      "category": "classification-lap",
+      "language": "tr",
+      "questions": [
+        "Kaçıncı sıradayım, hangi turdayız?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": [
+          "current_classification"
+        ],
+        "queries": [
+          {
+            "source": "player",
+            "signal": "lap_number",
+            "operation": "latest"
+          }
+        ],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "composition-three-facts-en",
+      "family": "composition-three-facts-en-family",
+      "category": "three-facts",
+      "language": "en",
+      "questions": [
+        "I need the fuel range, lap number, and the gap behind."
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": [
+          "fuel_range",
+          "gap_behind"
+        ],
+        "queries": [
+          {
+            "source": "player",
+            "signal": "lap_number",
+            "operation": "latest"
+          }
+        ],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "composition-three-facts-tr",
+      "family": "composition-three-facts-tr-family",
+      "category": "three-facts",
+      "language": "tr",
+      "questions": [
+        "Önce tur sayısını, sonra yakıtın kaç tur yeteceğini, son olarak arkadakiyle farkı ver."
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": [
+          "fuel_range",
+          "gap_behind"
+        ],
+        "queries": [
+          {
+            "source": "player",
+            "signal": "lap_number",
+            "operation": "latest"
+          }
+        ],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "composition-average-en",
+      "family": "composition-average-en-family",
+      "category": "average",
+      "language": "en",
+      "questions": [
+        "Over the past twenty seconds, what speed have we averaged?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "historical",
+        "capability_ids": [],
+        "queries": [
+          {
+            "source": "player",
+            "signal": "speed_mps",
+            "operation": "mean",
+            "window_s": 20
+          }
+        ],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "composition-average-tr",
+      "family": "composition-average-tr-family",
+      "category": "average",
+      "language": "tr",
+      "questions": [
+        "Son yirmi saniyede hızımız ortalama neydi?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "historical",
+        "capability_ids": [],
+        "queries": [
+          {
+            "source": "player",
+            "signal": "speed_mps",
+            "operation": "mean",
+            "window_s": 20
+          }
+        ],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "composition-peak-en",
+      "family": "composition-peak-en-family",
+      "category": "peak",
+      "language": "en",
+      "questions": [
+        "What was my peak speed during the last twenty seconds?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "historical",
+        "capability_ids": [],
+        "queries": [
+          {
+            "source": "player",
+            "signal": "speed_mps",
+            "operation": "maximum",
+            "window_s": 20
+          }
+        ],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "composition-peak-tr",
+      "family": "composition-peak-tr-family",
+      "category": "peak",
+      "language": "tr",
+      "questions": [
+        "Son yirmi saniyede ulaştığım en yüksek hız neydi?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "historical",
+        "capability_ids": [],
+        "queries": [
+          {
+            "source": "player",
+            "signal": "speed_mps",
+            "operation": "maximum",
+            "window_s": 20
+          }
+        ],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "composition-minimum-en",
+      "family": "composition-minimum-en-family",
+      "category": "minimum",
+      "language": "en",
+      "questions": [
+        "What was my lowest speed over the last twenty seconds?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "historical",
+        "capability_ids": [],
+        "queries": [
+          {
+            "source": "player",
+            "signal": "speed_mps",
+            "operation": "minimum",
+            "window_s": 20
+          }
+        ],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "composition-minimum-tr",
+      "family": "composition-minimum-tr-family",
+      "category": "minimum",
+      "language": "tr",
+      "questions": [
+        "Son yirmi saniyedeki en düşük hızım neydi?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "historical",
+        "capability_ids": [],
+        "queries": [
+          {
+            "source": "player",
+            "signal": "speed_mps",
+            "operation": "minimum",
+            "window_s": 20
+          }
+        ],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "composition-delta-en",
+      "family": "composition-delta-en-family",
+      "category": "delta",
+      "language": "en",
+      "questions": [
+        "How much has my speed changed over the last twenty seconds?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "historical",
+        "capability_ids": [],
+        "queries": [
+          {
+            "source": "player",
+            "signal": "speed_mps",
+            "operation": "delta",
+            "window_s": 20
+          }
+        ],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "composition-delta-tr",
+      "family": "composition-delta-tr-family",
+      "category": "delta",
+      "language": "tr",
+      "questions": [
+        "Son yirmi saniyede hızım ne kadar değişti?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "historical",
+        "capability_ids": [],
+        "queries": [
+          {
+            "source": "player",
+            "signal": "speed_mps",
+            "operation": "delta",
+            "window_s": 20
+          }
+        ],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "composition-mixed-fuel-en",
+      "family": "composition-mixed-fuel-en-family",
+      "category": "mixed-fuel",
+      "language": "en",
+      "questions": [
+        "This is so frustrating. Tell me our fuel range."
+      ],
+      "expected": {
+        "purpose": "mixed",
+        "temporal_scope": "current",
+        "capability_ids": [
+          "fuel_range"
+        ],
+        "queries": [],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "composition-mixed-fuel-tr",
+      "family": "composition-mixed-fuel-tr-family",
+      "category": "mixed-fuel",
+      "language": "tr",
+      "questions": [
+        "Çok sinirlendim. Yakıt kaç tur yetecek?"
+      ],
+      "expected": {
+        "purpose": "mixed",
+        "temporal_scope": "current",
+        "capability_ids": [
+          "fuel_range"
+        ],
+        "queries": [],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "composition-mixed-speed-en",
+      "family": "composition-mixed-speed-en-family",
+      "category": "mixed-speed",
+      "language": "en",
+      "questions": [
+        "Thanks for that, what's my speed?"
+      ],
+      "expected": {
+        "purpose": "mixed",
+        "temporal_scope": "current",
+        "capability_ids": [],
+        "queries": [
+          {
+            "source": "player",
+            "signal": "speed_mps",
+            "operation": "latest"
+          }
+        ],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "composition-mixed-speed-tr",
+      "family": "composition-mixed-speed-tr-family",
+      "category": "mixed-speed",
+      "language": "tr",
+      "questions": [
+        "Sağ ol, şu an hızım ne?"
+      ],
+      "expected": {
+        "purpose": "mixed",
+        "temporal_scope": "current",
+        "capability_ids": [],
+        "queries": [
+          {
+            "source": "player",
+            "signal": "speed_mps",
+            "operation": "latest"
+          }
+        ],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "composition-social-only-en",
+      "family": "composition-social-only-en-family",
+      "category": "social-only",
+      "language": "en",
+      "questions": [
+        "That was a ridiculous move."
+      ],
+      "expected": {
+        "purpose": "social",
+        "temporal_scope": "social",
+        "evidence_outcome": "no_evidence"
+      }
+    },
+    {
+      "id": "composition-social-only-tr",
+      "family": "composition-social-only-tr-family",
+      "category": "social-only",
+      "language": "tr",
+      "questions": [
+        "Adam resmen saçmaladı."
+      ],
+      "expected": {
+        "purpose": "social",
+        "temporal_scope": "social",
+        "evidence_outcome": "no_evidence"
+      }
+    }
+  ]
+}

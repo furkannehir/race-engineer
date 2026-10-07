@@ -1,0 +1,64 @@
+{
+  "schema_version": "intelligence-eval.v1",
+  "dataset_id": "intelligence-locked",
+  "revision": "2026-10-04.seed1",
+  "split": "locked",
+  "fixture": "fixtures/synthetic/intelligence-capabilities",
+  "groups": [
+    {
+      "id": "locked-classification-tr",
+      "family": "locked-classification-tr-family",
+      "category": "classification",
+      "language": "tr",
+      "questions": ["Sonuncu muyum?", "Sıralamada neredeyiz?"],
+      "expected": {
+        "temporal_scope": "current",
+        "capability_ids": ["current_classification"],
+        "evidence_outcome": "available"
+      },
+      "tags": ["capability", "relationship"]
+    },
+    {
+      "id": "locked-pit-loss-en",
+      "family": "locked-pit-loss-en-family",
+      "category": "strategy",
+      "language": "en",
+      "questions": ["How much time will I lose if I pit?", "What's the projected pit-lane loss?"],
+      "expected": {
+        "temporal_scope": "future_counterfactual",
+        "capability_ids": ["pit_loss_projection"],
+        "evidence_outcome": "unavailable",
+        "required_unknowns": ["pit_loss_projection:missing_pit_loss_model"]
+      },
+      "tags": ["capability", "authoritative-unavailable"]
+    },
+    {
+      "id": "locked-service-tr",
+      "family": "locked-service-tr-family",
+      "category": "strategy",
+      "language": "tr",
+      "questions": ["Pit servisi ne kadar sürer?", "Bu pit stopta kaç saniye dururuz?"],
+      "expected": {
+        "temporal_scope": "future_counterfactual",
+        "capability_ids": ["pit_stop_duration_projection"],
+        "evidence_outcome": "unavailable",
+        "required_unknowns": ["pit_stop_duration_projection:missing_pit_service_model"]
+      },
+      "tags": ["capability", "authoritative-unavailable"]
+    },
+    {
+      "id": "locked-rejoin-en",
+      "family": "locked-rejoin-en-family",
+      "category": "strategy",
+      "language": "en",
+      "questions": ["Where would I rejoin if I pit this lap?", "What position will we come out in after a stop?"],
+      "expected": {
+        "temporal_scope": "future_counterfactual",
+        "capability_ids": ["projected_rejoin_position"],
+        "evidence_outcome": "unavailable",
+        "required_unknowns": ["projected_rejoin_position:missing_rejoin_projection_model"]
+      },
+      "tags": ["capability", "authoritative-unavailable"]
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "fixture_version": "race-fixture.v1",
+  "fixture_id": "synthetic:intelligence:1",
+  "description": "Synthetic field ranking and changing telemetry for the evidence-driven intelligence replay.",
+  "frames_file": "frames.jsonl"
+}

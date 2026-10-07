@@ -2,8 +2,10 @@
 
 import argparse
 import asyncio
+import io
 import json
 import logging
+import sys
 import uuid
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -96,6 +98,59 @@ def _parser() -> argparse.ArgumentParser:
         "--language", choices=("en", "tr"), help="force reply language; default: auto"
     )
     chat.add_argument("--json", action="store_true", help="structured output with --question")
+
+    intelligence = subparsers.add_parser(
+        "intelligence-replay",
+        help="test the evidence-driven Context/Core/Qwen path on fixture telemetry",
+    )
+    intelligence.add_argument("--fixture", type=Path, required=True)
+    intelligence.add_argument(
+        "--config",
+        type=Path,
+        default=Path("config/default.toml"),
+        help="configuration file; default: config/default.toml",
+    )
+    intelligence.add_argument(
+        "--frame-index",
+        type=int,
+        default=-1,
+        help="fixture frame to use; default: latest",
+    )
+    intelligence.add_argument("--question", required=True)
+    intelligence.add_argument("--language", choices=("en", "tr"), help="reply language")
+    intelligence.add_argument("--json", action="store_true", help="show evidence and decisions")
+
+    intelligence_evaluation = subparsers.add_parser(
+        "evaluate-intelligence",
+        help="score a local Context Engineer candidate on versioned replay datasets",
+    )
+    intelligence_evaluation.add_argument(
+        "--config",
+        type=Path,
+        default=Path("config/default.toml"),
+        help="configuration file; default: config/default.toml",
+    )
+    intelligence_evaluation.add_argument(
+        "--dataset",
+        type=Path,
+        action="append",
+        required=True,
+        help="evaluation dataset JSON; repeat to combine splits",
+    )
+    intelligence_evaluation.add_argument(
+        "--candidate",
+        default="qwen-context-v5",
+        help=(
+            "candidate ID: qwen-context-v5, minilm-nli-v1, or "
+            "laya-multilingual-v1"
+        ),
+    )
+    intelligence_evaluation.add_argument(
+        "--profile",
+        choices=("portable", "enhanced"),
+        default="portable",
+        help="runtime profile; enhanced is reserved for a future temporal candidate",
+    )
 
     validate = subparsers.add_parser("validate-config", help="validate a TOML configuration")
     validate.add_argument("--config", type=Path, required=True)
@@ -601,6 +656,9 @@ async def _test_tts(config_path: Path, text: str) -> PlaybackResult:
 
 
 def main() -> None:
+    for stream in (sys.stdout, sys.stderr):
+        if isinstance(stream, io.TextIOWrapper):
+            stream.reconfigure(encoding="utf-8", errors="replace")
     args = _parser().parse_args()
     match args.command:
         case "voice-iracing":
@@ -712,6 +770,49 @@ def main() -> None:
                 print("Cannot start replay conversation; check config, fixture, and arguments.")
                 result_code = 2
             raise SystemExit(result_code)
+        case "intelligence-replay":
+            from race_engineer.application.intelligence_cli import intelligence_replay
+
+            try:
+                result_code = asyncio.run(
+                    intelligence_replay(
+                        args.config,
+                        args.fixture,
+                        frame_index=args.frame_index,
+                        question=args.question,
+                        reply_language=args.language,
+                        json_output=args.json,
+                    )
+                )
+            except KeyboardInterrupt:
+                result_code = 130
+            except (OSError, ValueError):
+                print("Cannot run intelligence replay; check config, fixture, and arguments.")
+                result_code = 2
+            raise SystemExit(result_code)
+        case "evaluate-intelligence":
+            from race_engineer.application.intelligence_evaluation import (
+                run_intelligence_evaluation,
+            )
+
+            try:
+                report = asyncio.run(
+                    run_intelligence_evaluation(
+                        Path.cwd(),
+                        args.config,
+                        tuple(args.dataset),
+                        candidate_id=args.candidate,
+                        runtime_profile=args.profile,
+                    )
+                )
+                print(json.dumps(report, indent=2, ensure_ascii=False, sort_keys=True))
+                evaluation_code = 0
+            except KeyboardInterrupt:
+                evaluation_code = 130
+            except (OSError, ValueError) as error:
+                print(f"Cannot run intelligence evaluation ({error}).")
+                evaluation_code = 2
+            raise SystemExit(evaluation_code)
         case "validate-config":
             config = load_config(args.config)
             print(config.model_dump_json(indent=2))
