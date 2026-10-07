@@ -126,22 +126,7 @@ def packet(*evidence: EvidenceItem, unknowns: tuple[str, ...] = ()) -> ContextPa
 def ranking_draft() -> dict[str, object]:
     return {
         "goal": "inform",
-        "tone": "calm_teammate",
-        "guidance": ["answer the comparison directly"],
-        "confidence": 1,
-        "speech_template": "Yes, you're last right now, P{{position}} of {{last_position}}.",
-        "references": [
-            {
-                "placeholder": "position",
-                "evidence_id": "position",
-                "field": "value",
-            },
-            {
-                "placeholder": "last_position",
-                "evidence_id": "last-position",
-                "field": "value",
-            },
-        ],
+        "speech": "Yes, you're last right now, P{{a}} of {{b}}.",
     }
 
 
@@ -163,13 +148,13 @@ def test_portable_engineer_decides_and_writes_response_in_one_inference():
     assert [entry["value"] for entry in payload["evidence"]] == [28, 28]
     assert payload["rendering_bindings"] == [
         {
-            "placeholder": "player_position",
+            "placeholder": "a",
             "evidence_id": "position",
             "field": "value",
             "meaning": "player position",
         },
         {
-            "placeholder": "field_position",
+            "placeholder": "b",
             "evidence_id": "last-position",
             "field": "value",
             "meaning": "last occupied current field position; not a car count",
@@ -188,11 +173,7 @@ def test_portable_engineer_allows_evidence_free_social_response():
     model = FakeJsonModel(
         {
             "goal": "acknowledge",
-            "tone": "calm_teammate",
-            "guidance": ["acknowledge briefly then refocus"],
-            "confidence": 0.9,
-            "speech_template": "Copy. Keep your head down and focus on the exits.",
-            "references": [],
+            "speech": "Copy. Keep your head down and focus on the exits.",
         }
     )
     engineer = PortableQwenEngineer(ConversationConfig(), model=model)
@@ -212,11 +193,7 @@ def test_silence_schema_requires_null_speech_and_no_guidance_or_references():
     model = FakeJsonModel(
         {
             "goal": "silence",
-            "tone": "calm_teammate",
-            "guidance": [],
-            "confidence": 1,
-            "speech_template": None,
-            "references": [],
+            "speech": None,
         }
     )
     engineer = PortableQwenEngineer(ConversationConfig(), model=model)
@@ -230,9 +207,7 @@ def test_silence_schema_requires_null_speech_and_no_guidance_or_references():
     schema = model.calls[0]["schema"]
     silent, spoken = schema["oneOf"]
     assert silent["properties"]["goal"]["const"] == "silence"
-    assert silent["properties"]["speech_template"] == {"type": "null"}
-    assert silent["properties"]["guidance"]["maxItems"] == 0
-    assert silent["properties"]["references"]["maxItems"] == 0
+    assert silent["properties"]["speech"] == {"type": "null"}
     assert spoken["properties"]["goal"]["enum"] == [
         "inform",
         "analyze",
@@ -240,14 +215,14 @@ def test_silence_schema_requires_null_speech_and_no_guidance_or_references():
         "acknowledge",
         "clarify",
     ]
-    assert spoken["properties"]["speech_template"]["type"] == "string"
-    assert spoken["properties"]["speech_template"]["pattern"] == "^[^0-9]+$"
-    assert "EvidenceReference" in schema["$defs"]
+    assert spoken["properties"]["speech"]["type"] == "string"
+    assert spoken["properties"]["speech"]["pattern"] == "^[^0-9]+$"
+    assert set(spoken["required"]) == {"goal", "speech"}
 
 
 def test_empty_silent_draft_from_provider_bypass_is_still_rejected():
     model = FakeJsonModel(
-        {"goal": "silence", "tone": "calm", "speech_template": "", "references": []}
+        {"goal": "silence", "speech": ""}
     )
     engineer = PortableQwenEngineer(ConversationConfig(), model=model)
     with pytest.raises(LocalIntelligenceError, match="engineer_model_response_invalid"):
@@ -259,22 +234,7 @@ def test_portable_engineer_uses_capability_relationship_without_speaking_boolean
     model = FakeJsonModel(
         {
             "goal": "inform",
-            "tone": "calm_teammate",
-            "guidance": [],
-            "confidence": 1,
-            "speech_template": "No, you're P{{position}}. Last place is P{{last_position}}.",
-            "references": [
-                {
-                    "placeholder": "position",
-                    "evidence_id": "c1:player_position",
-                    "field": "value",
-                },
-                {
-                    "placeholder": "last_position",
-                    "evidence_id": "c1:last_position",
-                    "field": "value",
-                },
-            ],
+            "speech": "No, you're P{{a}}. Last place is P{{b}}.",
         }
     )
     engineer = PortableQwenEngineer(ConversationConfig(), model=model)
@@ -296,31 +256,14 @@ def test_portable_engineer_uses_capability_relationship_without_speaking_boolean
         }
     ]
     assert all(binding["evidence_id"] != "c1:is_last" for binding in payload["rendering_bindings"])
-    schema = model.calls[0]["schema"]
-    allowed_ids = schema["$defs"]["EvidenceReference"]["properties"]["evidence_id"]["enum"]
-    assert "c1:is_last" not in allowed_ids
+    assert [binding["placeholder"] for binding in payload["rendering_bindings"]] == ["a", "b"]
 
 
 def test_portable_engineer_preserves_position_change_direction_and_magnitude():
     model = FakeJsonModel(
         {
             "goal": "inform",
-            "tone": "calm_teammate",
-            "guidance": [],
-            "confidence": 1,
-            "speech_template": "We've {{direction}} {{magnitude}} positions.",
-            "references": [
-                {
-                    "placeholder": "direction",
-                    "evidence_id": "c1:direction",
-                    "field": "value",
-                },
-                {
-                    "placeholder": "magnitude",
-                    "evidence_id": "c1:positions_changed",
-                    "field": "value",
-                },
-            ],
+            "speech": "We've {{a}} {{b}} positions.",
         }
     )
     engineer = PortableQwenEngineer(ConversationConfig(), model=model)
@@ -357,17 +300,7 @@ def test_portable_engineer_supplies_generic_scalar_binding_example():
     model = FakeJsonModel(
         {
             "goal": "inform",
-            "tone": "calm_teammate",
-            "guidance": [],
-            "confidence": 1,
-            "speech_template": "Fuel remaining is {{player_fuel_l}} litres.",
-            "references": [
-                {
-                    "placeholder": "player_fuel_l",
-                    "evidence_id": "fuel",
-                    "field": "value",
-                }
-            ],
+            "speech": "Fuel remaining is {{a}} litres.",
         }
     )
     engineer = PortableQwenEngineer(ConversationConfig(), model=model)
@@ -380,7 +313,7 @@ def test_portable_engineer_supplies_generic_scalar_binding_example():
 
     assert grounded.text == "Fuel remaining is 30 litres."
     prompt = str(model.calls[0]["system_prompt"])
-    assert '"speech_template":"Current fuel: {{player_fuel_l}} litres."' in prompt
+    assert '"speech":"Current fuel: {{a}} litres."' in prompt
     assert '"evidence_id":"fuel"' in prompt
 
 
@@ -388,14 +321,10 @@ def test_portable_engineer_reports_unsupported_projection_without_clarifying():
     model = FakeJsonModel(
         {
             "goal": "inform",
-            "tone": "calm_teammate",
-            "guidance": ["state the unavailable projection"],
-            "confidence": 1,
-            "speech_template": (
+            "speech": (
                 "I can't project the pit exit position yet; "
                 "the pit-loss and traffic model isn't available."
             ),
-            "references": [],
         }
     )
     engineer = PortableQwenEngineer(ConversationConfig(), model=model)
@@ -415,24 +344,9 @@ def test_portable_engineer_corrects_driver_claim_from_current_evidence():
     model = FakeJsonModel(
         {
             "goal": "inform",
-            "tone": "calm_teammate",
-            "guidance": ["correct the claim calmly"],
-            "confidence": 1,
-            "speech_template": (
-                "Telemetry has you P{{position}}; the current field runs to P{{last_position}}."
+            "speech": (
+                "Telemetry has you P{{a}}; the current field runs to P{{b}}."
             ),
-            "references": [
-                {
-                    "placeholder": "position",
-                    "evidence_id": "position",
-                    "field": "value",
-                },
-                {
-                    "placeholder": "last_position",
-                    "evidence_id": "last-position",
-                    "field": "value",
-                },
-            ],
         }
     )
     engineer = PortableQwenEngineer(ConversationConfig(), model=model)
@@ -454,13 +368,15 @@ def test_portable_engineer_corrects_driver_claim_from_current_evidence():
     [
         {
             **ranking_draft(),
-            "references": [{"placeholder": "missing", "evidence_id": "missing", "field": "value"}],
-            "speech_template": "You're {{missing}}.",
+            "speech": "You're {{z}}.",
         },
         {
             **ranking_draft(),
-            "references": [],
-            "speech_template": "You're P28.",
+            "speech": "You're P28.",
+        },
+        {
+            **ranking_draft(),
+            "speech": "You're [z].",
         },
     ],
 )
@@ -473,14 +389,7 @@ def test_portable_engineer_rejects_unavailable_evidence_or_raw_numbers(draft):
 def test_portable_engineer_retries_one_structurally_invalid_response():
     invalid = {
         **ranking_draft(),
-        "speech_template": "You're P{{position}}.",
-        "references": [
-            {
-                "placeholder": "position",
-                "evidence_id": "position",
-                "field": "value",
-            }
-        ],
+        "speech": "You're P{{a}}.",
     }
     model = FakeJsonModel([invalid, ranking_draft()])
     engineer = PortableQwenEngineer(ConversationConfig(), model=model)
@@ -489,17 +398,30 @@ def test_portable_engineer_retries_one_structurally_invalid_response():
     brief = asyncio.run(engineer.decide(turn(), current))
     response = asyncio.run(engineer.generate(turn(), current, brief))
 
-    assert response.speech_template == ranking_draft()["speech_template"]
+    assert response.speech_template == ranking_draft()["speech"]
     assert len(model.calls) == 2
     assert "previous JSON did not satisfy" in str(model.calls[1]["system_prompt"])
+
+
+def test_portable_engineer_canonicalizes_known_square_bracket_binding_aliases():
+    invalid = {**ranking_draft(), "speech": "You're P[a], last place is P[b]."}
+    model = FakeJsonModel(invalid)
+    engineer = PortableQwenEngineer(ConversationConfig(), model=model)
+    current = packet(item("position", "player", 28), item("last-position", "field", 28))
+
+    brief = asyncio.run(engineer.decide(turn(), current))
+    response = asyncio.run(engineer.generate(turn(), current, brief))
+    grounded = StrictEvidenceGrounder().ground(response, current, brief)
+
+    assert response.speech_template == "You're P{{a}}, last place is P{{b}}."
+    assert grounded.text == "You're P28, last place is P28."
+    assert len(model.calls) == 1
 
 
 def test_response_can_ignore_unrelated_retrieved_comparison():
     draft = {
         "goal": "inform",
-        "tone": "calm_teammate",
-        "speech_template": "Fuel remaining: {{player_fuel_l}} litres.",
-        "references": [{"placeholder": "player_fuel_l", "evidence_id": "fuel", "field": "value"}],
+        "speech": "Fuel remaining: {{a}} litres.",
     }
     model = FakeJsonModel(draft)
     engineer = PortableQwenEngineer(ConversationConfig(), model=model)
@@ -517,14 +439,10 @@ def test_response_can_ignore_unrelated_retrieved_comparison():
 
 @pytest.mark.parametrize("include_fuel", [False, True])
 def test_using_part_of_a_comparison_still_requires_all_its_evidence(include_fuel):
-    references = [{"placeholder": "position", "evidence_id": "position", "field": "value"}]
-    template = "You're P{{position}}."
+    template = "You're P{{b}}."
     if include_fuel:
-        references.append({"placeholder": "fuel", "evidence_id": "fuel", "field": "value"})
-        template += " Fuel: {{fuel}} litres."
-    model = FakeJsonModel(
-        {**ranking_draft(), "speech_template": template, "references": references}
-    )
+        template += " Fuel: {{a}} litres."
+    model = FakeJsonModel({**ranking_draft(), "speech": template})
     engineer = PortableQwenEngineer(ConversationConfig(), model=model)
     current = packet(fuel_item(), item("position", "player", 5), item("last-position", "field", 6))
 
@@ -534,7 +452,7 @@ def test_using_part_of_a_comparison_still_requires_all_its_evidence(include_fuel
 
 
 def test_evidence_free_comparison_remains_rejected():
-    model = FakeJsonModel({**ranking_draft(), "speech_template": "You're last.", "references": []})
+    model = FakeJsonModel({**ranking_draft(), "speech": "You're last."})
     engineer = PortableQwenEngineer(ConversationConfig(), model=model)
     current = packet(item("position", "player", 28), item("last-position", "field", 28))
     with pytest.raises(LocalIntelligenceError, match="engineer_model_response_invalid"):

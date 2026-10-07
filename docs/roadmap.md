@@ -114,7 +114,7 @@ should share the validated service later. CONV-004 is scheduled in CE-05, not ye
    queries, social abstention, temporal scope and authoritative unavailable results. A
    content-free runner reports exact plan/evidence scores, first/subsequent-call latency,
    optional server prompt/generation timings, model errors, candidate revisions, input and
-   implementation fingerprints, and machine metadata. `qwen-context-v5` is the
+   implementation fingerprints, and machine metadata. `qwen-context-v6` is the
    runnable portable baseline; the enhanced profile fails closed until a learned temporal
    adapter exists. The first CPU Qwen report is recorded: the original contract timed out on
    17/24 turns, while a compact development-only iteration cut mean planning from 29.5 to
@@ -144,8 +144,8 @@ should share the validated service later. CONV-004 is scheduled in CE-05, not ye
    saved run passes 41/50: original 12/12, controls 15/18, composition 14/20. Historical
    statistic controls now pass and compound retrieval improves, but extra evidence, mixed-purpose
    mistakes and an English social regression remain. Planner median is 4.06 s on this broader
-   workload; no full-radio latency claim is made. V5 is wired into this development branch's
-   live/replay path, not hidden behind a promotion flag. INT-07 remains open and unpromoted.
+   workload; no full-radio latency claim is made. V5 was wired into this development branch's
+   live/replay path before the October 7 v6 switch. INT-07 remains open.
    October 7 integration checks exposed and repaired an over-broad Core dependency check:
    unrelated retrieved comparisons no longer force their inclusion in an otherwise grounded
    answer. Used comparisons still require all dependency references. Automated verification:
@@ -157,7 +157,23 @@ should share the validated service later. CONV-004 is scheduled in CE-05, not ye
    with one Turkish Core validation failure (INT-007) and 8/12 exact plans. Cache reuse helps,
    but a nearly fully cached compound reply still spent 13.75 s generating structured output.
    No prompt, model, runtime acceleration or live behavior was changed for this measurement.
-   Automated verification now passes 404 tests, Ruff and mypy. Voice and game-load timing remain.
+   The first performance slice replaces Core's repeated metadata/reference objects with compact
+   `goal` plus `speech` output and application-owned reference reconstruction. The matched CPU
+   repeat completed 12/12 with no repair call: median fell to 8.85 s, sample p95 to 20.93 s and
+   median Core time to 2.97 s. INT-007 was reproduced as alternate placeholder delimiters and
+   fixed at the trusted binding boundary; live validation remains. Planner quality is unchanged:
+   exact plans remain 8/12 and the repeated English vent still retrieves and speaks fuel.
+   Automated verification now passes 410 tests, Ruff and mypy. Voice and game-load timing remain.
+   A separately selectable v6 prompt candidate improved exact plans from 45/58 to 53/58 on a
+   matched set and passed eight fresh bilingual contrasts. In the matching 30-turn reply
+   workload it reached 30/30 exact plans (v5: 18/30) but raised median reply latency from
+   8.01 s to 10.26 s. A user-run planner repeat reproduced 53/58 passes (median 4.05 s,
+   p95 10.45 s). V6 is now the live/replay development default by user decision, prioritizing
+   accuracy while speed work continues; v5 remains explicitly selectable for comparisons.
+   Five older follow-up/composition failures, the latency tradeoff and release evaluation
+   remain for INT-07.
+   Default-v6 and explicit-v5 regression checks pass; current verification is 414 tests,
+   Ruff lint and mypy.
 8. **Follow-up — strategy models:** normalize track/car pit loss, requested service and field
    trajectory inputs before enabling the existing pit/rejoin capability contracts.
 9. Optional CUDA/Vulkan controls and stable combined-workload benchmarks remain after a

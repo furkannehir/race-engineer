@@ -21,7 +21,12 @@ from race_engineer.evaluation.system import (
     git_revision,
     machine_metadata,
 )
-from race_engineer.intelligence.context_planner import PLANNER_ID, QwenContextQueryPlanner
+from race_engineer.intelligence.context_planner import (
+    PLANNER_ID,
+    PLANNER_V5_ID,
+    PLANNER_V6_ID,
+    QwenContextQueryPlanner,
+)
 from race_engineer.intelligence.local_model import LocalJsonModel, ModelRequestMetrics
 from race_engineer.intelligence.semantic_planner import (
     CatalogSemanticPlanner,
@@ -31,7 +36,12 @@ from race_engineer.intelligence.semantic_planner import (
 _QWEN_CANDIDATE = PLANNER_ID
 _MINILM_CANDIDATE = "minilm-nli-v1"
 _LAYA_CANDIDATE = "laya-multilingual-v1"
-_CANDIDATES = {_QWEN_CANDIDATE, _MINILM_CANDIDATE, _LAYA_CANDIDATE}
+_CANDIDATES = {
+    PLANNER_V5_ID,
+    PLANNER_V6_ID,
+    _MINILM_CANDIDATE,
+    _LAYA_CANDIDATE,
+}
 
 
 def _repository_file(root: Path, path: Path) -> Path:
@@ -81,9 +91,11 @@ async def run_intelligence_evaluation(
     semantic_planner: CatalogSemanticPlanner | None = None
     request_metrics: list[ModelRequestMetrics] = []
     planner: ContextQueryPlanner
-    if candidate_id == _QWEN_CANDIDATE:
+    if candidate_id in {PLANNER_V5_ID, PLANNER_V6_ID}:
         model = LocalJsonModel(config.conversation, on_metrics=request_metrics.append)
-        planner = QwenContextQueryPlanner(config.conversation, model=model)
+        planner = QwenContextQueryPlanner(
+            config.conversation, model=model, planner_id=candidate_id
+        )
         candidate = IntelligenceCandidateMetadata(
             candidate_id=candidate_id,
             runtime_profile=runtime_profile,

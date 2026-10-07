@@ -41,7 +41,7 @@ its scores become a release gate.
 
 | Profile | Current state | Intended use |
 | --- | --- | --- |
-| `portable` | Runnable with `qwen-context-v5` | One local general model selects catalog-bound evidence; deterministic code executes it |
+| `portable` | Runnable with `qwen-context-v6` | One local general model selects catalog-bound evidence; deterministic code executes it |
 | `enhanced` | Reserved, fails closed | A learned temporal component may add typed signals/capabilities before the same planning boundary |
 
 MiniLM and Laya remain evaluation candidates, not dependencies or selected architecture.
@@ -328,10 +328,10 @@ is not an isolated estimate of the inventory's overhead. These are planner-only 
 not STT-to-audio latency. The inventory and larger output budget have not earned a performance
 claim or release promotion.
 
-V5 is the planner currently wired into replay and live conversation **on this development
-branch**; "unpromoted" is an evaluation status, not a runtime feature flag or automatic v4
-fallback. INT-07 remains open. Do not treat a race using this branch as an acceptance-tested
-release. Calibration and locked seed datasets were not changed or used to tune v5.
+V5 was wired into replay and live conversation **on this development branch** before the
+October 7 switch to v6 below. "Unpromoted" describes evaluation status, not a runtime feature
+flag or automatic v4 fallback. INT-07 remains open. Calibration and locked seed datasets were
+not changed or used to tune v5.
 
 October 7 verification: 395 automated tests pass; Ruff lint and mypy (90 source files) pass.
 Tests cover strict inventory validation, catalog boundaries, complementary evidence selection,
@@ -465,6 +465,85 @@ The script returned exit code one because a pipeline failed and still saved its 
 report. Completion counts are not answer-quality scores. This small sample describes this
 workload, not a stable latency guarantee, and excludes STT/TTS/game load. Automated verification:
 404 tests pass, Ruff lint passes, and mypy passes for source plus the benchmark entry point.
+
+### Compact Core output comparison, October 7
+
+The first performance slice kept the same Qwen weights, CPU runtime, planner, fixture questions,
+seed and two-inference composition. It changed the combined Core/response wire contract from six
+fields plus repeated evidence-reference objects to `goal` plus `speech` with short placeholders.
+Application code now reconstructs references, tone, guidance and confidence, then applies the
+same relationship closure, delivery refresh and grounding gates. The Core output cap is 192
+tokens; observed replies remained well below it.
+
+The [matched 12-turn report](evaluations/intelligence-latency-core-compact-cpu-2026-10-07.json)
+completed 12/12 pipelines with no Core repair, compared with 11/12 and one repair in the original
+baseline. Completed median fell from 12.97 s to **8.85 s** (31.8%), sample p95 from 28.05 s to
+**20.93 s** (25.4%), and maximum from 32.32 s to **27.31 s**. Median Core time fell from 6.34 s
+to **2.97 s** (53.1%); mean Core time fell from 8.36 s to **3.97 s**. Average Core completion
+tokens per request fell from 75.2 to **26.8**. Three replies completed below five seconds and
+eight below ten, versus zero and five respectively in the baseline.
+
+Manual review exposed the old Turkish failure mode during the intermediate run: correct binding
+aliases were emitted with square brackets. Exact known aliases are now canonicalized before the
+application constructs references; unknown, malformed or repeated aliases still fail closed.
+The final run grounded both Turkish compound replies correctly without retrying.
+
+This is a useful CPU improvement, not race-ready latency. The cold first turn still took 27.31 s,
+and subsequent compound turns reached 15.71 s. Planner exact match remains 8/12 and evidence
+expectations 11/12. The repeated English vent still produced an unrelated fuel answer, and
+Turkish unit wording remains awkward. Context generation, planner relevance, STT/TTS, live game
+load and PTT-to-audio timing are unchanged.
+
+## Planner v6 development default, October 7
+
+V6 adds bilingual examples for opinions about driving skill, hypothetical pit projections,
+compound fuel/speed questions, and mixed criticism plus a factual question. It uses the same
+Qwen model and the same single planner inference. The live/replay factory, default evaluation
+and latency benchmark now select v6; v5 remains an explicit comparison candidate through
+`--candidate qwen-context-v5`. Eight fresh English/Turkish contrast cases were added to the
+development split.
+Both candidates were scored on the same 58 turns: the original 12, 18 controls, 20 composition
+cases, and the eight fresh contrasts.
+
+| Measure | V5 | V6 |
+| --- | ---: | ---: |
+| Exact plans | 45/58 (77.6%) | 53/58 (91.4%) |
+| English exact plans | 22/29 (75.9%) | 26/29 (89.7%) |
+| Turkish exact plans | 23/29 (79.3%) | 27/29 (93.1%) |
+| Purpose accuracy | 40/46 (87.0%) | 43/46 (93.5%) |
+| Extra-evidence turns | 9 | 2 |
+| New contrast cases passed | baseline comparison | 8/8 |
+| Planner median / p95 | 3.75 s / 9.95 s | 4.13 s / 10.76 s |
+
+Neither candidate had a model, transport, schema, or evidence-execution error. V6 fixed the
+English vent, hypothetical-social, and compound-selection failures represented in the new
+controls. Five older follow-up/composition turns still fail: two follow-ups are incorrectly
+marked mixed, an English gap/speed question gets an extra classification, an English
+classification/lap question selects the wrong evidence, and one Turkish mixed-speed turn loses
+its social purpose. Exact plan accuracy remains below the promotion threshold.
+
+The matched 30-turn full-pipeline replay used the same six cases, five repeats, seed, model and
+external Qwen endpoint as the saved v5 run. All 30 v6 turns completed with exact planner matches,
+expected evidence outcomes, and no Core retries. Median reply latency was **10.26 s** versus
+**8.01 s** for v5; mean was 9.24 s versus 8.89 s, p95 was 12.29 s versus 15.97 s, and maximum
+was 22.20 s versus 16.51 s. The v6 median is a material regression even as its p95 improved.
+Planner outputs averaged 72 completion tokens versus 63.7 for v5, and the v6 prompt was about
+659 tokens longer. The user chose v6 as the live development default for its accuracy gain,
+accepting this latency tradeoff while performance work continues. This runtime decision does
+not close INT-07 or satisfy the release promotion gates. The reused endpoint was
+external/unmanaged, so its effective compute backend could not be confirmed from the benchmark.
+
+A subsequent user-run 58-turn planner evaluation reproduced 53/58 exact passes and the same
+five remaining misses, with no model, transport, schema or execution errors. Planner median
+was 4.05 s, p95 10.45 s and maximum 12.26 s. These timings exclude Core response generation,
+STT, TTS and game load.
+
+Manual review of six v6 synthetic replies found accurate English speed/fuel answers and concise
+English/Turkish vent acknowledgments. Turkish unit phrasing (“metre per saniye”) remains awkward.
+The full report is available locally at
+`data/benchmarks/intelligence-core-compact-v6-30-turn.json`; the content-free report records
+plans and timings, while reply text and the optional temporary requested-fact inventory are
+shown only in the console during review.
 
 ## Promotion rules
 

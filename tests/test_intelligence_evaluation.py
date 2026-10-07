@@ -30,7 +30,11 @@ from race_engineer.evaluation.intelligence import (
 from race_engineer.evaluation.intelligence_runner import (
     evaluate_intelligence_datasets,
 )
-from race_engineer.intelligence.context_planner import QwenContextQueryPlanner
+from race_engineer.intelligence.context_planner import (
+    PLANNER_V5_ID,
+    PLANNER_V6_ID,
+    QwenContextQueryPlanner,
+)
 from race_engineer.intelligence.local_model import LocalIntelligenceError
 
 ROOT = Path(__file__).parents[1]
@@ -524,12 +528,28 @@ def test_intelligence_evaluation_cli_accepts_repeated_datasets() -> None:
 
     assert args.command == "evaluate-intelligence"
     assert len(args.dataset) == 2
-    assert args.candidate == "qwen-context-v5"
+    assert args.candidate == "qwen-context-v6"
     assert args.profile == "portable"
 
 
+@pytest.mark.parametrize("candidate_id", [PLANNER_V5_ID, PLANNER_V6_ID])
+def test_intelligence_evaluation_cli_accepts_the_separately_versioned_planner(candidate_id):
+    args = _parser().parse_args(
+        [
+            "evaluate-intelligence",
+            "--dataset",
+            "fixtures/intelligence-evaluation/development-controls.json",
+            "--candidate",
+            candidate_id,
+        ]
+    )
+    assert args.candidate == candidate_id
+
+
+@pytest.mark.parametrize("candidate_id", [None, PLANNER_V5_ID, PLANNER_V6_ID])
 def test_evaluation_application_builds_reproducible_content_free_report(
     monkeypatch: pytest.MonkeyPatch,
+    candidate_id,
 ) -> None:
     async def fake_evaluate(*args, **kwargs):
         del args, kwargs
@@ -553,16 +573,18 @@ def test_evaluation_application_builds_reproducible_content_free_report(
         lambda: {"cpu": "test"},
     )
 
+    candidate_options = {} if candidate_id is None else {"candidate_id": candidate_id}
     report = asyncio.run(
         evaluation_application.run_intelligence_evaluation(
             ROOT,
             ROOT / "config" / "default.toml",
             (Path("fixtures/intelligence-evaluation/development.json"),),
+            **candidate_options,
         )
     )
 
     assert report["schema_version"] == "intelligence-eval-report.v2"
-    assert report["candidate"]["candidate_id"] == "qwen-context-v5"
+    assert report["candidate"]["candidate_id"] == (candidate_id or PLANNER_V6_ID)
     assert report["datasets"][0]["turns"] == 12
     assert report["reproducibility"]["input_fingerprint_sha256"] == "fingerprint"
     assert report["privacy"] == {
@@ -616,6 +638,23 @@ def test_supplemental_development_controls_execute_and_forward_private_history(
             assert question not in report
         for line in group.recent_dialogue:
             assert line not in report
+
+
+def test_planner_contrast_development_dataset_is_balanced_and_uses_fresh_families():
+    dataset = load_intelligence_evaluation_dataset(
+        ROOT / "fixtures/intelligence-evaluation/development-planner-contrasts.json"
+    )
+    assert dataset.turn_count == 8
+    assert dataset.language_counts() == {"en": 4, "tr": 4}
+    assert {group.category for group in dataset.groups} == {
+        "vent",
+        "future",
+        "compound",
+        "mixed",
+    }
+    validate_intelligence_split_families(
+        (dataset, *(load_intelligence_evaluation_dataset(path) for path in DATASETS))
+    )
 
 
 def test_correct_evidence_with_wrong_purpose_does_not_pass_mixed_control():

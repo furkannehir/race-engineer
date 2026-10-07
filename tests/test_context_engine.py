@@ -26,7 +26,13 @@ from race_engineer.intelligence.context_engine import (
     ContextEngineerError,
     QueryDrivenContextEngineer,
 )
-from race_engineer.intelligence.context_planner import QwenContextQueryPlanner
+from race_engineer.intelligence.context_planner import (
+    PLANNER_ID,
+    PLANNER_V5_ID,
+    PLANNER_V6_ID,
+    QwenContextQueryPlanner,
+)
+from race_engineer.intelligence.factory import live_intelligence
 from race_engineer.intelligence.local_model import LocalIntelligenceError
 from race_engineer.intelligence.planner_diagnostics import ContextPlanRejection
 from race_engineer.intelligence.telemetry_memory import BoundedTelemetryMemory
@@ -261,6 +267,87 @@ class FakeJsonModel:
         return self.result
 
 
+def test_v6_prompt_is_separately_selected_and_reports_only_requested_fact_inventory_to_hook():
+    model = FakeJsonModel(
+        {
+            "social_comment": True,
+            "requested_facts": [],
+            "temporal_scope": None,
+            "capability_ids": [],
+            "queries": [],
+            "missing_information": "none",
+        }
+    )
+    inventory = []
+    planner = QwenContextQueryPlanner(
+        ConversationConfig(),
+        model=model,
+        planner_id=PLANNER_V6_ID,
+        on_request_inventory=inventory.append,
+    )
+    memory = BoundedTelemetryMemory()
+    memory.update(race_context(1, 0))
+
+    plan = asyncio.run(planner.plan(driver_turn("That guy hasn't got a clue."), (), ()))
+
+    assert planner._planner_id == PLANNER_V6_ID
+    assert plan.planner_id == PLANNER_V6_ID
+    assert inventory == [()]
+    assert model.captured is not None
+    assert "emotionally charged or negative statement" in model.captured["system_prompt"]
+    assert "Suppose I box now" in model.captured["system_prompt"]
+
+
+def test_v6_prompt_is_used_by_the_live_intelligence_factory(monkeypatch):
+    model = FakeJsonModel(
+        {
+            "social_comment": True,
+            "requested_facts": [],
+            "temporal_scope": None,
+            "capability_ids": [],
+            "queries": [],
+            "missing_information": "none",
+        }
+    )
+    monkeypatch.setattr(
+        "race_engineer.intelligence.factory.LocalJsonModel", lambda config: model
+    )
+    memory = BoundedTelemetryMemory()
+    memory.update(race_context(1, 0))
+    engineer = live_intelligence(ConversationConfig(), memory)
+
+    packet = asyncio.run(engineer._context.analyze(driver_turn("That guy hasn't got a clue.")))
+
+    assert PLANNER_ID == PLANNER_V6_ID
+    assert packet.evidence == ()
+    assert "driver_social_turn" in packet.situation
+    assert model.captured is not None
+    assert "emotionally charged or negative statement" in model.captured["system_prompt"]
+    assert "Suppose I box now" in model.captured["system_prompt"]
+
+
+def test_v5_prompt_remains_available_as_an_explicit_candidate():
+    model = FakeJsonModel(
+        {
+            "social_comment": True,
+            "requested_facts": [],
+            "temporal_scope": None,
+            "capability_ids": [],
+            "queries": [],
+            "missing_information": "none",
+        }
+    )
+    planner = QwenContextQueryPlanner(ConversationConfig(), model=model, planner_id=PLANNER_V5_ID)
+    memory = BoundedTelemetryMemory()
+    memory.update(race_context(1, 0))
+    plan = asyncio.run(planner.plan(driver_turn("Thanks"), (), ()))
+
+    assert planner._planner_id == PLANNER_V5_ID
+    assert plan.planner_id == PLANNER_V5_ID
+    assert model.captured is not None
+    assert "emotionally charged or negative statement" not in model.captured["system_prompt"]
+
+
 def test_qwen_context_planner_receives_schema_not_raw_values_and_returns_queries():
     memory = BoundedTelemetryMemory()
     memory.update(race_context(1, 0, position=6))
@@ -280,7 +367,7 @@ def test_qwen_context_planner_receives_schema_not_raw_values_and_returns_queries
 
     result = asyncio.run(planner.plan(driver_turn(), memory.signal_catalog(), capabilities))
 
-    assert result.planner_id == "qwen-context-v5"
+    assert result.planner_id == "qwen-context-v6"
     assert result.queries == (evidence_query("e1", "position"),)
     assert model.captured is not None
     payload = json.loads(str(model.captured["content"]))

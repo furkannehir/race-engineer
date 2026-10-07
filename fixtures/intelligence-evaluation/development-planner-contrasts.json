@@ -1,0 +1,133 @@
+{
+  "schema_version": "intelligence-eval.v1",
+  "dataset_id": "intelligence-development-planner-contrasts",
+  "revision": "2026-10-07.seed1",
+  "split": "development",
+  "fixture": "fixtures/synthetic/intelligence-capabilities",
+  "groups": [
+    {
+      "id": "skill-opinion-en",
+      "family": "planner-contrast-skill-opinion-en",
+      "category": "vent",
+      "language": "en",
+      "questions": ["That guy hasn't got a clue."],
+      "expected": {
+        "purpose": "social",
+        "temporal_scope": "social",
+        "evidence_outcome": "no_evidence"
+      }
+    },
+    {
+      "id": "skill-opinion-tr",
+      "family": "planner-contrast-skill-opinion-tr",
+      "category": "vent",
+      "language": "tr",
+      "questions": ["Öndeki sürücünün yarıştan haberi yok."],
+      "expected": {
+        "purpose": "social",
+        "temporal_scope": "social",
+        "evidence_outcome": "no_evidence"
+      }
+    },
+    {
+      "id": "hypothetical-en",
+      "family": "planner-contrast-hypothetical-en",
+      "category": "future",
+      "language": "en",
+      "questions": ["Suppose I box now; where would I come back out?"],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "future_counterfactual",
+        "capability_ids": ["projected_rejoin_position"],
+        "evidence_outcome": "unavailable",
+        "required_unknowns": [
+          "projected_rejoin_position:missing_rejoin_projection_model"
+        ]
+      }
+    },
+    {
+      "id": "hypothetical-tr",
+      "family": "planner-contrast-hypothetical-tr",
+      "category": "future",
+      "language": "tr",
+      "questions": ["Şimdi pite girsem kaçıncı sırada piste dönerim?"],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "future_counterfactual",
+        "capability_ids": ["projected_rejoin_position"],
+        "evidence_outcome": "unavailable",
+        "required_unknowns": [
+          "projected_rejoin_position:missing_rejoin_projection_model"
+        ]
+      }
+    },
+    {
+      "id": "compound-extra-en",
+      "family": "planner-contrast-compound-en",
+      "category": "compound",
+      "language": "en",
+      "questions": ["How many laps of fuel remain, and what's our velocity now?"],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": ["fuel_range"],
+        "queries": [
+          {
+            "source": "player",
+            "signal": "speed_mps",
+            "operation": "latest"
+          }
+        ],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "compound-extra-tr",
+      "family": "planner-contrast-compound-tr",
+      "category": "compound",
+      "language": "tr",
+      "questions": ["Yakıt kaç tur yeter ve şu anki hızımız ne?"],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": ["fuel_range"],
+        "queries": [
+          {
+            "source": "player",
+            "signal": "speed_mps",
+            "operation": "latest"
+          }
+        ],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "opinion-question-en",
+      "family": "planner-contrast-mixed-en",
+      "category": "mixed",
+      "language": "en",
+      "questions": ["That was a hopeless move. What's the gap to the car ahead?"],
+      "expected": {
+        "purpose": "mixed",
+        "temporal_scope": "current",
+        "capability_ids": ["gap_ahead"],
+        "queries": [],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "opinion-question-tr",
+      "family": "planner-contrast-mixed-tr",
+      "category": "mixed",
+      "language": "tr",
+      "questions": ["Bu çok kötü bir hamleydi. Öndeki araçla aramızda ne kadar fark var?"],
+      "expected": {
+        "purpose": "mixed",
+        "temporal_scope": "current",
+        "capability_ids": ["gap_ahead"],
+        "queries": [],
+        "evidence_outcome": "available"
+      }
+    }
+  ]
+}

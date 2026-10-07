@@ -25,7 +25,11 @@ from race_engineer.evaluation.system import (
     machine_metadata,
 )
 from race_engineer.fixtures import load_fixture
-from race_engineer.intelligence.context_planner import PLANNER_ID
+from race_engineer.intelligence.context_planner import (
+    PLANNER_ID,
+    PLANNER_V5_ID,
+    PLANNER_V6_ID,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CASES = (
@@ -45,6 +49,8 @@ async def benchmark(args: argparse.Namespace) -> dict[str, object]:
     dataset = load_intelligence_evaluation_dataset(dataset_path)
     if dataset.split != "development":
         raise ValueError("this diagnostic benchmark uses only development datasets")
+    if args.show_planner_inventory and not dataset.fixture.startswith("fixtures/synthetic/"):
+        raise ValueError("planner inventory display is limited to synthetic fixtures")
     wanted = set(args.case or (group.id for group in dataset.groups))
     groups = [group for group in dataset.groups if group.id in wanted]
     if len(groups) != len(wanted):
@@ -92,6 +98,7 @@ async def benchmark(args: argparse.Namespace) -> dict[str, object]:
             for group, question in turns:
                 index = len(results) + 1
                 print(f"[{index}] repeat {repetition}, {group.id}: processing...", flush=True)
+                request_inventory: list[tuple[str, ...]] = []
                 result, reply = await measure_intelligence_turn(
                     config.conversation,
                     contexts,
@@ -99,12 +106,26 @@ async def benchmark(args: argparse.Namespace) -> dict[str, object]:
                     question,
                     run_index=index,
                     repetition=repetition,
+                    planner_id=args.candidate,
+                    inventory_observer=(
+                        request_inventory.append if args.show_planner_inventory else None
+                    ),
                 )
                 results.append(result)
                 print(json.dumps(result, ensure_ascii=True, sort_keys=True), flush=True)
                 if args.show_replies:
                     print(
                         f"Question: {question}\nEngineer: {reply or '[no spoken reply]'}",
+                        flush=True,
+                    )
+                if args.show_planner_inventory:
+                    inventory_display = (
+                        request_inventory[-1]
+                        if request_inventory
+                        else "[planner did not return an inventory]"
+                    )
+                    print(
+                        f"Planner requested facts (temporary): {inventory_display}",
                         flush=True,
                     )
                 failure = result["failure"]
@@ -121,11 +142,11 @@ async def benchmark(args: argparse.Namespace) -> dict[str, object]:
     finally:
         await server.aclose()
     return {
-        "schema_version": "intelligence-latency-report.v1",
+        "schema_version": "intelligence-latency-report.v2",
         "generated_at": datetime.now(UTC).isoformat(),
         "evaluation_scope": "typed_context_core_refresh_grounding",
         "excluded_stages": ["microphone", "stt", "radio_queue", "tts", "audio_playback"],
-        "candidate_id": PLANNER_ID,
+        "candidate_id": args.candidate,
         "model": config.conversation.model,
         "configured_runtime": config.conversation.runtime.model_dump(mode="json"),
         "model_request_timeout_s": config.conversation.timeout_s,
@@ -136,7 +157,11 @@ async def benchmark(args: argparse.Namespace) -> dict[str, object]:
         "requested_repeats": args.repeats,
         "selected_cases": sorted(wanted),
         "expected_turns": args.repeats * sum(len(group.questions) for group in groups),
-        "privacy": {"contains_questions": False, "contains_model_replies": False},
+        "privacy": {
+            "contains_questions": False,
+            "contains_model_replies": False,
+            "contains_request_inventory": False,
+        },
         "reproducibility": {
             "git_revision": git_revision(ROOT),
             "git_dirty": git_dirty(ROOT),
@@ -166,9 +191,20 @@ def main() -> None:
     parser.add_argument("--case", action="append", help="group ID; repeat to choose cases")
     parser.add_argument("--repeats", type=int, default=2)
     parser.add_argument("--seed", type=int, default=7)
+    parser.add_argument(
+        "--candidate",
+        choices=(PLANNER_V5_ID, PLANNER_V6_ID),
+        default=PLANNER_ID,
+        help="planner prompt candidate to benchmark",
+    )
     parser.add_argument("--output", type=Path, help="new content-free JSON report")
     parser.add_argument(
         "--show-replies", action="store_true", help="show fixture replies for review"
+    )
+    parser.add_argument(
+        "--show-planner-inventory",
+        action="store_true",
+        help="show temporary requested-fact labels for synthetic development questions",
     )
     args = parser.parse_args()
     if args.repeats < 1 or args.repeats > 20:

@@ -146,10 +146,21 @@ and re-evaluate relevance and completeness before a model-promotion decision. Th
 currently also permits only one factual temporal scope per turn; cross-scope compound requests
 need an explicit contract extension. See [INT-07 evaluation](intelligence-evaluation.md).
 
-V5 is currently wired into this development branch's live/replay path; there is no automatic
-v4 fallback or release-quality claim. The request inventory is transient model guidance,
+V5 was wired into this development branch's live/replay path before the October 7 v6 switch;
+there is no automatic v4 fallback or release-quality claim. The request inventory is transient
+model guidance,
 not authoritative evidence or proof of completeness. Planner median rose to 4.06 s in the
 broader 50-turn run (earlier v4: 2.21 s over 30 turns); full radio latency still needs measuring.
+
+The `qwen-context-v6` planner now covers the English vent, hypothetical pit,
+and compound-selection regressions with fresh bilingual controls. On the same 58-turn set it
+scored 53/58 exact plans versus v5 at 45/58; the eight new contrast cases passed, and extra
+evidence turns fell from nine to two. The 30-turn full-pipeline sample improved exact plans
+from 18/30 to 30/30, but median total latency increased from 8.01 s to 10.26 s. V6 is now the
+live/replay development default by user decision; v5 remains available for explicit comparison.
+Five older follow-up/composition failures remain, and full spoken quality and release promotion
+still need broader evaluation. See the candidate comparison in
+[INT-07 evaluation](intelligence-evaluation.md).
 
 ## INT-005: Silent Core response uses an invalid empty speech string
 
@@ -194,19 +205,28 @@ is explicitly pending; this correctness repair is not a race-readiness claim.
 
 ## INT-007: Turkish compound reply intermittently fails Core validation
 
-**Status:** Open - observed in the full text latency benchmark, 2026-10-07
+**Status:** Fixed in synthetic local-model replay - live validation pending
 
 On the second `compound-tr` attempt, Context selected the exact expected fuel-range-plus-speed
 plan, but both Core output attempts failed application validation. Both model HTTP requests
 completed; the final error was `engineer_model_response_invalid`. No reply was delivered, and
 the failed turn took 21.90 seconds. The first attempt completed with both facts in its reply.
 
-The timing report deliberately excludes raw model output and therefore does not establish the
-specific validation defect. Investigate the two synthetic Core drafts before changing schema
-constraints or attribution; this is not automatically the repaired unrelated-comparison bug.
-The [latency baseline](evaluations/intelligence-latency-cpu-baseline-2026-10-07.json) retains
-per-attempt numeric metrics and the failing stage. Keep this as a correctness failure when
-comparing faster candidates or runtime settings, rather than dropping it from the workload.
+The original timing report deliberately excluded raw model output and could not establish the
+specific defect. The compact-Core performance slice reproduced it under manual reply review:
+Qwen selected the correct short evidence aliases but sometimes wrote `[a]` and `[b]` instead of
+the required `{{a}}` and `{{b}}` placeholders in Turkish. A strict repeat rejected the same
+delimiter error on both the initial and repair drafts. This was a wire-format serialization
+failure, not a telemetry calculation or evidence-selection failure.
+
+The Core wire response now contains only `goal` and `speech`. Exact known square-bracket aliases
+are canonicalized to the corresponding trusted placeholders before references are reconstructed.
+The application still rejects invented aliases, malformed/repeated placeholders, literal numeric
+telemetry and incomplete deterministic relationships. Sanitized rejection reasons are logged
+without model or driver text. The final 12-turn CPU replay completed 12/12 with zero repairs;
+both Turkish compound replies cited and grounded fuel range and speed correctly. The
+[post-change report](evaluations/intelligence-latency-core-compact-cpu-2026-10-07.json) retains
+the per-stage evidence. Real-race validation remains pending.
 
 ## CONV-004: Add contextual race-engineer acknowledgments and reassurance
 

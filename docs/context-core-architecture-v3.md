@@ -162,20 +162,25 @@ use a smaller distilled reasoner or policy model. Critical race-control calls re
 existing deterministic policy path and do not wait for this component.
 
 The portable INT-04 baseline uses one local Qwen inference to produce both the Core decision
-and the conversational response while preserving the two contracts in code. It selects only
-known evidence IDs, chooses the communication goal and calm-teammate tone, and writes short
-English or Turkish speech. Social turns may be evidence-free. Unsupported facts remain
-unknown rather than being replaced with a nearby measurement.
+and the conversational response while preserving the two contracts in code. Its compact model
+wire output contains only the communication goal and short English or Turkish speech. Evidence
+is selected by short placeholders; application code expands those placeholders into known
+evidence references and supplies the calm-teammate tone, empty guidance and default confidence
+in the full brief. Social turns may be evidence-free. Unsupported facts remain unknown rather
+than being replaced with a nearby measurement.
 
 ## Qwen and grounding
 
-Qwen is the conversational generator, not merely an intent classifier. It receives the
-turn, compact evidence, Core brief, personality and bounded dialogue context. It writes the
-actual English or Turkish response.
+Qwen is the conversational generator, not merely an intent classifier. In portable combined
+mode it receives the turn, compact evidence, personality and bounded dialogue context, then
+writes the actual English or Turkish response while choosing the communication goal.
 
-Generated speech cannot embed literal numeric telemetry; it uses placeholders such as
-{{position}} or {{sector_loss}}. Before delivery, the Context Engineer refreshes cited
-evidence and the grounding gate:
+Generated speech cannot embed literal numeric telemetry; the model uses compact placeholders
+such as `{{a}}` and `{{b}}` from the turn-specific binding table. The application reconstructs
+the full evidence references rather than asking the model to repeat IDs and fields. Exact known
+`[a]`-style aliases are normalized at this wire boundary; invented, malformed or repeated
+aliases still fail closed. Before delivery, the Context Engineer refreshes cited evidence and
+the grounding gate:
 
 - checks turn, session, generation and language scope;
 - requires the generator to use exactly the evidence approved by the Core brief;

@@ -243,18 +243,26 @@ application-owned; rejected plans never execute. Stable catalogs precede dialogu
 prompt-prefix reuse, without caching telemetry or bypassing delivery-time refresh. These
 development improvements do not constitute a model-promotion or full-radio quality result.
 
-The current v5 planner first emits a bounded factual-request inventory and an independent
+The current v6 planner first emits a bounded factual-request inventory and an independent
 social-content flag, then selects catalog-bound evidence in that same inference. Purpose is
 derived from the social flag and factual time scope; the inventory is discarded, not exposed
 as evidence or persisted to driver memory. This changes neither deterministic arithmetic nor
-the two-inference composition. V5 is wired into this development branch, but remains
-unpromoted: extra evidence and social-purpose regressions are documented in INT-004.
+the two-inference composition. V6 is the live/replay development default, with bilingual
+examples for opinions, hypotheticals and compound requests. V5 remains available for explicit
+evaluation comparisons. Extra evidence and social-purpose regressions remain in INT-004;
+release-quality evaluation and live radio acceptance are still pending.
 
 The portable INT-04/05 baseline is now the production `voice-iracing` conversation path.
 A second local Qwen inference combines the Core Engineer decision and natural response,
 then selected evidence is re-executed and grounded only when the existing radio scheduler
 delivers the answer. The legacy bounded query/template session remains available to replay
 and tests during migration, but is no longer the normal live composition.
+
+The combined Core/response inference now returns a compact wire contract: `goal` plus `speech`
+with short evidence placeholders. Application code reconstructs the full evidence references,
+brief defaults and response contract before delivery-time refresh. This removes repeated tone,
+guidance, confidence and reference metadata from model generation without weakening provenance,
+relationship closure or numeric grounding.
 
 ## Post-M3 improvement: Jev-assisted policy ranking
 

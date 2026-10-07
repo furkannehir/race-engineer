@@ -3,6 +3,7 @@
 import json
 import re
 import time
+from collections import Counter
 from collections.abc import Callable, Sequence
 from hashlib import sha256
 
@@ -24,7 +25,10 @@ from race_engineer.evaluation.intelligence_runner import TimedContextPlanner
 from race_engineer.evaluation.system import distribution
 from race_engineer.intelligence.capabilities import DeterministicRaceCapabilities
 from race_engineer.intelligence.context_engine import QueryDrivenContextEngineer
-from race_engineer.intelligence.context_planner import QwenContextQueryPlanner
+from race_engineer.intelligence.context_planner import (
+    PLANNER_ID,
+    QwenContextQueryPlanner,
+)
 from race_engineer.intelligence.grounding import StrictEvidenceGrounder
 from race_engineer.intelligence.local_model import (
     JsonModelClient,
@@ -186,6 +190,75 @@ def _plan_matches(plan: ContextPlan | None, expected: ExpectedContextPlan) -> bo
     )
 
 
+def _plan_diagnostic_value(plan: ContextPlan | None) -> dict[str, object] | None:
+    if plan is None:
+        return None
+    queries = sorted(
+        (
+            {
+                **query.selector.model_dump(mode="json"),
+                "operation": query.operation,
+                "window_s": query.window_s,
+            }
+            for query in plan.queries
+        ),
+        key=lambda query: json.dumps(query, sort_keys=True),
+    )
+    social = "driver_social_turn" in plan.situation
+    factual = "race_information_request" in plan.situation
+    purpose = "mixed" if social and factual else "social" if social else "race_information"
+    return {
+        "purpose": purpose,
+        "temporal_scope": plan.temporal_scope,
+        "capability_ids": sorted(request.capability_id for request in plan.capability_requests),
+        "queries": queries,
+    }
+
+
+def _expected_plan_diagnostic_value(expected: ExpectedContextPlan) -> dict[str, object]:
+    queries = sorted(
+        (query.model_dump(mode="json") for query in expected.queries),
+        key=lambda query: json.dumps(query, sort_keys=True),
+    )
+    return {
+        "purpose": expected.purpose,
+        "temporal_scope": expected.temporal_scope,
+        "capability_ids": sorted(expected.capability_ids),
+        "queries": queries,
+    }
+
+
+def _selection_diagnostic(
+    observed: dict[str, object] | None, expected: dict[str, object]
+) -> dict[str, object]:
+    def requests(plan: dict[str, object] | None) -> Counter[str]:
+        if plan is None:
+            return Counter()
+        capability_items = plan.get("capability_ids", [])
+        query_items = plan.get("queries", [])
+        capabilities = capability_items if isinstance(capability_items, list) else []
+        queries = query_items if isinstance(query_items, list) else []
+        values = Counter(
+            f"capability:{value}" for value in capabilities if isinstance(value, str)
+        )
+        values.update(
+            f"query:{json.dumps(value, sort_keys=True)}"
+            for value in queries
+            if isinstance(value, dict)
+        )
+        return values
+
+    actual_requests, expected_requests = requests(observed), requests(expected)
+    missing = sorted((expected_requests - actual_requests).elements())
+    extra = sorted((actual_requests - expected_requests).elements())
+    return {
+        "missing": missing,
+        "extra": extra,
+        "missing_count": len(missing),
+        "extra_count": len(extra),
+    }
+
+
 async def measure_intelligence_turn(
     config: ConversationConfig,
     contexts: tuple[RaceContext, ...],
@@ -196,6 +269,8 @@ async def measure_intelligence_turn(
     repetition: int,
     planner_client: JsonModelClient | None = None,
     core_client: JsonModelClient | None = None,
+    planner_id: str = PLANNER_ID,
+    inventory_observer: Callable[[tuple[str, ...]], None] | None = None,
 ) -> tuple[dict[str, object], str | None]:
     """Use production adapters/orchestration; return content-free data plus transient text."""
 
@@ -219,7 +294,14 @@ async def measure_intelligence_turn(
     stages = _Stages()
     planner_model = MeasuredModel(config, "context", client=planner_client)
     core_model = MeasuredModel(config, "core", client=core_client)
-    planner = TimedContextPlanner(QwenContextQueryPlanner(config, model=planner_model))
+    planner = TimedContextPlanner(
+        QwenContextQueryPlanner(
+            config,
+            model=planner_model,
+            planner_id=planner_id,
+            on_request_inventory=inventory_observer,
+        )
+    )
     context_engine = _MeasuredContext(
         QueryDrivenContextEngineer(memory, planner, DeterministicRaceCapabilities(memory)), stages
     )
@@ -247,6 +329,8 @@ async def measure_intelligence_turn(
         if "unknown" in kinds
         else "available"
     )
+    observed_plan = _plan_diagnostic_value(planner.last_plan)
+    expected_plan = _expected_plan_diagnostic_value(group.expected)
     result: dict[str, object] = {
         "case_id": group.id,
         "language": group.language,
@@ -256,6 +340,18 @@ async def measure_intelligence_turn(
         "call_state": "first_in_run" if run_index == 1 else "subsequent_in_run",
         "pipeline_completed": grounded is not None,
         "planner_exact_match": _plan_matches(planner.last_plan, group.expected),
+        "expected_plan": expected_plan,
+        "observed_plan": observed_plan,
+        "observed_purpose": observed_plan["purpose"] if observed_plan else None,
+        "temporal_scope_match": (
+            observed_plan is not None
+            and observed_plan["temporal_scope"] == expected_plan["temporal_scope"]
+        ),
+        "purpose_match": (
+            group.expected.purpose is None
+            or (observed_plan is not None and observed_plan["purpose"] == group.expected.purpose)
+        ),
+        "selection_difference": _selection_diagnostic(observed_plan, expected_plan),
         "evidence_expectation_match": (
             outcome == group.expected.evidence_outcome
             and set(group.expected.required_unknowns) == set(unknowns)

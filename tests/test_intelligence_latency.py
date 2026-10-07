@@ -57,14 +57,7 @@ def planner_reply(extra=False):
 def core_reply():
     return {
         "goal": "inform",
-        "tone": "calm_teammate",
-        "guidance": [],
-        "confidence": 1,
-        "speech_template": "Speed: {{speed}} metres per second. Fuel range: {{fuel}} laps.",
-        "references": [
-            {"placeholder": "speed", "evidence_id": "e1", "field": "value"},
-            {"placeholder": "fuel", "evidence_id": "c1:laps_remaining", "field": "value"},
-        ],
+        "speech": "Speed: {{a}} metres per second. Fuel range: {{b}} laps.",
     }
 
 
@@ -86,11 +79,35 @@ def measure(planner, core):
 
 def test_benchmark_measures_both_model_calls_refresh_and_grounding_without_extra_inference():
     planner, core = FixedModel(planner_reply()), FixedModel(core_reply())
-    result, reply = measure(planner, core)
+    inventory = []
+    config, contexts, group = setup()
+    result, reply = asyncio.run(
+        measure_intelligence_turn(
+            config,
+            contexts,
+            group,
+            group.questions[0],
+            run_index=1,
+            repetition=1,
+            planner_client=planner,
+            core_client=core,
+            inventory_observer=inventory.append,
+        )
+    )
     assert planner.calls == core.calls == 1
     assert reply == "Speed: 51 metres per second. Fuel range: 12 laps."
     assert result["pipeline_completed"] is True
     assert result["planner_exact_match"] is True
+    assert result["observed_purpose"] == "race_information"
+    assert result["expected_plan"]["capability_ids"] == ["fuel_range"]
+    assert result["observed_plan"]["capability_ids"] == ["fuel_range"]
+    assert result["selection_difference"] == {
+        "missing": [],
+        "extra": [],
+        "missing_count": 0,
+        "extra_count": 0,
+    }
+    assert inventory == [("remaining fuel laps", "current speed")]
     assert result["evidence_expectation_match"] is True
     assert result["core_retries"] == 0
     assert [request["role"] for request in result["model_requests"]] == ["context", "core"]
@@ -114,6 +131,8 @@ def test_benchmark_distinguishes_successful_reply_from_incorrect_extra_plan_sele
     assert reply is not None
     assert result["pipeline_completed"] is True
     assert result["planner_exact_match"] is False
+    assert result["selection_difference"]["extra_count"] == 1
+    assert result["selection_difference"]["extra"] == ["capability:current_classification"]
     summary = summarize_latency([result])
     assert summary["pipeline_completed"] == 1
     assert summary["planner_exact_matches"] == 0
@@ -121,7 +140,7 @@ def test_benchmark_distinguishes_successful_reply_from_incorrect_extra_plan_sele
 
 
 def test_benchmark_counts_the_existing_core_repair_call():
-    invalid = {**core_reply(), "speech_template": ""}
+    invalid = {**core_reply(), "speech": ""}
     core = FixedModel(invalid, core_reply())
     result, reply = measure(FixedModel(planner_reply()), core)
     assert reply is not None
@@ -212,6 +231,8 @@ def test_benchmark_stops_after_timeout_and_closes_only_its_managed_runtime(monke
         repeats=2,
         seed=7,
         show_replies=False,
+        show_planner_inventory=False,
+        candidate="qwen-context-v5",
         output=None,
     )
     report = asyncio.run(script.benchmark(args))
@@ -236,6 +257,8 @@ def test_benchmark_refuses_to_overwrite_an_existing_report_before_server_start(t
         repeats=1,
         seed=7,
         show_replies=False,
+        show_planner_inventory=False,
+        candidate="qwen-context-v5",
         output=output,
     )
     with pytest.raises(ValueError, match="output already exists"):

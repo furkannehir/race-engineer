@@ -23,6 +23,7 @@ from race_engineer.core.contracts import (
 from race_engineer.core.enums import PlaybackStatus, PolicyDecisionOutcome
 from race_engineer.core.interfaces import LiveTelemetryBridge
 from race_engineer.fixtures import load_fixture
+from race_engineer.intelligence.context_planner import PLANNER_ID
 from race_engineer.language import language_factory
 from race_engineer.memory import DurableHistory
 from race_engineer.observability import configure_logging
@@ -139,9 +140,9 @@ def _parser() -> argparse.ArgumentParser:
     )
     intelligence_evaluation.add_argument(
         "--candidate",
-        default="qwen-context-v5",
+        default=PLANNER_ID,
         help=(
-            "candidate ID: qwen-context-v5, minilm-nli-v1, or "
+            "candidate ID: qwen-context-v5, qwen-context-v6, minilm-nli-v1, or "
             "laya-multilingual-v1"
         ),
     )
