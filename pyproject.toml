@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "race-engineer"
 version = "0.1.0"
-description = "Local-first, game-adaptable personalized race engineer"
+description = "Pitward, a local-first, game-adaptable personalized race engineer"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -44,6 +44,10 @@ race-engineer-panel = "race_engineer.ui.app:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
+"race_engineer" = [
+  "assets/pitward-brand-pack/icons/pitward.ico",
+  "assets/pitward-brand-pack/png/pitward-logo-horizontal-dark.png",
+]
 "race_engineer.stt" = ["assets/*.wav", "assets/README.md"]
 
 [tool.pytest.ini_options]

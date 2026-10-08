@@ -19,6 +19,7 @@ from race_engineer.config import PttBindingConfig
 from race_engineer.core.speech_input import SpeechInputError
 from race_engineer.memory import SqliteDriverProfileRepository
 from race_engineer.ui.app import BindingDialog, RadioDesk
+from race_engineer.ui.branding import PRODUCT_NAME
 from race_engineer.ui.settings import PanelSettings, load_settings, save_settings
 
 ROOT = Path(__file__).parents[1]
@@ -77,6 +78,12 @@ class FakeWorker(QObject):
 
 
 def test_opening_panel_never_claims_connected_or_loads_models(panel):
+    assert panel.windowTitle() == PRODUCT_NAME
+    assert not panel.windowIcon().isNull()
+    assert panel.brand_logo.accessibleName() == PRODUCT_NAME
+    assert panel.brand_logo.pixmap() is not None
+    assert not panel.brand_logo.pixmap().isNull()
+    assert panel.tray.toolTip() == f"{PRODUCT_NAME} — Ready to start"
     assert panel.worker is None
     assert panel.heading.text() == "Ready to start"
     assert panel.telemetry.text.text() == "iRacing not connected"

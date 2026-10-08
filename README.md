@@ -1,6 +1,6 @@
-# Race Engineer
+# Pitward
 
-Race Engineer is a local-first, simulator-adaptable foundation for real-time racing
+Pitward is a local-first, simulator-adaptable foundation for real-time racing
 assistance. Its central policy engine decides what is worth communicating; telemetry,
 language generation, and speech synthesis remain replaceable adapters.
 

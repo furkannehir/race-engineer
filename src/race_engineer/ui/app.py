@@ -53,6 +53,7 @@ from race_engineer.stt.buttons import (
 from race_engineer.stt.capture import input_devices
 from race_engineer.tts.devices import output_devices
 from race_engineer.ui import icons as qta
+from race_engineer.ui.branding import PRODUCT_NAME, application_icon, panel_logo
 from race_engineer.ui.runtime import (
     run_engineer,
     run_until_stopped,
@@ -479,8 +480,8 @@ class RadioDesk(QWidget):
         self._speaking = False
         self._mode = "engineer"
         self._failed = False
-        self.setWindowTitle("Race Engineer" + (" — Design preview" if preview else ""))
-        self.setWindowIcon(qta.icon("mdi6.headset", color=_ACCENT))
+        self.setWindowTitle(PRODUCT_NAME + (" — Design preview" if preview else ""))
+        self.setWindowIcon(application_icon())
         self.resize(1040, 700)
         self.setMinimumSize(1000, 690)
         self.setStyleSheet(_STYLE)
@@ -509,6 +510,10 @@ class RadioDesk(QWidget):
         outer.addLayout(main, 1)
         left = QVBoxLayout()
         left.setSpacing(18)
+        self.brand_logo = QLabel()
+        self.brand_logo.setAccessibleName(PRODUCT_NAME)
+        self.brand_logo.setPixmap(panel_logo(214))
+        left.addWidget(self.brand_logo, 0, Qt.AlignmentFlag.AlignLeft)
         self.eyebrow = label("ENGINEER STOPPED", "eyebrow")
         eyebrow_row = QHBoxLayout()
         eyebrow_row.setSpacing(10)
@@ -655,7 +660,7 @@ class RadioDesk(QWidget):
 
     def _tray(self) -> None:
         self.tray = QSystemTrayIcon(self.windowIcon(), self)
-        self.tray.setToolTip("Race Engineer")
+        self.tray.setToolTip(PRODUCT_NAME)
         menu = QMenu(self)
         show_action = QAction("Show control panel", self)
         show_action.triggered.connect(self._restore)
@@ -1072,7 +1077,7 @@ class RadioDesk(QWidget):
         )
         self.start_button.setEnabled(self._phase != "stopping" and not self._settings_error)
         self.tray_stop.setEnabled(self.worker is not None)
-        self.tray.setToolTip(f"Race Engineer — {heading}")
+        self.tray.setToolTip(f"{PRODUCT_NAME} — {heading}")
         for control in self._settings_controls:
             control.setEnabled(not active or self.preview)
 
@@ -1116,7 +1121,7 @@ class RadioDesk(QWidget):
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Race Engineer desktop control panel")
+    parser = argparse.ArgumentParser(description=f"{PRODUCT_NAME} desktop control panel")
     parser.add_argument("--config", type=Path, default=Path("config/default.toml"))
     parser.add_argument("--settings", type=Path, default=Path("data/control-panel.json"))
     parser.add_argument("--preview", action="store_true", help="design only; never opens hardware")
@@ -1128,7 +1133,8 @@ def main() -> int:
         sys.stderr = open(os.devnull, "w", encoding="utf-8")  # noqa: SIM115
     app = QApplication.instance() or QApplication(sys.argv[:1])
     assert isinstance(app, QApplication)
-    app.setApplicationName("Race Engineer")
+    app.setApplicationName(PRODUCT_NAME)
+    app.setWindowIcon(application_icon())
     app.setStyle("Fusion")
     app.setFont(QFont("Segoe UI", 11))
     root = Path.cwd()
@@ -1137,7 +1143,7 @@ def main() -> int:
         (root / "data").mkdir(exist_ok=True)
         lock = QLockFile(str(root / "data/control-panel.lock"))
         if not lock.tryLock(0):
-            QMessageBox.information(None, "Race Engineer", "The control panel is already running.")
+            QMessageBox.information(None, PRODUCT_NAME, "The control panel is already running.")
             return 1
         (root / "logs").mkdir(exist_ok=True)
         handler = RotatingFileHandler(
@@ -1151,7 +1157,7 @@ def main() -> int:
             root, args.config.resolve(), args.settings.resolve(), preview=args.preview
         )
     except (OSError, ValueError) as error:
-        QMessageBox.critical(None, "Cannot open Race Engineer", str(error))
+        QMessageBox.critical(None, f"Cannot open {PRODUCT_NAME}", str(error))
         return 1
     panel.show()
     result = app.exec()

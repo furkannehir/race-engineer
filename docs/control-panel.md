@@ -1,9 +1,12 @@
-# Desktop radio desk
+# Pitward desktop radio desk
 
 The selected dark, two-column design is implemented as an optional native PySide6
 Windows panel. It wraps the same `voice-iracing` pipeline; it is not another speech queue
 or a browser dashboard. This brings the basic M5 controls forward for real-world testing,
 before adaptive driver memory or natural-language preference commands.
+
+The Pitward wordmark appears in the panel, while the matching multi-resolution icon is
+used for the window, Windows taskbar, and system tray.
 
 ## Launch
 
