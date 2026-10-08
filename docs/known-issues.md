@@ -228,6 +228,25 @@ both Turkish compound replies cited and grounded fuel range and speed correctly.
 [post-change report](evaluations/intelligence-latency-core-compact-cpu-2026-10-07.json) retains
 the per-stage evidence. Real-race validation remains pending.
 
+## INT-008: Live engineer stops after five completed conversations
+
+**Status:** Fixed in simulated live-loop regression - real-race validation pending
+
+**Observed:** 2026-10-07, local panel shakedown
+
+The failed run completed five replies before `panel_error` reported `ValidationError`.
+The live buffer retained six complete exchanges (twelve dialogue entries) by default, while
+`DriverTurn.recent_dialogue` accepted only eight entries. The sixth question therefore tried
+to construct a turn containing ten entries and stopped the worker. Restart cleared the buffer.
+The log omitted validation-field detail, but a simulated live-loop regression reproduced this
+exact failure before the fix.
+
+Configuration and dialogue contracts now share a maximum of twelve complete exchanges
+(twenty-four entries). The default remains six exchanges, and live/replay buffers derive
+their entry count from the validated configuration. Evaluation history uses the same bound.
+Regressions cover zero, default and maximum history, continuing beyond buffer rollover while
+retaining the most recent complete exchanges. Oversized contract history remains rejected.
+
 ## CONV-004: Add contextual race-engineer acknowledgments and reassurance
 
 **Status:** Implemented in the new intelligence path - live validation pending

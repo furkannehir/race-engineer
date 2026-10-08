@@ -166,6 +166,146 @@ def test_escape_before_press_does_not_start_capture():
     asyncio.run(run())
 
 
+def test_radio_cues_are_excluded_and_microphone_is_ready_when_opening_finishes():
+    events = []
+    streams = []
+    spoken_pcm = tone().pcm16
+
+    class Stream:
+        def __init__(self, **kwargs):
+            self.callback = kwargs["callback"]
+            streams.append(self)
+
+        def start(self):
+            events.append("input_started")
+            self.callback(b"\1\0" * 320, 320, None, False)
+
+        def stop(self):
+            events.append("input_stopped")
+
+        def close(self):
+            events.append("input_closed")
+
+    states = iter((False, True, True, True, False))
+    microphone = PushToTalkMicrophone(
+        SttConfig(),
+        stream_factory=Stream,
+        key_down=lambda key: next(states, False) if key == 0x77 else False,
+    )
+
+    async def opened():
+        events.append("open_cue")
+        streams[0].callback(b"\2\0" * 320, 320, None, False)
+        asyncio.get_running_loop().call_soon(
+            streams[0].callback, spoken_pcm, 6400, None, False
+        )
+
+    async def closed():
+        events.append("close_cue")
+        streams[0].callback(b"\3\0" * 320, 320, None, False)
+
+    async def run():
+        clip = await microphone.next_clip(
+            lambda message: events.append("listening"),
+            after_stream_started=opened,
+            after_capture=closed,
+        )
+        await microphone.aclose()
+        return clip
+
+    clip = asyncio.run(run())
+    assert clip is not None and clip.pcm16 == spoken_pcm
+    assert events == [
+        "input_started", "open_cue", "listening", "input_stopped", "close_cue", "input_closed"
+    ]
+
+
+def test_releasing_during_opening_cue_discards_capture_and_has_no_close_cue():
+    events = []
+
+    class Stream:
+        def __init__(self, **kwargs):
+            self.callback = kwargs["callback"]
+
+        def start(self):
+            events.append("started")
+            self.callback(tone().pcm16, 6400, None, False)
+
+        def stop(self):
+            events.append("stopped")
+
+        def close(self):
+            pass
+
+    states = iter((False, True, False))
+    microphone = PushToTalkMicrophone(
+        SttConfig(), stream_factory=Stream,
+        key_down=lambda key: next(states, False) if key == 0x77 else False,
+    )
+
+    async def opened():
+        events.append("open")
+
+    async def closed():
+        events.append("close")
+
+    async def run():
+        with pytest.raises(SpeechInputError, match="capture_empty"):
+            await microphone.next_clip(
+                after_stream_started=opened, after_capture=closed
+            )
+        await microphone.aclose()
+
+    asyncio.run(run())
+    assert events == ["started", "open", "stopped"]
+
+
+def test_cancelling_opening_cue_stops_capture_without_a_closing_cue():
+    events = []
+
+    class Stream:
+        def __init__(self, **kwargs):
+            pass
+
+        def start(self):
+            events.append("started")
+
+        def stop(self):
+            events.append("stopped")
+
+        def close(self):
+            events.append("closed")
+
+    states = iter((False, True))
+    microphone = PushToTalkMicrophone(
+        SttConfig(), stream_factory=Stream,
+        key_down=lambda key: next(states, True) if key == 0x77 else False,
+    )
+
+    async def run():
+        opened_started = asyncio.Event()
+
+        async def opened():
+            events.append("open")
+            opened_started.set()
+            await asyncio.Event().wait()
+
+        async def closed():
+            events.append("close")
+
+        task = asyncio.create_task(microphone.next_clip(
+            after_stream_started=opened, after_capture=closed
+        ))
+        await opened_started.wait()
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+        await microphone.aclose()
+
+    asyncio.run(run())
+    assert events == ["started", "open", "stopped", "closed"]
+
+
 def test_desktop_capture_does_not_treat_iracing_escape_as_exit():
     class Stream:
         def __init__(self, **kwargs):

@@ -120,6 +120,11 @@ and `voice-replay` behavior remain available and independently testable.
 
 ## Freshness and session isolation
 
+`[conversation].history_turns` counts complete driver/engineer exchanges: six by default,
+with zero to twelve supported. Each exchange contributes two dialogue entries. Configuration,
+live/replay buffers and intelligence/evaluation contracts share this bound. Once the buffer
+fills, the oldest exchanges drop out; a longer conversation does not exceed the contract limit.
+
 Live snapshots use current UTC, not a replay clock. There is no placeholder/fabricated
 frame before the first valid telemetry update. Replay frames are rejected in live mode
 even if the general telemetry configuration allows them.

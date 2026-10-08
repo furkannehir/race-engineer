@@ -6,6 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from race_engineer.core.conversation import MAX_DIALOGUE_HISTORY_ENTRIES
 from race_engineer.core.intelligence import (
     ContextTemporalScope,
     EvidenceQuery,
@@ -87,7 +88,7 @@ class IntelligenceEvaluationGroup(IntelligenceEvaluationModel):
     expected: ExpectedContextPlan
     frame_index: int = Field(default=-1, ge=-1)
     tags: tuple[str, ...] = Field(default=(), max_length=20)
-    recent_dialogue: tuple[str, ...] = Field(default=(), max_length=8)
+    recent_dialogue: tuple[str, ...] = Field(default=(), max_length=MAX_DIALOGUE_HISTORY_ENTRIES)
 
     @model_validator(mode="after")
     def validate_questions(self) -> "IntelligenceEvaluationGroup":

@@ -93,7 +93,7 @@ async def intelligence_replay(
 
     engineer = live_intelligence(config.conversation, memory)
     language = reply_language or config.conversation.default_language
-    recent_dialogue: deque[str] = deque(maxlen=config.conversation.history_turns * 2)
+    recent_dialogue: deque[str] = deque(maxlen=config.conversation.history_entry_limit)
     turn = DriverTurn(
         turn_id=(f"replay:{current.frame.session_id}:{current.frame.sequence}:driver:1"),
         transcript=question.strip(),

@@ -28,7 +28,7 @@ the push-to-talk binding dialog. There is no download or cloud fallback.
 ## First shakedown
 
 1. Select the microphone and output. System default is the safest first choice. Output
-   selection affects **Piper replies only**; automatic SAPI calls use Windows' default
+   selection affects **Piper replies and PTT cues**; automatic SAPI calls use Windows' default
    playback device. Set that default to the same headset yourself if needed.
 2. Click **Test mic** and speak for three seconds. It reports a level, without saving
    audio. **Test voice** plays a short Piper radio check; Auto uses English for this test.
@@ -45,7 +45,9 @@ the push-to-talk binding dialog. There is no download or cloud fallback.
    speech readiness. A green iRacing indicator requires accepted, fresh telemetry, not
    just an SDK connection. A stopped panel does not monitor iRacing.
 5. Start stationary in practice. Check English/Turkish questions and automatic calls
-   before committing to a race. Then minimize to the tray and hold PTT to talk normally.
+   before committing to a race. Then minimize to the tray and hold PTT. Wait for the short
+   opening static cue to finish before speaking; release PTT to submit and hear the distinct
+   closing cue. The microphone clip excludes both cues.
 6. Restore from the tray to stop. Closing a running panel asks to stop and quit, then
    waits for cleanup. A reused external model server is left running; a model server
    started by the panel is stopped with its session.
@@ -66,6 +68,22 @@ different audio device after an index change. PTT controller bindings store the 
 name, SDL GUID, device-index hint, control type, and control number. A uniquely reindexed
 device is recovered; a missing or ambiguous device fails closed and asks for a rebind.
 Reconnect changed controller hardware before opening the binding dialog again.
+
+The radio cues follow the selected output device, volume and master mute. Text-only
+CLI sessions suppress them. Cue playback failures disable cues for that session while PTT
+capture continues. Interrupted or empty captures do not play a closing cue.
+
+To listen to the selected cues without iRacing or microphone capture:
+
+```powershell
+Invoke-Item src\race_engineer\stt\assets\radio-open.wav
+Invoke-Item src\race_engineer\stt\assets\radio-close.wav
+```
+
+The selected opening combines soft squelch with the supplied beep; the closing uses a reversed
+beep. The installed WAVs live in `src/race_engineer/stt/assets`. Experimental variants and
+previews have been removed; the retained `scripts/build_radio_cues.py` reproduces this pair.
+Generation source and provenance are documented in the assets folder.
 
 ## Preferences and privacy
 

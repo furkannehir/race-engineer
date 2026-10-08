@@ -6,6 +6,7 @@ from typing import Literal
 from pydantic import Field, JsonValue, model_validator
 
 from race_engineer.core.contracts import Confidence, ContractModel, UtcDatetime
+from race_engineer.core.conversation import MAX_DIALOGUE_HISTORY_ENTRIES
 
 type EngineerLanguage = Literal["en", "tr"]
 type EvidenceKind = Literal["measurement", "derived", "inference", "unknown"]
@@ -53,7 +54,7 @@ class DriverTurn(ContractModel):
     generation: int = Field(ge=0)
     asr_language: EngineerLanguage | None = None
     reply_language: EngineerLanguage | None = None
-    recent_dialogue: tuple[str, ...] = Field(default=(), max_length=8)
+    recent_dialogue: tuple[str, ...] = Field(default=(), max_length=MAX_DIALOGUE_HISTORY_ENTRIES)
 
 
 class SignalSelector(ContractModel):

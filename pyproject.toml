@@ -43,6 +43,9 @@ race-engineer-panel = "race_engineer.ui.app:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+"race_engineer.stt" = ["assets/*.wav", "assets/README.md"]
+
 [tool.pytest.ini_options]
 addopts = "-ra --strict-config --strict-markers"
 testpaths = ["tests"]

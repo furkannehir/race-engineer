@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from race_engineer.application.live_conversation import LiveBridge, live_dialogue, voice_iracing
-from race_engineer.config import AppConfig, SttConfig
+from race_engineer.config import AppConfig, ConversationConfig, SttConfig
 from race_engineer.conversation.live import LiveRaceState, LiveTelemetryUnavailable
 from race_engineer.conversation.replay import ReplayRaceState
 from race_engineer.conversation.session import ConversationSession
@@ -192,17 +192,24 @@ def test_live_dialogue_refreshes_facts_and_closes_microphone(monkeypatch, capsys
     assert "Engineer (tr)" in capsys.readouterr().out
 
 
-def test_live_dialogue_uses_new_intelligence_path_when_supplied(monkeypatch, capsys):
+@pytest.mark.parametrize("history_turns", [0, 6, 12])
+def test_live_dialogue_retains_configured_history_across_long_conversations(
+    monkeypatch, capsys, history_turns
+):
     from test_stt_audio import tone
 
     state = LiveRaceState(3)
     state.update(context())
     captured = []
     prepared_turns = []
+    questions = tuple(
+        "Am I last?" if index == 0 else f"Am I last now? Follow-up {index}."
+        for index in range(max(8, history_turns + 3))
+    )
 
     class Microphone:
         def __init__(self, config):
-            self.clips = iter((tone(), None))
+            self.clips = iter((*[tone()] * len(questions), None))
 
         async def next_clip(self, *, before_capture):
             before_capture()
@@ -212,13 +219,16 @@ def test_live_dialogue_uses_new_intelligence_path_when_supplied(monkeypatch, cap
             pass
 
     class Recognizer:
+        def __init__(self):
+            self.questions = iter(questions)
+
         async def start(self):
             pass
 
         async def transcribe(self, audio):
             return Transcription(
                 status="transcribed",
-                text="Am I last?",
+                text=next(self.questions),
                 language="en",
                 audio_duration_s=1,
             )
@@ -263,7 +273,7 @@ def test_live_dialogue_uses_new_intelligence_path_when_supplied(monkeypatch, cap
     async def run():
         radio = LiveRadio(None)
         await live_dialogue(
-            AppConfig(),
+            AppConfig(conversation=ConversationConfig(history_turns=history_turns)),
             SttConfig(),
             state,
             radio,
@@ -275,8 +285,19 @@ def test_live_dialogue_uses_new_intelligence_path_when_supplied(monkeypatch, cap
         await radio.aclose()
 
     asyncio.run(run())
+    assert len(prepared_turns) == len(captured) == len(questions)
     assert prepared_turns[0].transcript == "Am I last?"
     assert captured[0].text == "Yes, you're last right now."
+    for index, prepared in enumerate(prepared_turns):
+        expected_history = tuple(
+            entry
+            for previous in range(max(0, index - history_turns), index)
+            for entry in (
+                f"driver: {questions[previous]}",
+                f"engineer: {captured[previous].text}",
+            )
+        )
+        assert prepared.recent_dialogue == expected_history
     assert "Engineer (en)" in capsys.readouterr().out
 
 

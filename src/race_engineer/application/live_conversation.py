@@ -37,6 +37,7 @@ from race_engineer.observability import configure_logging
 from race_engineer.stt.buttons import binding_label, legacy_binding
 from race_engineer.stt.capture import PushToTalkMicrophone
 from race_engineer.stt.qwen import QwenSpeechRecognizer
+from race_engineer.stt.radio_cues import RadioCuePlayer
 from race_engineer.tts import tts_factory
 from race_engineer.tts.live_radio import LiveRadio
 from race_engineer.tts.piper import PiperConversationSpeaker
@@ -149,6 +150,7 @@ async def _capture(
     state: LiveRaceState,
     radio: LiveRadio,
     control: LiveControl | None = None,
+    cues: RadioCuePlayer | None = None,
 ) -> tuple[AudioClip | None, int]:
     epoch = state.epoch
 
@@ -158,10 +160,25 @@ async def _capture(
             raise SpeechInputError("live_telemetry_unavailable")
         radio.claim_capture()
         epoch = state.epoch
+        if control and cues is None:
+            control.emit("phase", "listening")
+
+    async def opened() -> None:
+        assert cues is not None
+        await cues.play("open")
         if control:
             control.emit("phase", "listening")
 
     try:
+        if cues is not None:
+            return (
+                await microphone.next_clip(
+                    before_capture=claim,
+                    after_stream_started=opened,
+                    after_capture=lambda: cues.play("close"),
+                ),
+                epoch,
+            )
         return await microphone.next_clip(before_capture=claim), epoch
     finally:
         # next_clip's finally has already stopped the physical microphone stream.
@@ -178,6 +195,7 @@ async def live_dialogue(
     reply_language: RadioLanguage | None,
     control: LiveControl | None = None,
     intelligence: EngineerOrchestrator | None = None,
+    cues: RadioCuePlayer | None = None,
 ) -> None:
     from race_engineer.core.speech_output import SpeechOutputError
 
@@ -191,7 +209,7 @@ async def live_dialogue(
         if intelligence is None
         else None
     )
-    recent_dialogue: deque[str] = deque(maxlen=config.conversation.history_turns * 2)
+    recent_dialogue: deque[str] = deque(maxlen=config.conversation.history_entry_limit)
     turn_sequence = 0
     microphone: PushToTalkMicrophone | None = None
     try:
@@ -221,7 +239,7 @@ async def live_dialogue(
             if control:
                 control.emit("phase", "ready")
             try:
-                capture = asyncio.create_task(_capture(microphone, state, radio, control))
+                capture = asyncio.create_task(_capture(microphone, state, radio, control, cues))
                 try:
                     audio, epoch = await asyncio.shield(capture)
                 except asyncio.CancelledError:
@@ -402,6 +420,12 @@ async def voice_iracing(
     if output_device is not None:
         output_settings["output_device"] = output_device
     radio_tts = RadioTtsConfig.model_validate(output_settings)
+    cues = RadioCuePlayer(
+        output_device=radio_tts.output_device,
+        volume=radio_tts.volume,
+        muted=(lambda: control.muted.is_set()) if control else (lambda: False),
+        enabled=not text_only,
+    )
     state = LiveRaceState(config.conversation.max_snapshot_age_s)
     telemetry_memory = BoundedTelemetryMemory()
     intelligence = live_intelligence(config.conversation, telemetry_memory)
@@ -479,6 +503,7 @@ async def voice_iracing(
                 reply_language,
                 control,
                 intelligence,
+                cues,
             )
         )
         watchdog = asyncio.create_task(bridge.watch_freshness())

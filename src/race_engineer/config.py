@@ -8,6 +8,11 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from race_engineer.core.conversation import (
+    DIALOGUE_HISTORY_ENTRIES_PER_TURN,
+    MAX_CONVERSATION_HISTORY_TURNS,
+)
+
 
 class ConfigModel(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
@@ -151,10 +156,16 @@ class ConversationConfig(ConfigModel):
     # The adapter connects only to literal 127.0.0.1, never a remote host or proxy.
     port: int = Field(default=8087, ge=1, le=65535)
     timeout_s: float = Field(default=30.0, gt=0, le=120, allow_inf_nan=False)
-    history_turns: int = Field(default=6, ge=0, le=12)
+    history_turns: int = Field(default=6, ge=0, le=MAX_CONVERSATION_HISTORY_TURNS)
     max_snapshot_age_s: float = Field(default=3.0, gt=0, le=30, allow_inf_nan=False)
     default_language: Literal["en", "tr"] = "en"
     runtime: ConversationRuntimeConfig = ConversationRuntimeConfig()
+
+    @property
+    def history_entry_limit(self) -> int:
+        """Translate configured exchanges to the flat Context/Core dialogue contract."""
+
+        return self.history_turns * DIALOGUE_HISTORY_ENTRIES_PER_TURN
 
 
 class PttBindingConfig(ConfigModel):

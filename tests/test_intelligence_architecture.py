@@ -4,6 +4,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from pydantic import ValidationError
 
+from race_engineer.config import ConversationConfig
 from race_engineer.core.intelligence import (
     ContextPacket,
     DriverTurn,
@@ -30,6 +31,20 @@ def turn(text: str) -> DriverTurn:
         generation=2,
         asr_language="en",
     )
+
+
+def test_driver_turn_accepts_full_configured_history_but_rejects_an_extra_entry():
+    config = ConversationConfig(history_turns=12)
+    history = tuple(
+        entry
+        for index in range(config.history_turns)
+        for entry in (f"driver: question {index}", f"engineer: reply {index}")
+    )
+    data = turn("Where are we?").model_dump()
+    accepted = DriverTurn.model_validate({**data, "recent_dialogue": history})
+    assert accepted.recent_dialogue == history
+    with pytest.raises(ValidationError, match="recent_dialogue"):
+        DriverTurn.model_validate({**data, "recent_dialogue": (*history, "one extra entry")})
 
 
 def evidence(

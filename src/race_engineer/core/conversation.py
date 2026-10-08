@@ -9,6 +9,10 @@ from race_engineer.core.contracts import ContractModel, RaceContext, UtcDatetime
 
 type RadioLanguage = Literal["en", "tr"]
 
+MAX_CONVERSATION_HISTORY_TURNS = 12
+DIALOGUE_HISTORY_ENTRIES_PER_TURN = 2  # One driver line and one engineer line.
+MAX_DIALOGUE_HISTORY_ENTRIES = MAX_CONVERSATION_HISTORY_TURNS * DIALOGUE_HISTORY_ENTRIES_PER_TURN
+
 
 class RaceQuery(StrEnum):
     POSITION = "position"
