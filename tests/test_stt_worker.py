@@ -94,6 +94,24 @@ def test_persistent_worker_uses_offline_environment_and_cleans_up(tmp_path, monk
     assert worker.stdin.lines[0]["sample_rate_hz"] == 16000
 
 
+def test_frozen_worker_executable_replaces_python_module_command(tmp_path, monkeypatch):
+    process = FakeProcess([{"ready": True}])
+    calls = []
+    worker = tmp_path / "PitwardSTTWorker.exe"
+    worker.touch()
+
+    async def create(*args, **kwargs):
+        calls.append((args, kwargs))
+        return process
+
+    monkeypatch.setattr("race_engineer.stt.qwen.asyncio.create_subprocess_exec", create)
+    recognizer = QwenSpeechRecognizer(runtime_config(tmp_path, worker_path=worker))
+    asyncio.run(recognizer.start())
+    args = calls[0][0]
+    assert args[0] == str(worker.resolve())
+    assert "-m" not in args and "race_engineer.stt.worker" not in args
+
+
 def test_timeout_kills_worker_and_does_not_leave_inference_running(tmp_path, monkeypatch):
     worker = FakeProcess([{"ready": True}])
 

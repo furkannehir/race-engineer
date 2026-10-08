@@ -1,0 +1,142 @@
+{
+  "schema_version": "pitward-components.v1",
+  "component_set": "1",
+  "artifacts": [
+    {
+      "id": "llama-cpp-cpu-b10964",
+      "kind": "zip",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b10964/llama-b10964-bin-win-cpu-x64.zip",
+      "sha256": "917f39c076402c421224824607397af20f53625a60defc20e8dd22446bf4c5d7",
+      "size": 18427629,
+      "destination": "conversation/llama-b10964-cpu",
+      "required": "llama-server.exe",
+      "license": "MIT"
+    },
+    {
+      "id": "qwen3-4b-instruct-2507-q4-k-m",
+      "kind": "file",
+      "url": "https://huggingface.co/unsloth/Qwen3-4B-Instruct-2507-GGUF/resolve/a06e946bb6b655725eafa393f4a9745d460374c9/Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+      "sha256": "3605803b982cb64aead44f6c1b2ae36e3acdb41d8e46c8a94c6533bc4c67e597",
+      "size": 2497281120,
+      "destination": "conversation/Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+      "license": "Apache-2.0"
+    },
+    {
+      "id": "qwen3-asr-config",
+      "kind": "file",
+      "url": "https://huggingface.co/Qwen/Qwen3-ASR-0.6B-hf/resolve/7f1569a48a89f3e3f4dc3a5c9d28bddd903bc76c/config.json",
+      "sha256": "9eecf6f1b383e343889c2e6010e632590fa57d4bc678e151c7d6a160a0dfb04a",
+      "size": 2398,
+      "destination": "stt/Qwen3-ASR-0.6B-hf/config.json",
+      "license": "Apache-2.0"
+    },
+    {
+      "id": "qwen3-asr-generation-config",
+      "kind": "file",
+      "url": "https://huggingface.co/Qwen/Qwen3-ASR-0.6B-hf/resolve/7f1569a48a89f3e3f4dc3a5c9d28bddd903bc76c/generation_config.json",
+      "sha256": "9939fc9388b79bd70757f938b87381e817173d6a6158f5af6506c0b73e775c3c",
+      "size": 165,
+      "destination": "stt/Qwen3-ASR-0.6B-hf/generation_config.json",
+      "license": "Apache-2.0"
+    },
+    {
+      "id": "qwen3-asr-processor-config",
+      "kind": "file",
+      "url": "https://huggingface.co/Qwen/Qwen3-ASR-0.6B-hf/resolve/7f1569a48a89f3e3f4dc3a5c9d28bddd903bc76c/processor_config.json",
+      "sha256": "bc0b230081b44e629dd5b9045b78495615c1831b4b9f4cffe97bd37e82a6156a",
+      "size": 487,
+      "destination": "stt/Qwen3-ASR-0.6B-hf/processor_config.json",
+      "license": "Apache-2.0"
+    },
+    {
+      "id": "qwen3-asr-tokenizer-config",
+      "kind": "file",
+      "url": "https://huggingface.co/Qwen/Qwen3-ASR-0.6B-hf/resolve/7f1569a48a89f3e3f4dc3a5c9d28bddd903bc76c/tokenizer_config.json",
+      "sha256": "945e980986de2ca7768f3326bfdbb4fbea3406f972b8ae0be233089f2b253c11",
+      "size": 998,
+      "destination": "stt/Qwen3-ASR-0.6B-hf/tokenizer_config.json",
+      "license": "Apache-2.0"
+    },
+    {
+      "id": "qwen3-asr-chat-template",
+      "kind": "file",
+      "url": "https://huggingface.co/Qwen/Qwen3-ASR-0.6B-hf/resolve/7f1569a48a89f3e3f4dc3a5c9d28bddd903bc76c/chat_template.jinja",
+      "sha256": "f50e6b694fbf4a683206e37869990d68333fe95d285730f084c838a34b0d98c2",
+      "size": 1434,
+      "destination": "stt/Qwen3-ASR-0.6B-hf/chat_template.jinja",
+      "license": "Apache-2.0"
+    },
+    {
+      "id": "qwen3-asr-tokenizer",
+      "kind": "file",
+      "url": "https://huggingface.co/Qwen/Qwen3-ASR-0.6B-hf/resolve/7f1569a48a89f3e3f4dc3a5c9d28bddd903bc76c/tokenizer.json",
+      "sha256": "fe1fad59be22a41ee293363fcf95fdedbc7c93f3b49270b1d2e18bd1399a7a05",
+      "size": 11429653,
+      "destination": "stt/Qwen3-ASR-0.6B-hf/tokenizer.json",
+      "license": "Apache-2.0"
+    },
+    {
+      "id": "qwen3-asr-model",
+      "kind": "file",
+      "url": "https://huggingface.co/Qwen/Qwen3-ASR-0.6B-hf/resolve/7f1569a48a89f3e3f4dc3a5c9d28bddd903bc76c/model.safetensors",
+      "sha256": "d3f212dd20abecd315d830bc54ae3865e56ebfc3276484e57b771288ba27fd35",
+      "size": 1564928088,
+      "destination": "stt/Qwen3-ASR-0.6B-hf/model.safetensors",
+      "license": "Apache-2.0"
+    },
+    {
+      "id": "piper-english-model",
+      "kind": "file",
+      "url": "https://huggingface.co/rhasspy/piper-voices/resolve/c10ece1aade47bb51c153c893d14e5bf8e5b7117/en/en_US/ljspeech/high/en_US-ljspeech-high.onnx",
+      "sha256": "5d4f08ba6a2a48c44592eed3ce56bf85e9de3dd4e20df90541ae68a8310c029a",
+      "size": 114199011,
+      "destination": "tts/voices/en_US-ljspeech-high.onnx",
+      "license": "Public-domain dataset; Piper engine GPL-3.0"
+    },
+    {
+      "id": "piper-english-config",
+      "kind": "file",
+      "url": "https://huggingface.co/rhasspy/piper-voices/resolve/c10ece1aade47bb51c153c893d14e5bf8e5b7117/en/en_US/ljspeech/high/en_US-ljspeech-high.onnx.json",
+      "sha256": "7e1f4634af596d83cca997fb7a931ba80b70f8a316a2655ee69c55365e0ace14",
+      "size": 4970,
+      "destination": "tts/voices/en_US-ljspeech-high.onnx.json",
+      "license": "Public-domain dataset; Piper engine GPL-3.0"
+    },
+    {
+      "id": "piper-english-model-card",
+      "kind": "file",
+      "url": "https://huggingface.co/rhasspy/piper-voices/resolve/c10ece1aade47bb51c153c893d14e5bf8e5b7117/en/en_US/ljspeech/high/MODEL_CARD",
+      "sha256": "289f7421072d689a3d91f6c632f486af46f9b8b04417536104a4ea667b8a394b",
+      "size": 513,
+      "destination": "tts/voices/en_US-ljspeech-high.MODEL_CARD",
+      "license": "Public-domain dataset"
+    },
+    {
+      "id": "piper-turkish-model",
+      "kind": "file",
+      "url": "https://huggingface.co/rhasspy/piper-voices/resolve/c10ece1aade47bb51c153c893d14e5bf8e5b7117/tr/tr_TR/dfki/medium/tr_TR-dfki-medium.onnx",
+      "sha256": "2844717f524ab965d3fe86e60562cbb601d3e456836efcc2196cc3a14112a8fb",
+      "size": 63201294,
+      "destination": "tts/voices/tr_TR-dfki-medium.onnx",
+      "license": "CC BY-NC-SA 4.0 dataset; Piper engine GPL-3.0"
+    },
+    {
+      "id": "piper-turkish-config",
+      "kind": "file",
+      "url": "https://huggingface.co/rhasspy/piper-voices/resolve/c10ece1aade47bb51c153c893d14e5bf8e5b7117/tr/tr_TR/dfki/medium/tr_TR-dfki-medium.onnx.json",
+      "sha256": "13ebd7810f1b61b5027583cf3131a0a233b6ea81c38f2200ebc4ff41c3cca039",
+      "size": 4960,
+      "destination": "tts/voices/tr_TR-dfki-medium.onnx.json",
+      "license": "CC BY-NC-SA 4.0 dataset; Piper engine GPL-3.0"
+    },
+    {
+      "id": "piper-turkish-model-card",
+      "kind": "file",
+      "url": "https://huggingface.co/rhasspy/piper-voices/resolve/c10ece1aade47bb51c153c893d14e5bf8e5b7117/tr/tr_TR/dfki/medium/MODEL_CARD",
+      "sha256": "a3e08c57b9c6d428f8e4fb146512c8b1fb96a68c99d43820ed1dfea6d39cb35f",
+      "size": 319,
+      "destination": "tts/voices/tr_TR-dfki-medium.MODEL_CARD",
+      "license": "CC BY-NC-SA 4.0 dataset"
+    }
+  ]
+}

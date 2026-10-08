@@ -1,0 +1,102 @@
+name: windows-package
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install application build environment
+        run: python -m pip install -e ".[dev,desktop,build]"
+      - name: Test source
+        run: |
+          pytest
+          ruff check .
+          mypy
+      - name: Create speech worker environments
+        shell: pwsh
+        run: |
+          python -m venv build-env/stt
+          python -m venv build-env/tts
+          ./build-env/stt/Scripts/python.exe -m pip install torch==2.14.0 --index-url https://download.pytorch.org/whl/cpu
+          ./build-env/stt/Scripts/python.exe -m pip install -e ".[asr,build]"
+          ./build-env/tts/Scripts/python.exe -m pip install -e ".[radio,build]"
+      - name: Build portable Windows package
+        shell: pwsh
+        run: |
+          $tag = if ($env:GITHUB_REF_TYPE -eq "tag") { $env:GITHUB_REF_NAME } else { "" }
+          ./scripts/build_windows.ps1 `
+            -MainPython "python" `
+            -SttPython "build-env/stt/Scripts/python.exe" `
+            -TtsPython "build-env/tts/Scripts/python.exe" `
+            -Tag $tag
+      - name: Smoke-test frozen executables
+        shell: pwsh
+        run: |
+          $env:PITWARD_DATA_DIR = "$env:RUNNER_TEMP/Pitward"
+          $pitward = Start-Process `
+            -FilePath "build/package/dist/Pitward/Pitward.exe" `
+            -ArgumentList @("--preview", "--smoke-test") `
+            -WindowStyle Hidden -Wait -PassThru
+          if ($pitward.ExitCode -ne 0) { throw "Pitward smoke test failed" }
+          & build/package/dist/Pitward/PitwardComponents.exe status
+          if ($LASTEXITCODE -ne 1) { throw "Unexpected component status result" }
+          & build/package/dist/Pitward/workers/PitwardSTTWorker/PitwardSTTWorker.exe --help
+          if ($LASTEXITCODE -ne 0) { throw "STT worker did not start" }
+          & build/package/dist/Pitward/workers/PitwardTTSWorker/PitwardTTSWorker.exe --help
+          if ($LASTEXITCODE -ne 0) { throw "TTS worker did not start" }
+      - name: Build Windows installer
+        shell: pwsh
+        run: |
+          choco install innosetup --version=6.7.1 --yes --no-progress
+          ./scripts/build_installer.ps1 -MainPython "python"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pitward-windows-${{ github.sha }}
+          path: |
+            dist/Pitward-*.zip
+            dist/Pitward-Setup-*.exe
+            dist/SHA256SUMS.txt
+          retention-days: 14
+
+  publish-draft:
+    if: github.ref_type == 'tag'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Confirm release clearance
+        run: python scripts/check_release_clearance.py
+      - uses: actions/download-artifact@v5
+        with:
+          name: pitward-windows-${{ github.sha }}
+          path: dist
+      - name: Create draft GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "${{ github.ref_name }}"
+          dist/Pitward-*.zip
+          dist/Pitward-Setup-*.exe
+          dist/SHA256SUMS.txt
+          --draft
+          --verify-tag
+          --generate-notes
+          --title "Pitward ${{ github.ref_name }}"

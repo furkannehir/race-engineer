@@ -40,18 +40,28 @@ class PiperConversationSpeaker:
     async def _start(self) -> None:
         if self._process is not None and self._process.returncode is None:
             return
-        if not self._config.python_path.is_file():
+        worker = self._config.worker_path
+        if worker is None and not self._config.python_path.is_file():
+            raise SpeechOutputError("tts_runtime_missing")
+        if worker is not None and not worker.is_file():
             raise SpeechOutputError("tts_runtime_missing")
         for path in (self._config.english_model_path, self._config.turkish_model_path):
             if not path.is_file() or not path.with_suffix(".onnx.json").is_file():
                 raise SpeechOutputError("tts_voice_missing")
         environment = dict(os.environ)
         environment.update(PYTHONIOENCODING="utf-8", HF_HUB_OFFLINE="1")
+        command = (
+            [str(worker.resolve())]
+            if worker is not None
+            else [
+                str(self._config.python_path.resolve()),
+                "-u",
+                "-m",
+                "race_engineer.tts.piper_worker",
+            ]
+        )
         arguments = [
-            str(self._config.python_path.resolve()),
-            "-u",
-            "-m",
-            "race_engineer.tts.piper_worker",
+            *command,
             "--english-model",
             str(self._config.english_model_path.resolve()),
             "--turkish-model",

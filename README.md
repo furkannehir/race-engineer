@@ -77,6 +77,9 @@ start the microphone just by opening the window. See the [control panel guide](d
 for audio checks, steering-wheel/controller binding, preferences, tray controls and
 current limitations.
 
+Versioned portable Windows builds, installers and GitHub releases are documented in the
+[distribution guide](docs/distribution.md).
+
 Do not run a separate live engineer CLI alongside the panel.
 
 Inspect or update the default local driver profile:

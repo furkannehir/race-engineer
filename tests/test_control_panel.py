@@ -17,6 +17,7 @@ from PySide6.QtWidgets import QApplication, QCheckBox, QDialog, QDialogButtonBox
 from race_engineer.application.control import LiveControl
 from race_engineer.config import PttBindingConfig
 from race_engineer.core.speech_input import SpeechInputError
+from race_engineer.installation import Installation
 from race_engineer.memory import SqliteDriverProfileRepository
 from race_engineer.ui.app import BindingDialog, RadioDesk
 from race_engineer.ui.branding import PRODUCT_NAME
@@ -323,4 +324,26 @@ def test_preview_never_starts_hardware_or_persists_settings(app, tmp_path):
     panel.volume.setValue(12)
     assert panel.worker is None and not path.exists()
     assert "Design preview" in panel.notice.text()
+    panel.close()
+
+
+def test_packaged_first_launch_requires_local_component_setup(app, tmp_path):
+    installation = Installation.discover(
+        environ={"LOCALAPPDATA": str(tmp_path / "local")},
+        executable=tmp_path / "program/Pitward.exe",
+        bundle_root=ROOT,
+        frozen=True,
+    )
+    panel = RadioDesk(
+        installation.install_root,
+        ROOT / "config/default.toml",
+        installation.settings_path,
+        devices=([], []),
+        installation=installation,
+    )
+    panel.show()
+    app.processEvents()
+    assert not panel.start_button.isEnabled()
+    assert panel.setup_components.isVisible()
+    assert "not installed" in panel.notice.text()
     panel.close()

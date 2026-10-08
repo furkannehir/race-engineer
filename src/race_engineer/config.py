@@ -205,6 +205,7 @@ class PttBindingConfig(ConfigModel):
 class SttConfig(ConfigModel):
     adapter: Literal["qwen3-asr"] = "qwen3-asr"
     python_path: Path = Path("data/stt-prototype/runtime/Scripts/python.exe")
+    worker_path: Path | None = None
     model_path: Path = Path("data/stt-prototype/Qwen3-ASR-0.6B-hf")
     device: Literal["cpu", "cuda"] = "cpu"
     threads: int = Field(default=8, ge=1, le=32)
@@ -227,6 +228,7 @@ class RadioTtsConfig(ConfigModel):
     enabled: bool = True
     adapter: Literal["piper"] = "piper"
     python_path: Path = Path("data/tts-prototype/runtime/Scripts/python.exe")
+    worker_path: Path | None = None
     english_model_path: Path = Path("data/tts-prototype/voices/en_US-ljspeech-high.onnx")
     turkish_model_path: Path = Path("data/tts-prototype/voices/tr_TR-dfki-medium.onnx")
     output_device: int | None = Field(default=None, ge=0)

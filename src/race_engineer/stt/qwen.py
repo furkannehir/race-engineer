@@ -40,7 +40,10 @@ class QwenSpeechRecognizer:
     async def _start(self) -> None:
         if self._process is not None and self._process.returncode is None:
             return
-        if not self._config.python_path.is_file():
+        worker = self._config.worker_path
+        if worker is None and not self._config.python_path.is_file():
+            raise SpeechInputError("stt_runtime_missing")
+        if worker is not None and not worker.is_file():
             raise SpeechInputError("stt_runtime_missing")
         if not self._config.model_path.is_dir():
             raise SpeechInputError("stt_model_missing")
@@ -51,11 +54,18 @@ class QwenSpeechRecognizer:
             HF_HUB_DISABLE_TELEMETRY="1",
             PYTHONIOENCODING="utf-8",
         )
+        command = (
+            (str(worker.resolve()),)
+            if worker is not None
+            else (
+                str(self._config.python_path.resolve()),
+                "-u",
+                "-m",
+                "race_engineer.stt.worker",
+            )
+        )
         self._process = await start_owned_process(
-            str(self._config.python_path.resolve()),
-            "-u",
-            "-m",
-            "race_engineer.stt.worker",
+            *command,
             "--model",
             str(self._config.model_path.resolve()),
             "--device",

@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import logging
 import os
+import subprocess
 import sys
 import uuid
 from collections.abc import Callable
@@ -11,8 +12,16 @@ from datetime import UTC, datetime
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-from PySide6.QtCore import QLockFile, QSignalBlocker, QSize, Qt, QThread, QTimer, Signal
-from PySide6.QtGui import QAction, QCloseEvent, QFont, QKeyEvent, QKeySequence, QMouseEvent
+from PySide6.QtCore import QLockFile, QSignalBlocker, QSize, Qt, QThread, QTimer, QUrl, Signal
+from PySide6.QtGui import (
+    QAction,
+    QCloseEvent,
+    QDesktopServices,
+    QFont,
+    QKeyEvent,
+    QKeySequence,
+    QMouseEvent,
+)
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -33,10 +42,12 @@ from PySide6.QtWidgets import (
 )
 
 from race_engineer.application.control import LiveControl
+from race_engineer.build_identity import read_build_identity
 from race_engineer.config import AppConfig, PttBindingConfig, load_config
 from race_engineer.core.contracts import PreferenceCommand
 from race_engineer.core.enums import PreferenceScope, PreferenceSource
 from race_engineer.core.speech_input import SpeechInputError
+from race_engineer.installation import Installation
 from race_engineer.memory import (
     CommunicationPreferences,
     DriverMemoryError,
@@ -53,7 +64,12 @@ from race_engineer.stt.buttons import (
 from race_engineer.stt.capture import input_devices
 from race_engineer.tts.devices import output_devices
 from race_engineer.ui import icons as qta
-from race_engineer.ui.branding import PRODUCT_NAME, application_icon, panel_logo
+from race_engineer.ui.branding import (
+    PRODUCT_NAME,
+    application_icon,
+    panel_logo,
+    set_windows_app_id,
+)
 from race_engineer.ui.runtime import (
     run_engineer,
     run_until_stopped,
@@ -419,11 +435,17 @@ class RadioDesk(QWidget):
         preview: bool = False,
         devices: tuple[list[dict[str, object]], list[dict[str, object]]] | None = None,
         profile_repository: SqliteDriverProfileRepository | None = None,
+        installation: Installation | None = None,
     ) -> None:
         super().__init__()
         self.root, self.config_path, self.settings_path = root, config_path, settings_path
+        self.installation = installation
         self.preview = preview
-        self.config = load_config(config_path)
+        loaded_config = load_config(config_path)
+        self.config = installation.apply_to(loaded_config) if installation else loaded_config
+        self._missing_components = (
+            installation.missing_required_components(self.config) if installation else ()
+        )
         self.settings = PanelSettings.from_config(self.config)
         loaded_legacy: CommunicationPreferences | None = None
         self._settings_error = ""
@@ -494,6 +516,10 @@ class RadioDesk(QWidget):
         if self._settings_error:
             self.notice.setText(self._settings_error)
             self.start_button.setEnabled(False)
+        elif self._missing_components:
+            self.notice.setText(
+                "Local AI components are not installed yet. Complete setup before starting."
+            )
         if preview:
             self._telemetry_ready = self._models_ready = True
             self._phase = "ready"
@@ -636,12 +662,22 @@ class RadioDesk(QWidget):
         self.notice.setWordWrap(True)
         self.notice.setAccessibleName("Session status message")
         right.addWidget(self.notice)
+        self.setup_components = QPushButton("Set up local AI components")
+        self.setup_components.setProperty("role", "primary")
+        self.setup_components.setVisible(bool(self._missing_components))
+        right.addWidget(self.setup_components, 0, Qt.AlignmentFlag.AlignLeft)
         right.addStretch(1)
         main.addLayout(right, 6)
         outer.addWidget(divider())
         footer = QHBoxLayout()
         footer.setContentsMargins(32, 18, 28, 18)
         footer.addWidget(label("Runs locally on this PC", "muted"), 1)
+        self.about_button = QPushButton(f"About {PRODUCT_NAME}")
+        self.about_button.setProperty("role", "link")
+        footer.addWidget(self.about_button)
+        self.releases_button = QPushButton("Releases & updates")
+        self.releases_button.setProperty("role", "link")
+        footer.addWidget(self.releases_button)
         self.minimize_button = QPushButton("Minimize to tray")
         self.minimize_button.setProperty("role", "primary")
         footer.addWidget(self.minimize_button)
@@ -730,6 +766,9 @@ class RadioDesk(QWidget):
         self.binding.clicked.connect(self._change_binding)
         self.change_binding.clicked.connect(self._change_binding)
         self.preferences.clicked.connect(self._preferences)
+        self.about_button.clicked.connect(self._about)
+        self.releases_button.clicked.connect(self._open_releases)
+        self.setup_components.clicked.connect(self._setup_local_components)
         self.test_mic.clicked.connect(lambda: self._start("mic"))
         self.test_voice.clicked.connect(lambda: self._start("voice"))
         self.volume.valueChanged.connect(lambda value: self.volume_label.setText(f"{value}%"))
@@ -919,6 +958,55 @@ class RadioDesk(QWidget):
             )
             self._persist_preferences(candidate, changed)
 
+    def _about(self) -> None:
+        identity = read_build_identity(self.root)
+        QMessageBox.about(
+            self,
+            f"About {PRODUCT_NAME}",
+            f"{PRODUCT_NAME} {identity.version}\n"
+            f"Build {identity.commit}\n\n"
+            "A local race engineer for iRacing.\n"
+            "Telemetry, speech, and conversation stay on this PC.",
+        )
+
+    def _open_releases(self) -> None:
+        QDesktopServices.openUrl(
+            QUrl("https://github.com/furkannehir/race-engineer/releases/latest")
+        )
+
+    def _setup_local_components(self) -> None:
+        if self.installation is None or not self.installation.frozen:
+            return
+        installer = self.installation.component_installer_path
+        if not installer.is_file():
+            self.notice.setText("The component installer is missing. Reinstall Pitward.")
+            return
+        answer = QMessageBox.question(
+            self,
+            "Set up local AI components?",
+            "Pitward will download about 4.1 GB of pinned local models and a CPU runtime.\n\n"
+            "The Qwen models use Apache 2.0 terms. Piper uses GPL-3.0; the bundled "
+            "Turkish voice dataset is CC BY-NC-SA 4.0. Full notices are included with "
+            "Pitward.\n\nContinue with the download?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            subprocess.Popen(
+                [str(installer), "install", "--accept-third-party-licenses"],
+                cwd=self.installation.install_root,
+                creationflags=getattr(subprocess, "CREATE_NEW_CONSOLE", 0),
+            )
+        except OSError:
+            self.notice.setText("The component setup could not be started.")
+            return
+        self.setup_components.setEnabled(False)
+        self.notice.setText(
+            "Component setup is running in a separate window. Restart Pitward when it finishes."
+        )
+
     def _start_or_stop(self) -> None:
         if self.worker:
             self._stop()
@@ -1075,7 +1163,11 @@ class RadioDesk(QWidget):
             if active
             else "Start engineer"
         )
-        self.start_button.setEnabled(self._phase != "stopping" and not self._settings_error)
+        self.start_button.setEnabled(
+            self._phase != "stopping"
+            and not self._settings_error
+            and not self._missing_components
+        )
         self.tray_stop.setEnabled(self.worker is not None)
         self.tray.setToolTip(f"{PRODUCT_NAME} — {heading}")
         for control in self._settings_controls:
@@ -1122,44 +1214,63 @@ class RadioDesk(QWidget):
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=f"{PRODUCT_NAME} desktop control panel")
-    parser.add_argument("--config", type=Path, default=Path("config/default.toml"))
-    parser.add_argument("--settings", type=Path, default=Path("data/control-panel.json"))
+    parser.add_argument("--config", type=Path)
+    parser.add_argument("--settings", type=Path)
     parser.add_argument("--preview", action="store_true", help="design only; never opens hardware")
+    parser.add_argument("--smoke-test", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
     # A pythonw launch has no console. Do not persist printed conversation text.
     if sys.stdout is None:
         sys.stdout = open(os.devnull, "w", encoding="utf-8")  # noqa: SIM115
     if sys.stderr is None:
         sys.stderr = open(os.devnull, "w", encoding="utf-8")  # noqa: SIM115
+    set_windows_app_id()
     app = QApplication.instance() or QApplication(sys.argv[:1])
     assert isinstance(app, QApplication)
     app.setApplicationName(PRODUCT_NAME)
     app.setWindowIcon(application_icon())
     app.setStyle("Fusion")
     app.setFont(QFont("Segoe UI", 11))
-    root = Path.cwd()
+    installation = Installation.discover()
+    root = installation.install_root
+    config_path = args.config.resolve() if args.config else installation.config_path
+    settings_path = args.settings.resolve() if args.settings else installation.settings_path
     lock: QLockFile | None = None
     if not args.preview:
-        (root / "data").mkdir(exist_ok=True)
-        lock = QLockFile(str(root / "data/control-panel.lock"))
+        installation.data_root.mkdir(parents=True, exist_ok=True)
+        lock = QLockFile(str(installation.data_root / "control-panel.lock"))
         if not lock.tryLock(0):
             QMessageBox.information(None, PRODUCT_NAME, "The control panel is already running.")
             return 1
-        (root / "logs").mkdir(exist_ok=True)
+        installation.logs_root.mkdir(parents=True, exist_ok=True)
         handler = RotatingFileHandler(
-            root / "logs/control-panel.jsonl", maxBytes=2_000_000, backupCount=2, encoding="utf-8"
+            installation.logs_root / "control-panel.jsonl",
+            maxBytes=2_000_000,
+            backupCount=2,
+            encoding="utf-8",
         )
         handler.setFormatter(JsonFormatter())
         logging.getLogger().addHandler(handler)
         logging.getLogger().setLevel(logging.INFO)
     try:
         panel = RadioDesk(
-            root, args.config.resolve(), args.settings.resolve(), preview=args.preview
+            root,
+            config_path,
+            settings_path,
+            preview=args.preview,
+            installation=installation,
         )
     except (OSError, ValueError) as error:
         QMessageBox.critical(None, f"Cannot open {PRODUCT_NAME}", str(error))
         return 1
     panel.show()
+    if args.smoke_test:
+        app.processEvents()
+        valid = not panel.windowIcon().isNull() and panel.brand_logo.pixmap() is not None
+        panel.close()
+        if lock:
+            lock.unlock()
+        return 0 if valid else 2
     result = app.exec()
     if lock:
         lock.unlock()

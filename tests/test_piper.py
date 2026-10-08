@@ -76,6 +76,24 @@ def test_worker_reused_for_both_languages_and_text_is_only_pipe_data(tmp_path, m
     assert "shell" not in kwargs
 
 
+def test_frozen_worker_executable_replaces_python_module_command(tmp_path, monkeypatch):
+    process = FakeProcess([{"ready": True}])
+    calls = []
+    worker = tmp_path / "PitwardTTSWorker.exe"
+    worker.touch()
+
+    async def create(*args, **kwargs):
+        calls.append((args, kwargs))
+        return process
+
+    monkeypatch.setattr("race_engineer.tts.piper.asyncio.create_subprocess_exec", create)
+    speaker = PiperConversationSpeaker(settings(tmp_path, worker_path=worker))
+    asyncio.run(speaker.start())
+    args = calls[0][0]
+    assert args[0] == str(worker.resolve())
+    assert "-m" not in args and "race_engineer.tts.piper_worker" not in args
+
+
 @pytest.mark.parametrize(
     "bad",
     [
