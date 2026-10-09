@@ -13,6 +13,11 @@ planner and only two produced speech. One of those misinterpreted a presence che
 position request. These results do not establish MVP accuracy or predictable latency.
 The next experiment is an isolated local multilingual Laya interpreter evaluation, not a
 live replacement. Preserve the earlier rejected Laya adapter results described below.
+The [first isolated screening](laya-interpreter-experiment.md) reused the pinned Laya 0.3.20
+checkpoint without downloads or training. Plain-text CPU inference had a 537 ms median and
+636 ms p95, but passed only 4/56 component expectations (28 cases repeated twice), with
+0/28 Turkish attempts. It is not promoted; the question interface/checkpoint needs further
+investigation. Qwen v6 remains live, and INT-07 accuracy/endurance gates remain open.
 
 The earlier prototype checkpoint and milestone accounting follow; functional progress is
 not equivalent to passing the latest live shakedown.
