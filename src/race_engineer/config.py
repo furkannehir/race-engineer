@@ -38,6 +38,7 @@ class PrivacyConfig(ConfigModel):
     record_raw_telemetry: bool = False
     record_generator_prompts: bool = False
     record_generator_outputs: bool = False
+    record_radio_text: bool = False
 
 
 class HistoryConfig(ConfigModel):

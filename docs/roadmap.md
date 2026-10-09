@@ -1,10 +1,21 @@
 # Working roadmap
 
-Updated 2026-10-04. This is the current progress/backlog companion to the original
+Updated 2026-10-09. This is the current progress/backlog companion to the original
 [implementation plan](personalized-ai-race-engineer-implementation-plan.docx), not a claim
 that every original milestone exit criterion has been formally validated.
 
 ## Current checkpoint
+
+October 9 checkpoint: v6 remains the live development baseline. Correlated radio diagnostics
+now distinguish capture, ASR, interpretation, Core, evidence refresh and voice delivery.
+The latest CPU-only live session transcribed 12 questions, but 10 timed out in the Context
+planner and only two produced speech. One of those misinterpreted a presence check as a
+position request. These results do not establish MVP accuracy or predictable latency.
+The next experiment is an isolated local multilingual Laya interpreter evaluation, not a
+live replacement. Preserve the earlier rejected Laya adapter results described below.
+
+The earlier prototype checkpoint and milestone accounting follow; functional progress is
+not equivalent to passing the latest live shakedown.
 
 The driver has tried the combined live iRacing prototype and considers it sufficient to
 continue development. Short-input recognition, voice quality, and conversational reactions
@@ -180,6 +191,27 @@ should share the validated service later. CONV-004 is scheduled in CE-05, not ye
    stable intelligence workload; AMD support still requires an actual AMD test.
 10. Proactive usefulness learning remains separate and shadow-only until independently
    labeled evidence justifies promotion.
+
+## Future research: after the MVP
+
+These are explicitly deferred research directions, not MVP dependencies or claims that
+training will automatically improve speed or accuracy. The MVP uses existing local models.
+
+- **RES-01: purpose-trained radio interpreter.** Investigate a multilingual sentence encoder
+  such as MiniLM with SetFit or another lightweight learning method for English/Turkish radio
+  interpretation. Cover natural paraphrases, short inputs, dialogue references, mixed purposes,
+  out-of-scope requests and uncertainty rather than a prescribed spoken command set. This
+  needs suitable domain examples, independent evaluation and CPU resource measurements;
+  collecting a training corpus and training a model are not current tasks.
+- **RES-02: specialize the Core/response model.** Investigate adapting the local conversational
+  model to a calm race-engineer teammate style and supported evidence-based reasoning.
+  Application code still owns telemetry retrieval, arithmetic, provenance, freshness and final
+  grounding. Do not train memorized race values into answers, weaken safety boundaries, or assume
+  that fine-tuning the same model makes inference cheaper. Compare quality and latency against
+  the unadapted baseline before adoption.
+
+The immediate Laya experiment evaluates an existing checkpoint without training. Generic
+"copy/checking" acknowledgments remain a later UX discussion, not part of this experiment.
 
 ## Constraints carried forward
 

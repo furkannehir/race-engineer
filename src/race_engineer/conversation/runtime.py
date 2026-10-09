@@ -233,6 +233,14 @@ class ConversationServer:
             if await asyncio.to_thread(model_ready, self.config.port, self.config.model):
                 self.effective = candidate
                 self.notify("compute", f"{candidate.mode}:{candidate.backend}")
+                _LOGGER.info(
+                    "local conversation runtime ready",
+                    extra={"event": "conversation_runtime_ready", "mode": candidate.mode,
+                           "backend": candidate.backend, "model": self.config.model,
+                           "threads": self.config.runtime.threads,
+                           "gpu_layers": candidate.gpu_layers,
+                           "context_size": self.config.runtime.context_size},
+                )
                 return
             await asyncio.sleep(0.25)
         raise ConversationRuntimeError("model_startup_timeout")
@@ -240,6 +248,11 @@ class ConversationServer:
     async def start(self) -> None:
         if await asyncio.to_thread(model_ready, self.config.port, self.config.model):
             self.notify("compute", "external:unmanaged")
+            _LOGGER.info(
+                "reusing external conversation runtime",
+                extra={"event": "conversation_runtime_ready", "mode": "external",
+                       "backend": "unmanaged", "model": self.config.model},
+            )
             return
         self.notify("phase", "loading_model")
         candidates, skipped_reason = await runtime_candidates(self.root, self.config.runtime)

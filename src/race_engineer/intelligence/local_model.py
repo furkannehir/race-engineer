@@ -4,10 +4,12 @@ import asyncio
 import http.client
 import json
 import math
+import time
 from collections.abc import Callable
 from typing import Protocol
 
 from race_engineer.config import ConversationConfig
+from race_engineer.radio_diagnostics import error_code, model_stage, radio_event
 
 
 class LocalIntelligenceError(Exception):
@@ -140,6 +142,10 @@ class LocalJsonModel:
         schema: dict[str, object],
         max_tokens: int = 1024,
     ) -> object:
+        started = time.perf_counter()
+        stage = model_stage()
+        radio_event("radio_model_started", stage=stage, max_tokens=max_tokens,
+                    timeout_s=self._config.timeout_s)
         try:
             result, metrics = await asyncio.wait_for(
                 asyncio.to_thread(
@@ -152,9 +158,21 @@ class LocalJsonModel:
                 timeout=self._config.timeout_s,
             )
         except TimeoutError as error:
+            radio_event("radio_model_finished", stage=stage, outcome="failed",
+                        reason="model_timeout",
+                        duration_ms=round((time.perf_counter() - started) * 1000, 3))
             raise LocalIntelligenceError("model_timeout") from error
+        except BaseException as error:
+            radio_event("radio_model_finished", stage=stage,
+                        outcome="cancelled"
+                        if isinstance(error, asyncio.CancelledError) else "failed",
+                        reason=error_code(error),
+                        duration_ms=round((time.perf_counter() - started) * 1000, 3))
+            raise
         # Notify only after this awaited request completes. A timed-out background thread
         # must not attach late metrics to the next evaluation turn.
         if self._on_metrics is not None:
             self._on_metrics(metrics)
+        radio_event("radio_model_finished", stage=stage, outcome="completed", **metrics,
+                    duration_ms=round((time.perf_counter() - started) * 1000, 3))
         return result

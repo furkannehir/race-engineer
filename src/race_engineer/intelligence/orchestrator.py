@@ -15,6 +15,7 @@ from race_engineer.core.interfaces import (
     EngineerResponseGenerator,
     EvidenceGrounder,
 )
+from race_engineer.radio_diagnostics import radio_event, radio_evidence, radio_stage
 
 
 class IntelligenceBoundaryError(Exception):
@@ -86,25 +87,33 @@ class EngineerOrchestrator:
         self._grounder = grounder
 
     async def prepare(self, turn: DriverTurn) -> PreparedEngineerResponse:
-        context = await self._context.analyze(turn)
-        _validate_context(turn, context)
-        brief = await self._core.decide(turn, context)
-        _validate_brief(turn, context, brief)
-        response = await self._generator.generate(turn, context, brief)
-        _validate_generated(turn, brief, response)
+        with radio_stage("context"):
+            context = await self._context.analyze(turn)
+            _validate_context(turn, context)
+            radio_evidence("radio_context_ready", context)
+        with radio_stage("core"):
+            brief = await self._core.decide(turn, context)
+            _validate_brief(turn, context, brief)
+            radio_event(
+                "radio_core_decision", goal=brief.goal, language=brief.language,
+                evidence_ids=brief.evidence_ids,
+            )
+        with radio_stage("response"):
+            response = await self._generator.generate(turn, context, brief)
+            _validate_generated(turn, brief, response)
         return PreparedEngineerResponse(turn, context, brief, response)
 
     async def ground(self, prepared: PreparedEngineerResponse) -> GroundedResponse:
         evidence_ids = tuple(reference.evidence_id for reference in prepared.response.references)
-        refreshed = await self._context.refresh(prepared.context, evidence_ids)
-        _validate_context(prepared.turn, refreshed)
-        if refreshed.source_sequence < prepared.context.source_sequence:
-            raise IntelligenceBoundaryError("refreshed_context_moved_backwards")
-        return self._grounder.ground(
-            prepared.response,
-            refreshed,
-            prepared.brief,
-        )
+        with radio_stage("grounding"):
+            refreshed = await self._context.refresh(prepared.context, evidence_ids)
+            _validate_context(prepared.turn, refreshed)
+            if refreshed.source_sequence < prepared.context.source_sequence:
+                raise IntelligenceBoundaryError("refreshed_context_moved_backwards")
+            radio_evidence("radio_evidence_refreshed", refreshed)
+            return self._grounder.ground(
+                prepared.response, refreshed, prepared.brief,
+            )
 
     async def respond(self, turn: DriverTurn) -> GroundedResponse:
         return await self.ground(await self.prepare(turn))

@@ -113,7 +113,18 @@ reported and left intact rather than silently overwritten. Session-scoped prefer
 learning, voice-based edits and broader personality controls remain deferred.
 
 Bounded diagnostic logs live in ignored `logs/control-panel.jsonl` (2 MB plus two rotated
-files). They do not persist microphone audio, question/reply text or model prompts. The
+files), or `%LOCALAPPDATA%\Pitward\logs` for packaged builds. Each radio attempt has a
+`run_id` and `trace_id` linking capture, transcription, context selection, Core decisions,
+model token/timing metrics, refreshed evidence, queue wait, TTS and its terminal outcome.
+Explicit outcomes distinguish `silence`, `no_question`, timeouts, expired/interrupted delivery,
+text-only replies and completed speech. The actual conversation runtime mode is also logged.
+
+`[privacy] record_radio_text = true` is enabled in the development config for the next
+diagnostic race: it saves the ASR transcript, requested-fact inventory and final grounded
+reply to these local rotated logs. Set it to `false` and restart the engineer to omit text
+while retaining timing and routing metadata. Selected evidence values stay omitted unless
+the separate `record_raw_telemetry` setting is enabled. Microphone audio and full model prompts
+are never saved by these diagnostics. The
 terminal launch can still print conversational text, as the existing CLI does; the
 double-click/pythonw launch discards console output. The panel does not record telemetry
 fixtures; use the existing CLI recording option when specifically collecting one.
@@ -142,7 +153,8 @@ The preview is clearly labeled and never starts hardware. Screenshots are genera
 
 The blue-flag bug, short-input recognition, voice quality and conversation issues remain
 open in [known-issues.md](known-issues.md). This panel is a shakedown tool, not a claim of
-race-certified accuracy, latency or endurance. There is no installer or auto-updater yet.
+race-certified accuracy, latency or endurance. Windows packaging is documented in
+[distribution.md](distribution.md); automatic update installation remains deferred.
 
 Implementation references: Qt's [thread/signals documentation](https://doc.qt.io/qtforpython-6.10/PySide6/QtCore/QThread.html)
 and [system-tray API](https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSystemTrayIcon.html);

@@ -17,6 +17,9 @@ format = "console"
 record_raw_telemetry = false
 record_generator_prompts = false
 record_generator_outputs = false
+# Local diagnostic transcripts and grounded replies for the next radio test.
+# Set false to keep stage timings/routing without conversation text.
+record_radio_text = true
 
 [history]
 enabled = true

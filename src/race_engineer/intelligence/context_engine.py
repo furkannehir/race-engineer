@@ -2,6 +2,7 @@
 
 from collections import OrderedDict
 from collections.abc import Iterable, Sequence
+from dataclasses import asdict
 
 from race_engineer.core.intelligence import (
     CapabilityRequest,
@@ -16,6 +17,8 @@ from race_engineer.core.interfaces import (
     RaceCapabilityRegistry,
     TelemetryMemory,
 )
+from race_engineer.intelligence.planner_diagnostics import ContextPlanRejection
+from race_engineer.radio_diagnostics import radio_event, radio_stage
 
 
 class ContextEngineerError(Exception):
@@ -95,9 +98,24 @@ class QueryDrivenContextEngineer:
     async def analyze(self, turn: DriverTurn) -> ContextPacket:
         signals = self._memory.signal_catalog()
         capabilities = self._capabilities.catalog() if self._capabilities is not None else ()
-        plan = await self._planner.plan(turn, signals, capabilities)
+        with radio_stage("context_planner"):
+            try:
+                plan = await self._planner.plan(turn, signals, capabilities)
+            except ContextPlanRejection as error:
+                radio_event(
+                    "radio_context_plan_rejected", reason=str(error),
+                    selection=asdict(error.diagnostic) if error.diagnostic is not None else None,
+                )
+                raise
         if plan.turn_id != turn.turn_id:
             raise ContextEngineerError("context_plan_turn_mismatch")
+        radio_event(
+            "radio_context_plan", planner_id=plan.planner_id,
+            temporal_scope=plan.temporal_scope, situation=plan.situation,
+            capability_ids=[request.capability_id for request in plan.capability_requests],
+            queries=[query.model_dump(mode="json") for query in plan.queries],
+            unknowns=plan.unknowns,
+        )
         query_evidence = self._memory.query_many(plan.queries)
         capability_evidence, capability_unknowns = self._execute_capabilities(
             plan.capability_requests

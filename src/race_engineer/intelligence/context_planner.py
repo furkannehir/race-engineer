@@ -29,6 +29,7 @@ from race_engineer.intelligence.planner_diagnostics import (
     ContextPlanRejection,
     RejectedPlanDiagnostic,
 )
+from race_engineer.radio_diagnostics import radio_text
 
 PLANNER_V5_ID = "qwen-context-v5"
 PLANNER_V6_ID = "qwen-context-v6"
@@ -494,6 +495,9 @@ class QwenContextQueryPlanner:
                 max_tokens=384,
             )
             draft = ContextPlanDraft.model_validate(raw)
+            radio_text("radio_requested_facts", " | ".join(draft.requested_facts),
+                       requested_fact_count=len(draft.requested_facts),
+                       social_comment=draft.social_comment)
             if self._on_request_inventory is not None:
                 self._on_request_inventory(draft.requested_facts)
         except LocalIntelligenceError as error:
@@ -504,7 +508,7 @@ class QwenContextQueryPlanner:
         except ValidationError as error:
             raise ContextPlanRejection("context_model_response_invalid") from error
         # The bounded natural-language inventory guides model generation only. It is not
-        # a fact, query, logged explanation or session memory and is never copied onward.
+        # a fact, query or session memory. Optional radio diagnostics record it separately.
         scope: ContextTemporalScope = draft.temporal_scope or "social"
         selected_queries = []
         unknown_signals = invalid_queries = 0
