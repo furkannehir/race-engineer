@@ -1,10 +1,32 @@
 # Working roadmap
 
-Updated 2026-10-09. This is the current progress/backlog companion to the original
+Updated 2026-10-11. This is the current progress/backlog companion to the original
 [implementation plan](personalized-ai-race-engineer-implementation-plan.docx), not a claim
 that every original milestone exit criterion has been formally validated.
 
 ## Current checkpoint
+
+October 11 branch split: the standard edition on `main` now uses Qwen3-4B for
+Context planning and Core/reply generation with NVIDIA/CUDA selected in the normal
+source configuration. The trained interpreter is not part of this branch's live
+pipeline. CPU Qwen3-ASR, Piper/SAPI, telemetry retrieval/calculations, profiles and
+grounding are unchanged. The normal launcher owns its server on port 8088 and does
+not silently reuse an external CPU server or fall back. Existing packaged components
+remain CPU-only pending explicit GPU distribution work.
+
+The Qwen-only development comparison completed 12/12 typed GPU turns with a 0.772 s
+median and 1.215 s sample p95; the CPU run stopped after its first 30 s timeout.
+The subsequent seven-question live run had no model timeouts but four empty factual
+plans failed silently, two turns were mapped to unrelated speed evidence, and
+one reply made an unsupported damage claim. These correctness and error-feedback
+issues remain open; acceleration does not fix them. See [GPU guide](qwen-gpu-trial.md).
+
+Interpreter experiments, authored draft datasets, training and the bounded social
+pilot are preserved on [light-version](https://github.com/furkannehir/race-engineer/tree/light-version).
+Pitward Light still needs full request extraction and a measured small CPU reply
+model before Qwen-4B can be removed. No trained checkpoint is promoted by this split.
+
+The earlier October 9 checkpoint follows for historical context.
 
 October 9 checkpoint: v6 remains the live development baseline. Correlated radio diagnostics
 now distinguish capture, ASR, interpretation, Core, evidence refresh and voice delivery.
@@ -187,22 +209,26 @@ should share the validated service later. CONV-004 is scheduled in CE-05, not ye
    Ruff lint and mypy.
 8. **Follow-up — strategy models:** normalize track/car pit loss, requested service and field
    trajectory inputs before enabling the existing pit/rejoin capability contracts.
-9. Optional CUDA/Vulkan controls and stable combined-workload benchmarks remain after a
-   stable intelligence workload; AMD support still requires an actual AMD test.
+9. The measured source-mode NVIDIA/CUDA path is now the standard edition's default.
+   Packaged GPU components, compute UI controls and stable combined game-load
+   benchmarks remain. AMD/Vulkan support still requires actual hardware validation.
 10. Proactive usefulness learning remains separate and shadow-only until independently
    labeled evidence justifies promotion.
 
 ## Future research: after the MVP
 
-These are explicitly deferred research directions, not MVP dependencies or claims that
-training will automatically improve speed or accuracy. The MVP uses existing local models.
+The standard edition uses existing local models. Interpreter/domain-adaptation work
+is developed separately on `light-version`; no training result automatically
+establishes production accuracy or makes the standard edition depend on that branch.
 
 - **RES-01: purpose-trained radio interpreter.** Investigate a multilingual sentence encoder
   such as MiniLM with SetFit or another lightweight learning method for English/Turkish radio
   interpretation. Cover natural paraphrases, short inputs, dialogue references, mixed purposes,
   out-of-scope requests and uncertainty rather than a prescribed spoken command set. This
   needs suitable domain examples, independent evaluation and CPU resource measurements;
-  collecting a training corpus and training a model are not current tasks.
+  The draft datasets, first training experiments and bounded live action pilot are
+  preserved on `light-version`. Full request extraction and the small reply model
+  remain pending; the standard edition retains Qwen context planning.
 - **RES-02: specialize the Core/response model.** Investigate adapting the local conversational
   model to a calm race-engineer teammate style and supported evidence-based reasoning.
   Application code still owns telemetry retrieval, arithmetic, provenance, freshness and final
@@ -210,8 +236,8 @@ training will automatically improve speed or accuracy. The MVP uses existing loc
   that fine-tuning the same model makes inference cheaper. Compare quality and latency against
   the unadapted baseline before adoption.
 
-The immediate Laya experiment evaluates an existing checkpoint without training. Generic
-"copy/checking" acknowledgments remain a later UX discussion, not part of this experiment.
+Laya/mDeBERTa screening and MiniLM training artifacts belong to `light-version`.
+Generic "copy/checking" acknowledgments remain a later UX discussion.
 
 ## Constraints carried forward
 
@@ -227,8 +253,9 @@ The immediate Laya experiment evaluates an existing checkpoint without training.
   Turkish TTS-001 evaluation option among alternatives; Piper remains selected until a
   candidate earns replacement through offline Windows/racing-language quality and resource
   comparisons.
-- CPU remains a required execution path; acceleration is optional and includes an AMD
-  validation target. Automatic selection is not a current capability or a proven default.
+- CPU compatibility remains available explicitly, and Pitward Light targets CPU-only
+  operation. The standard source edition now defaults to NVIDIA/CUDA; this does not
+  establish automatic selection, packaged GPU support or AMD/Vulkan compatibility.
 - Do not treat the driver's prototype acceptance as resolution of the blue-flag defect or
   the existing conversation interpretation failures. IR-001 remains pending live
   validation even though its normalization fix and regression coverage are implemented.

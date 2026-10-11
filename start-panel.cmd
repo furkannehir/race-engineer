@@ -11,4 +11,4 @@ if errorlevel 1 (
     pause
     exit /b 1
 )
-start "" ".venv\Scripts\pythonw.exe" -m race_engineer.ui
+start "" ".venv\Scripts\pythonw.exe" -m race_engineer.ui %*

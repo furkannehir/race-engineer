@@ -29,9 +29,17 @@ def test_default_configuration_is_valid() -> None:
     assert config.tts.voice is None
     assert config.tts.queue_capacity == 8
     assert config.conversation.model == "Qwen3-4B-Instruct-2507"
-    assert config.conversation.runtime.mode == "cpu"
+    assert config.conversation.runtime.mode == "gpu"
+    assert config.conversation.port == 8088
     assert config.conversation.runtime.threads == 8
-    assert config.conversation.runtime.accelerated_executable_path is None
+    assert config.conversation.runtime.accelerated_executable_path == Path(
+        "data/conversation-prototype/llama-b10964-cuda-13.3/llama-server.exe"
+    )
+    assert config.conversation.runtime.accelerated_backend == "cuda"
+    assert config.conversation.runtime.device == "CUDA0"
+    assert config.conversation.runtime.fallback_to_cpu is False
+    assert config.conversation.runtime.reuse_external_server is False
+    assert config.stt.device == "cpu"
     assert config.conversation.runtime.runtime_revision == "b10964"
     assert config.conversation.runtime.quantization == "Q4_K_M"
 

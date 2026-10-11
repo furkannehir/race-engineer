@@ -1,0 +1,189 @@
+{
+  "schema_version": "qwen-hardware-trial-summary.v1",
+  "recorded_at": "2026-10-11",
+  "scope": "typed_context_core_refresh_grounding_development_controls",
+  "excluded_stages": [
+    "microphone",
+    "stt",
+    "radio_queue",
+    "tts",
+    "audio_playback"
+  ],
+  "experimental": true,
+  "production_promotion": false,
+  "runtime_revision": "b10964",
+  "model": "Qwen3-4B-Instruct-2507",
+  "model_revision": "a06e946bb6b655725eafa393f4a9745d460374c9",
+  "quantization": "Q4_K_M",
+  "hardware": {
+    "os": "Windows-11",
+    "architecture": "AMD64",
+    "cpu": "AMD Ryzen 7 9800X3D 8-Core Processor",
+    "logical_cpus": 16,
+    "memory_bytes": 66145669120,
+    "gpus": [
+      {
+        "name": "NVIDIA GeForce RTX 5080",
+        "driver_version": "32.0.15.9186"
+      },
+      {
+        "name": "AMD Radeon(TM) Graphics",
+        "driver_version": "32.0.21030.2001"
+      }
+    ]
+  },
+  "cpu": {
+    "raw_report": "data/evaluations/qwen-cpu-gpu-trial-cpu-20261011.json",
+    "runtime": {
+      "ownership": "benchmark",
+      "effective_mode": "cpu",
+      "effective_backend": "cpu",
+      "effective_gpu_layers": 0,
+      "effective_device": null,
+      "startup_or_healthcheck_ms": 3825.789
+    },
+    "requested_turns": 12,
+    "attempted_turns": 1,
+    "completed_turns": 0,
+    "stopped_after_first_transport_timeout": true,
+    "failure_reason": "context_model_timeout",
+    "first_question_id": "1a29a9df2e1c04b7",
+    "first_question_wall_ms": 30014.183,
+    "completed_latency_ms": null
+  },
+  "cuda": {
+    "raw_report": "data/evaluations/qwen-cpu-gpu-trial-cuda-20261011.json",
+    "runtime": {
+      "ownership": "benchmark",
+      "effective_mode": "gpu",
+      "effective_backend": "cuda",
+      "effective_gpu_layers": -1,
+      "effective_device": "CUDA0",
+      "startup_or_healthcheck_ms": 3171.533
+    },
+    "summary": {
+      "turns": 12,
+      "pipeline_completed": 12,
+      "pipeline_failed": 0,
+      "planner_exact_matches": 12,
+      "evidence_expectation_matches": 12,
+      "core_retries": 2,
+      "all_turn_latency_ms": {
+        "count": 12,
+        "min": 485.743,
+        "mean": 793.112,
+        "p50": 772.443,
+        "p95": 1215.217,
+        "max": 1243.274
+      },
+      "completed_turn_latency_ms": {
+        "count": 12,
+        "min": 485.743,
+        "mean": 793.112,
+        "p50": 772.443,
+        "p95": 1215.217,
+        "max": 1243.274
+      },
+      "completed_under_5s": 12,
+      "completed_under_10s": 12,
+      "completed_at_least_30s": 0,
+      "stage_latency_ms": {
+        "context": {
+          "count": 12,
+          "min": 264.439,
+          "mean": 470.995,
+          "p50": 407.215,
+          "p95": 741.643,
+          "max": 876.605
+        },
+        "core": {
+          "count": 12,
+          "min": 221.211,
+          "mean": 321.829,
+          "p50": 278.131,
+          "p95": 587.46,
+          "max": 611.322
+        },
+        "materialize": {
+          "count": 12,
+          "min": 0.007,
+          "mean": 0.008,
+          "p50": 0.008,
+          "p95": 0.01,
+          "max": 0.01
+        },
+        "refresh": {
+          "count": 12,
+          "min": 0.028,
+          "mean": 0.2,
+          "p50": 0.09,
+          "p95": 0.577,
+          "max": 0.646
+        },
+        "grounding": {
+          "count": 12,
+          "min": 0.013,
+          "mean": 0.023,
+          "p50": 0.022,
+          "p95": 0.034,
+          "max": 0.041
+        }
+      },
+      "first_in_run_latency_ms": {
+        "count": 1,
+        "min": 1192.262,
+        "mean": 1192.262,
+        "p50": 1192.262,
+        "p95": 1192.262,
+        "max": 1192.262
+      },
+      "subsequent_in_run_latency_ms": {
+        "count": 11,
+        "min": 485.743,
+        "mean": 756.826,
+        "p50": 702.579,
+        "p95": 1111.409,
+        "max": 1243.274
+      },
+      "automatic_reply_accuracy": null
+    },
+    "first_question_id": "1a29a9df2e1c04b7",
+    "first_question_wall_ms": 1192.262
+  },
+  "comparison_limits": [
+    "CPU run was censored at the first 30-second timeout; no CPU completed-turn median or general speedup factor is available.",
+    "GPU results cover six already-observed bilingual development controls repeated twice, not fresh release acceptance.",
+    "No controlled live-racing workload, frame-time measurements, STT/TTS or audible-response latency were measured."
+  ],
+  "gpu_memory": {
+    "scope": "sampled_whole_device_including_other_applications",
+    "peak_or_per_process_measurement": false,
+    "before_mib": 7298,
+    "highest_sample_mib": 11214,
+    "after_shutdown_mib": 7297,
+    "capacity_mib": 16303
+  },
+  "manual_reply_review": {
+    "automatic_accuracy": null,
+    "core_repairs": 2,
+    "observations": [
+      "One Turkish fuel-and-speed reply after repair omitted the requested fuel quantity despite correct planner selection.",
+      "Awkward Turkish unit wording remained in some replies. These checks do not establish complete spoken-answer correctness."
+    ]
+  },
+  "reproducibility": {
+    "git_revision": "729e77bae1b51b2f9225f8ebe785ba0237021498",
+    "git_dirty": true,
+    "implementation_fingerprint_sha256": "6109e2f196276740c92fda1139d7a2b70343e24fa3a33948b6ee37521682a569",
+    "identical_implementation_during_cpu_and_gpu_runs": true,
+    "implementation_changed_during_either_run": false,
+    "cpu_input_fingerprint_sha256": "5e82c5158e5accb6c4b127b806951c487121a8e72e2dd09cedd71aa34776b6a6",
+    "gpu_input_fingerprint_sha256": "0c81fd05292662d2ad8c90220d7991aa10fdc2eadcce2c3b29cbfde4518a065c",
+    "input_changes_during_either_run": false
+  },
+  "privacy": {
+    "contains_questions": false,
+    "contains_model_replies": false,
+    "contains_user_telemetry": false
+  }
+}

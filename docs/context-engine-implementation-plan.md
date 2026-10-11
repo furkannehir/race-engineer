@@ -147,6 +147,17 @@ if CPU performance blocks CE-04/05/06 development. Missing AMD access blocks an 
 claim, not CPU work. CE-07 is optional: it must demonstrate value before becoming a release
 dependency.
 
+2026-10-11 targeted pull-forward: the owner authorized a Qwen-only source-mode CUDA
+experiment because CPU Context planning blocked the live shakedown. A pinned optional
+NVIDIA runtime, isolated CPU/GPU profiles and typed comparison are now implemented;
+see [the GPU trial](qwen-gpu-trial.md). This does not complete CE-03: packaged optional
+components, UI compute controls, AMD/Vulkan validation and combined game-load evidence
+remain deferred. The subsequent branch decision makes CUDA the standard source-mode
+default on `main`, with Qwen context planning and no experimental interpreter.
+Interpreter/dataset/training work is preserved on `light-version` for the planned
+CPU-only edition. STT and TTS stay on CPU; packaged components retain their existing
+CPU baseline until GPU distribution is implemented. See the [current roadmap](roadmap.md).
+
 ### CE-01: Configurable planners and runtime foundation
 
 - Move model identity, local model/server paths, context size, threads, device/backend,

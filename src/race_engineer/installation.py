@@ -83,6 +83,12 @@ class Installation:
         workers = self.install_root / "workers"
         runtime = config.conversation.runtime.model_copy(
             update={
+                # The released component manifest still contains only the CPU
+                # runtime. Do not apply repository-only CUDA paths to an .exe.
+                "mode": "cpu",
+                "accelerated_executable_path": None,
+                "accelerated_backend": None,
+                "device": None,
                 "cpu_executable_path": conversation
                 / "llama-b10964-cpu"
                 / "llama-server.exe",

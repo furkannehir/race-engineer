@@ -40,10 +40,18 @@ the initial live prototype as sufficient to continue; quality upgrades and quant
 validation remain open. See the [live run guide](docs/live-conversation.md) and
 [current roadmap / next task](docs/roadmap.md).
 
-Conversation model identity and llama.cpp execution are separately configurable. The panel
-and standalone launcher share the same bounded runtime lifecycle and one CPU fallback.
-CPU remains the installed default; CUDA/Vulkan packages and UI selection are later measured
-work, not current support claims. See the [conversation setup](docs/conversation.md#local-model-setup).
+The standard edition on `main` uses **Qwen3-4B on NVIDIA/CUDA** for context planning
+and replies; Qwen3-ASR and Piper/SAPI stay on CPU. The normal `start-panel.cmd` now
+uses the GPU configuration directly, with no silent CPU fallback or external-server
+reuse. See [GPU setup and measurements](docs/qwen-gpu-trial.md). The existing packaged
+`.exe` component installer remains CPU-only; packaged GPU distribution, compute UI
+controls and AMD/Vulkan validation are not implemented yet.
+
+Interpreter experiments, draft datasets and training tools are preserved on
+[`light-version`](https://github.com/furkannehir/race-engineer/tree/light-version),
+the development branch for **Pitward Light**, a planned CPU-only edition with a
+trained request interpreter and smaller reply model. It is not yet Qwen-4B-free.
+The standard edition does not load the experimental interpreter.
 
 faster-whisper is reserved as a future performance alternative. See the
 [speech-input setup](docs/speech-to-text.md),

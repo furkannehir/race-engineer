@@ -41,9 +41,11 @@ the push-to-talk binding dialog. There is no download or cloud fallback.
    steering wheels, button boxes, joysticks, and gamepads. Steering, pedals, triggers, and
    other analog axes are deliberately ignored so driving cannot open the microphone. Save
    the detected binding; there is no device-name or button-number hunting.
-4. Click **Start engineer**. The panel reuses a matching local conversation server or
-   starts the runtime selected in `[conversation.runtime]` on literal `127.0.0.1`. The
-   default remains the downloaded CPU runtime; accelerated setup and controls are planned.
+4. Click **Start engineer**. In the standard source edition, the panel starts and owns
+   the configured NVIDIA/CUDA Qwen server on literal `127.0.0.1:8088`; do not start a
+   separate server first. The normal `start-panel.cmd` uses this GPU default. Follow
+   [the GPU setup guide](qwen-gpu-trial.md) if needed. The existing packaged `.exe`
+   components still use CPU until GPU distribution is implemented.
    Wait for both iRacing and
    speech readiness. A green iRacing indicator requires accepted, fresh telemetry, not
    just an SDK connection. A stopped panel does not monitor iRacing.

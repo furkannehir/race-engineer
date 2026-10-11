@@ -93,9 +93,7 @@ def test_unknown_configured_device_falls_back_to_cpu(tmp_path, monkeypatch):
 def test_server_command_keeps_cpu_baseline_and_allows_explicit_gpu_device(tmp_path):
     runtime = runtime_config(tmp_path, device="CUDA0", gpu_layers=24)
     config = ConversationConfig(model="local-test", port=9000, runtime=runtime)
-    cpu = RuntimeCandidate(
-        "cpu", tmp_path / "cpu.exe", tmp_path / "model.gguf", "cpu", None, 0
-    )
+    cpu = RuntimeCandidate("cpu", tmp_path / "cpu.exe", tmp_path / "model.gguf", "cpu", None, 0)
     gpu = RuntimeCandidate(
         "gpu", tmp_path / "gpu.exe", tmp_path / "model.gguf", "cuda", "CUDA0", 24
     )
@@ -154,3 +152,39 @@ def test_failed_accelerated_start_retries_cpu_once(tmp_path, monkeypatch):
     assert spawned == ["gpu-server.exe", "cpu-server.exe"]
     assert ("compute", "cpu:model_startup_failed") in events
     assert events[-1] == ("compute", "cpu:cpu")
+
+
+def test_controlled_trial_refuses_external_server_without_spawning_or_stopping_it(
+    tmp_path, monkeypatch
+):
+    config = ConversationConfig(runtime=runtime_config(tmp_path, reuse_external_server=False))
+    monkeypatch.setattr("race_engineer.conversation.runtime.model_ready", lambda *_: True)
+
+    async def forbidden(*args, **kwargs):
+        pytest.fail("must never spawn a second server on the occupied trial port")
+
+    monkeypatch.setattr("race_engineer.conversation.runtime.start_owned_process", forbidden)
+
+    async def exercise():
+        server = ConversationServer(tmp_path, config)
+        with pytest.raises(ConversationRuntimeError, match="model_port_already_in_use"):
+            await server.start()
+        assert server.process is server.effective is None
+        await server.aclose()  # Must leave the external server untouched.
+
+    asyncio.run(exercise())
+
+
+def test_default_launcher_preserves_explicit_unmanaged_external_reuse(tmp_path, monkeypatch):
+    config = ConversationConfig(runtime=runtime_config(tmp_path))
+    monkeypatch.setattr("race_engineer.conversation.runtime.model_ready", lambda *_: True)
+    notices = []
+
+    async def exercise():
+        server = ConversationServer(tmp_path, config, notify=lambda *row: notices.append(row))
+        await server.start()
+        assert server.process is server.effective is None
+        await server.aclose()
+
+    asyncio.run(exercise())
+    assert notices == [("compute", "external:unmanaged")]

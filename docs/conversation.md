@@ -142,14 +142,18 @@ used by the panel and `scripts/start_conversation_model.py`; the script reads
 `config/default.toml` unless `--config` selects another file. Its legacy `--server`,
 `--model`, `--port`, and `--threads` arguments remain bounded one-run overrides.
 
-`mode = "cpu"` is the current default and uses the pinned CPU-only binary with zero GPU
-layers. `gpu` and `auto` require both `accelerated_executable_path` and
+`mode = "gpu"` is the standard source edition's default, selecting the pinned NVIDIA/CUDA
+runtime on port 8088. STT and TTS stay on CPU. `cpu` remains an explicit compatibility
+override and uses the pinned CPU-only binary with zero GPU layers. `gpu` and `auto`
+require both `accelerated_executable_path` and
 `accelerated_backend`. The runtime runs a bounded `--list-devices` probe before attempting
 acceleration. With `fallback_to_cpu = true`, a missing/unusable accelerated runtime or one
 failed startup is cleaned up and retried once on CPU. An already-running matching server is
-reused and reported as unmanaged because the application cannot verify or change its
-hardware settings. No accelerated binaries are installed by this slice; CUDA/Vulkan setup,
-panel controls, and hardware performance claims belong to CE-03.
+reused only when `reuse_external_server = true`, and then reported as unmanaged because
+the application cannot verify or change its hardware settings. The standard source config
+sets both `fallback_to_cpu` and `reuse_external_server` to false: the panel must own its GPU
+server. See [CUDA setup and measurements](qwen-gpu-trial.md). Packaged components remain
+CPU-only; packaged GPU distribution, panel compute controls and AMD validation remain open.
 
 ## Verification
 

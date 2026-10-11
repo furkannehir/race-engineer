@@ -247,6 +247,10 @@ class ConversationServer:
 
     async def start(self) -> None:
         if await asyncio.to_thread(model_ready, self.config.port, self.config.model):
+            if not self.config.runtime.reuse_external_server:
+                # A healthy model endpoint does not prove its backend/offload settings.
+                # Owned GPU sessions/trials must never borrow or terminate another server.
+                raise ConversationRuntimeError("model_port_already_in_use")
             self.notify("compute", "external:unmanaged")
             _LOGGER.info(
                 "reusing external conversation runtime",

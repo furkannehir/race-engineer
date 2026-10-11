@@ -26,6 +26,10 @@ def test_frozen_installation_keeps_program_and_user_data_separate(tmp_path: Path
     assert layout.config_path == bundle / "config/default.toml"
     assert layout.data_root == local / "Pitward"
     assert config.paths.database_path == local / "Pitward/race_engineer.sqlite3"
+    assert config.conversation.runtime.mode == "cpu"
+    assert config.conversation.runtime.accelerated_executable_path is None
+    assert config.conversation.runtime.accelerated_backend is None
+    assert config.conversation.runtime.device is None
     assert config.conversation.runtime.model_path == (
         local / "Pitward/components/conversation/Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
     )

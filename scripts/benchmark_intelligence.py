@@ -2,9 +2,13 @@
 
 import argparse
 import asyncio
+import csv
 import io
 import json
+import os
 import random
+import shutil
+import subprocess
 import sys
 import time
 from datetime import UTC, datetime
@@ -42,6 +46,47 @@ DEFAULT_CASES = (
 )
 
 
+def gpu_memory_snapshot() -> dict[str, object]:
+    """Whole-device sampled memory, not per-process memory or a measured VRAM peak."""
+    executable = shutil.which("nvidia-smi")
+    if executable is None:
+        return {"available": False, "reason": "nvidia_smi_unavailable"}
+    try:
+        result = subprocess.run(
+            [
+                executable,
+                "--query-gpu=index,name,memory.used,memory.total",
+                "--format=csv,noheader,nounits",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
+        )
+        if result.returncode != 0:
+            return {"available": False, "reason": "gpu_query_failed"}
+        devices = [
+            {
+                "index": int(index),
+                "name": name.strip(),
+                "used_mib": int(used),
+                "total_mib": int(total),
+            }
+            for index, name, used, total in csv.reader(result.stdout.splitlines())
+        ]
+    except (OSError, ValueError, subprocess.TimeoutExpired):
+        return {"available": False, "reason": "gpu_query_failed"}
+    return {"available": True, "devices": devices}
+
+
+def verify_trial_runtime(server: ConversationServer, args: argparse.Namespace) -> None:
+    if getattr(args, "require_owned_runtime", False) and server.process is None:
+        raise ValueError("Controlled trial refuses an external server; use a free port")
+    expected = getattr(args, "expect_backend", None)
+    if expected is not None and (server.effective is None or server.effective.backend != expected):
+        raise ValueError(f"Expected owned {expected} runtime; effective backend did not match")
+
+
 async def benchmark(args: argparse.Namespace) -> dict[str, object]:
     dataset_path = args.dataset.resolve()
     if not dataset_path.is_relative_to(ROOT) or not dataset_path.is_file():
@@ -76,13 +121,25 @@ async def benchmark(args: argparse.Namespace) -> dict[str, object]:
     input_before = files_fingerprint(ROOT, input_files)
     machine = machine_metadata()
     server = ConversationServer(ROOT, config.conversation)
+    if getattr(args, "show_server_logs", False):
+        server.quiet = False
     results: list[dict[str, object]] = []
+    gpu_observations: list[dict[str, object]] = []
+
+    async def sample_gpu(phase: str) -> None:
+        if getattr(args, "sample_gpu_memory", False):
+            gpu_observations.append(
+                {"phase": phase, **await asyncio.to_thread(gpu_memory_snapshot)}
+            )
+
+    await sample_gpu("before_server")
     order = random.Random(args.seed)
     started = time.perf_counter()
     runtime: dict[str, object] = {}
     try:
         print("Starting or reusing local Qwen server...", flush=True)
         await server.start()
+        verify_trial_runtime(server, args)
         startup_ms = (time.perf_counter() - started) * 1000
         effective = server.effective
         runtime = {
@@ -90,8 +147,10 @@ async def benchmark(args: argparse.Namespace) -> dict[str, object]:
             "effective_mode": effective.mode if effective is not None else None,
             "effective_backend": effective.backend if effective is not None else None,
             "effective_gpu_layers": effective.gpu_layers if effective is not None else None,
+            "effective_device": effective.device if effective is not None else None,
             "startup_or_healthcheck_ms": round(startup_ms, 3),
         }
+        await sample_gpu("after_server_start")
         for repetition in range(1, args.repeats + 1):
             turns = [(group, question) for group in groups for question in group.questions]
             order.shuffle(turns)
@@ -112,6 +171,7 @@ async def benchmark(args: argparse.Namespace) -> dict[str, object]:
                     ),
                 )
                 results.append(result)
+                await sample_gpu(f"after_turn_{index}")
                 print(json.dumps(result, ensure_ascii=True, sort_keys=True), flush=True)
                 if args.show_replies:
                     print(
@@ -141,6 +201,7 @@ async def benchmark(args: argparse.Namespace) -> dict[str, object]:
             break
     finally:
         await server.aclose()
+        await sample_gpu("after_server_close")
     return {
         "schema_version": "intelligence-latency-report.v2",
         "generated_at": datetime.now(UTC).isoformat(),
@@ -151,6 +212,11 @@ async def benchmark(args: argparse.Namespace) -> dict[str, object]:
         "configured_runtime": config.conversation.runtime.model_dump(mode="json"),
         "model_request_timeout_s": config.conversation.timeout_s,
         "runtime": runtime,
+        "gpu_observations": {
+            "scope": "whole_device_including_other_applications",
+            "peak_memory_measured": False,
+            "samples": gpu_observations,
+        },
         "dataset_id": dataset.dataset_id,
         "dataset_revision": dataset.revision,
         "seed": args.seed,
@@ -191,6 +257,26 @@ def main() -> None:
     parser.add_argument("--case", action="append", help="group ID; repeat to choose cases")
     parser.add_argument("--repeats", type=int, default=2)
     parser.add_argument("--seed", type=int, default=7)
+    parser.add_argument(
+        "--require-owned-runtime",
+        action="store_true",
+        help="refuse external/unverified servers for controlled hardware trials",
+    )
+    parser.add_argument(
+        "--expect-backend",
+        choices=("cpu", "cuda", "vulkan"),
+        help="fail rather than benchmark the wrong effective backend",
+    )
+    parser.add_argument(
+        "--show-server-logs",
+        action="store_true",
+        help="print managed server startup/offload diagnostics",
+    )
+    parser.add_argument(
+        "--sample-gpu-memory",
+        action="store_true",
+        help="sample whole NVIDIA device memory outside per-turn timers",
+    )
     parser.add_argument(
         "--candidate",
         choices=(PLANNER_V5_ID, PLANNER_V6_ID),

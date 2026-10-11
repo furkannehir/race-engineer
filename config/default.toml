@@ -62,18 +62,21 @@ queue_capacity = 8
 [conversation]
 adapter = "llama-cpp"
 model = "Qwen3-4B-Instruct-2507"
-port = 8087
+port = 8088
 timeout_s = 30.0
 history_turns = 6
 max_snapshot_age_s = 3.0
 default_language = "en"
 
-# Machine-local inference settings. CPU is the compatibility baseline. Configure an
-# accelerated runtime explicitly before selecting gpu/auto; unsupported acceleration
-# falls back to CPU unless fallback_to_cpu is disabled.
+# Main edition: Qwen context planning and replies run on NVIDIA/CUDA.
+# STT and TTS remain CPU-only. CPU mode is an explicit compatibility override;
+# do not silently reuse an external CPU server or fall back during a GPU session.
 [conversation.runtime]
-mode = "cpu"
+mode = "gpu"
 cpu_executable_path = "data/conversation-prototype/llama-b10964-cpu/llama-server.exe"
+accelerated_executable_path = "data/conversation-prototype/llama-b10964-cuda-13.3/llama-server.exe"
+accelerated_backend = "cuda"
+device = "CUDA0"
 model_path = "data/conversation-prototype/Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
 runtime_revision = "b10964"
 model_revision = "a06e946bb6b655725eafa393f4a9745d460374c9"
@@ -82,7 +85,8 @@ threads = 8
 context_size = 8192
 parallel = 1
 gpu_layers = -1
-fallback_to_cpu = true
+fallback_to_cpu = false
+reuse_external_server = false
 probe_timeout_s = 5.0
 startup_timeout_s = 120.0
 shutdown_timeout_s = 5.0

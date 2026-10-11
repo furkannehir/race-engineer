@@ -130,6 +130,7 @@ class ConversationRuntimeConfig(ConfigModel):
     parallel: int = Field(default=1, ge=1, le=16)
     gpu_layers: int = Field(default=-1, ge=-1, le=10_000)
     fallback_to_cpu: bool = True
+    reuse_external_server: bool = True
     probe_timeout_s: float = Field(default=5, gt=0, le=30, allow_inf_nan=False)
     startup_timeout_s: float = Field(default=120, gt=0, le=600, allow_inf_nan=False)
     shutdown_timeout_s: float = Field(default=5, gt=0, le=30, allow_inf_nan=False)
