@@ -15,6 +15,7 @@ from typing import cast
 
 from race_engineer.evaluation.radio_interpreter import (
     decision_questions,
+    question_language_for,
     score_case,
     state_for,
     summarize,
@@ -57,7 +58,14 @@ def run(args: argparse.Namespace) -> dict[str, object]:
     provenance = json.loads((model_path / "provenance.json").read_text(encoding="utf-8"))
     if provenance != {"repo": "convaiinnovations/laya-multilingual", "revision": MODEL_REVISION}:
         raise ValueError("unexpected_model_provenance")
-    questions = decision_questions()
+    question_languages = {
+        language: question_language_for(language, args.question_language)
+        for language in ("en", "tr")
+    }
+    questions_by_language = {
+        language: decision_questions(wording_language)
+        for language, wording_language in question_languages.items()
+    }
     source_files = (
         Path(__file__), ROOT / "src/race_engineer/evaluation/radio_interpreter.py",
         package_path / "laya/agent.py", package_path / "laya/common.py",
@@ -91,6 +99,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         rng.shuffle(ordered)
         for case in ordered:
             state = text_state_for(case) if args.state_format == "text" else state_for(case)
+            questions = questions_by_language[case["language"]]
             started = time.perf_counter()
             try:
                 prediction = agent.predict(
@@ -105,7 +114,8 @@ def run(args: argparse.Namespace) -> dict[str, object]:
                     "case_id": case["id"], "language": case["language"], "passed": False,
                     "error": type(error).__name__,
                 }
-            result.update(repetition=repetition, duration_ms=round(elapsed_ms, 3))
+            result.update(repetition=repetition, duration_ms=round(elapsed_ms, 3),
+                          question_language=question_languages[case["language"]])
             result["model_input_sha256"] = hashlib.sha256(
                 json.dumps(state, ensure_ascii=False, sort_keys=True).encode("utf-8")
             ).hexdigest()
@@ -124,11 +134,17 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             "model": provenance["repo"], "model_revision": MODEL_REVISION,
             "effective_device": "cpu", "threads": args.threads,
             "state_format": args.state_format,
+            "question_language_mode": args.question_language,
+            "question_languages": question_languages,
             "python": sys.version.split()[0], "torch": version("torch"),
             "transformers": version("transformers"), "startup_ms": round(startup_ms, 3),
             "question_sha256": hashlib.sha256(
-                json.dumps(questions, sort_keys=True).encode("utf-8")
+                json.dumps(questions_by_language["en"], sort_keys=True).encode("utf-8")
             ).hexdigest(),
+            "question_sha256_by_language": {
+                language: hashlib.sha256(json.dumps(wording, sort_keys=True).encode("utf-8"))
+                .hexdigest() for language, wording in questions_by_language.items()
+            },
         },
         "reproducibility": {
             "input_fingerprint_sha256": input_fingerprint,
@@ -182,6 +198,8 @@ def main() -> int:
     parser.add_argument("--repeats", type=int, default=2)
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--state-format", choices=("structured", "text"), default="structured")
+    parser.add_argument("--question-language", choices=("english", "matched"), default="english",
+                        help="English questions for all inputs, or questions matching en/tr input.")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     try:

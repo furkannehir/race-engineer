@@ -45,6 +45,12 @@ and standalone launcher share the same bounded runtime lifecycle and one CPU fal
 CPU remains the installed default; CUDA/Vulkan packages and UI selection are later measured
 work, not current support claims. See the [conversation setup](docs/conversation.md#local-model-setup).
 
+This `light-version` branch preserves the experimental driver-interpreter work for
+**Pitward Light**, the planned CPU-only edition. The current action pilot still falls
+back to Qwen for telemetry requests and uses Qwen for replies; it is not yet a
+Qwen-4B-free implementation. See the [training pilot](docs/driver-interpreter-training-pilot.md)
+and [dataset guide](docs/driver-meaning-dataset.md). The GPU/Qwen edition lives on `main`.
+
 faster-whisper is reserved as a future performance alternative. See the
 [speech-input setup](docs/speech-to-text.md),
 [spoken-reply setup and voice license notices](docs/conversational-speech.md),

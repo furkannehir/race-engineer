@@ -1,6 +1,7 @@
 """One-turn orchestration across Context Engineer, Core Engineer, Qwen, and grounding."""
 
 from dataclasses import dataclass
+from typing import Protocol
 
 from race_engineer.core.intelligence import (
     ContextPacket,
@@ -20,6 +21,13 @@ from race_engineer.radio_diagnostics import radio_event, radio_evidence, radio_s
 
 class IntelligenceBoundaryError(Exception):
     """A component returned a valid shape with invalid cross-component scope."""
+
+
+class IntelligenceRuntime(Protocol):
+    """Optional owned model resources, warmed before radio capture and closed on exit."""
+
+    async def start(self) -> None: ...
+    async def aclose(self) -> None: ...
 
 
 @dataclass(frozen=True)
@@ -80,11 +88,22 @@ class EngineerOrchestrator:
         core_engineer: CoreEngineer,
         generator: EngineerResponseGenerator,
         grounder: EvidenceGrounder,
+        *,
+        runtime: IntelligenceRuntime | None = None,
     ) -> None:
         self._context = context_engineer
         self._core = core_engineer
         self._generator = generator
         self._grounder = grounder
+        self._runtime = runtime
+
+    async def start(self) -> None:
+        if self._runtime is not None:
+            await self._runtime.start()
+
+    async def aclose(self) -> None:
+        if self._runtime is not None:
+            await self._runtime.aclose()
 
     async def prepare(self, turn: DriverTurn) -> PreparedEngineerResponse:
         with radio_stage("context"):

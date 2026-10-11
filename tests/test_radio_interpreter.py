@@ -1,3 +1,4 @@
+import hashlib
 import json
 from pathlib import Path
 
@@ -7,6 +8,7 @@ from race_engineer.evaluation.radio_interpreter import (
     TOPICS,
     decision_questions,
     decode_decisions,
+    question_language_for,
     score_case,
     state_for,
     summarize,
@@ -50,6 +52,39 @@ def test_questions_allow_multiple_topics_without_generation_or_phrase_matching()
     assert observed == {
         "purpose": "mixed", "time_scope": "current", "topics": ["classification", "fuel"],
     }
+
+
+def test_english_question_baseline_is_byte_for_byte_unchanged():
+    digest = hashlib.sha256(json.dumps(decision_questions(), sort_keys=True).encode()).hexdigest()
+    assert digest == "9e955ef4b9d62d2d26abffa83990c138eb6312148df6e1b92c031ae2a5fa3ffa"
+
+
+def test_turkish_wording_preserves_question_types_ids_and_choice_labels():
+    english = decision_questions("en")
+    turkish = decision_questions("tr")
+    assert english.keys() == turkish.keys()
+    for question_id in english:
+        assert english[question_id]["type"] == turkish[question_id]["type"]
+        assert english[question_id]["criteria"].keys() == turkish[question_id]["criteria"].keys()
+        assert english[question_id]["instructions"] != turkish[question_id]["instructions"]
+    assert "yakıt" in turkish["topic_fuel"]["instructions"]
+    assert "SON sürücü" in turkish["purpose"]["instructions"]
+    assert "telsiz" in turkish["purpose"]["criteria"]["presence"].lower()
+
+
+@pytest.mark.parametrize("language,mode,expected", [
+    ("en", "english", "en"), ("tr", "english", "en"),
+    ("en", "matched", "en"), ("tr", "matched", "tr"),
+])
+def test_question_language_mapping_is_explicit(language, mode, expected):
+    assert question_language_for(language, mode) == expected
+
+
+def test_unsupported_question_languages_and_modes_do_not_silently_fall_back():
+    with pytest.raises(ValueError, match="unsupported_question_language"):
+        decision_questions("de")
+    with pytest.raises(ValueError, match="unsupported_question_language"):
+        question_language_for("tr", "unknown")
 
 
 def test_presence_after_position_is_scored_against_current_message():

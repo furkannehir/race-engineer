@@ -30,6 +30,7 @@ def test_frozen_installation_keeps_program_and_user_data_separate(tmp_path: Path
         local / "Pitward/components/conversation/Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
     )
     assert config.stt.worker_path == install / "workers/PitwardSTTWorker/PitwardSTTWorker.exe"
+    assert config.conversation.driver_interpreter.enabled is False
     assert config.radio_tts.worker_path == (
         install / "workers/PitwardTTSWorker/PitwardTTSWorker.exe"
     )

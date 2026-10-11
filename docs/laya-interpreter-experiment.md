@@ -64,6 +64,37 @@ a simultaneous-game-load benchmark.
 
 ## First CPU measurements
 
+### Try your own messages in a terminal
+
+The playground uses the same pinned model and decision questions, without writing prompts
+or responses to files. It displays classifications, not conversational replies or telemetry.
+Each message is independent by default; no Qwen server or iRacing session is required.
+
+```powershell
+.\data\stt-prototype\runtime\Scripts\python.exe scripts\try_laya_interpreter.py
+```
+
+Question wording now matches the chosen input language by default. Type `/lang tr` for
+Turkish messages and Turkish decision questions, `/raw on` to inspect the complete returned
+probabilities and action fields, `/questions` to see precisely what the model is asked, and `/quit` to
+exit. Scores are uncalibrated, not evidence that an interpretation is correct. The current
+question design only identifies coarse purpose/time/topics; it does not extract executable
+queries or entities.
+
+Optional `/history on` includes the last six dialogue entries in memory. Add a simulated
+engineer response with `/engineer <text>`: the interpreter itself does not generate one.
+Use `/reset` to clear history or `/history off` to disable and clear it. No dialogue is stored
+on disk, although text is visible in terminal scrollback.
+
+For one prompt with the complete raw response:
+
+```powershell
+.\data\stt-prototype\runtime\Scripts\python.exe scripts\try_laya_interpreter.py `
+  --language en --prompt "Are you there?" --raw
+```
+
+### Recorded measurements
+
 | Measure | Structured state | Plain conversation text |
 | --- | ---: | ---: |
 | Unique development cases | 28 | 28 |
@@ -94,6 +125,57 @@ The runs demonstrate sub-second, comparatively tight CPU timings for this small 
 eight typed questions. They **do not** establish acceptable interpretation accuracy, reliable
 abstention, or live-race performance. Scores use a fixed **0.5** topic threshold for screening;
 no threshold tuning was done. Raw probabilities are uncalibrated and cannot authorize routing.
+
+## Language-matched question experiment, October 10
+
+The same multilingual checkpoint can now receive naturally written Turkish instructions and
+option descriptions for Turkish messages. English wording remains byte-for-byte unchanged
+(question SHA-256 `9e955ef4b9d62d2d26abffa83990c138eb6312148df6e1b92c031ae2a5fa3ffa`).
+Question IDs, canonical English output labels, model weights, CPU threads, context formatting,
+authored messages/history, expectations, topic threshold, repeats and seeded order are unchanged.
+This tests question wording, not separate models or training. English labels and context
+section headings stay stable so the comparison does not change multiple design choices at once.
+
+The benchmark preserves the old default (`--question-language english`). Opt into matching:
+
+```powershell
+.\data\stt-prototype\runtime\Scripts\python.exe scripts\benchmark_laya_interpreter.py `
+  --state-format text --question-language matched --repeats 2 `
+  --output data\benchmarks\laya-language-matched-my-run.json
+```
+
+For the control, use `--question-language english` and a different output filename. Each
+report records the mode, question language for every turn, and per-language question hashes.
+Retain reports unchanged; do not compare runs with edited expectations or message histories.
+
+In the playground, `/lang tr` now selects Turkish wording when the default matched mode is
+active. Compare the same Turkish message with `/question-language english` and
+`/question-language matched`. `/questions` shows the selected wording, and each output includes
+`question_language`. There is no automatic detection or mixed-language routing in this test.
+
+Matched October 10 runs used the same source/input fingerprints and English question hash.
+Both completed all 56 attempts without runtime or response-validation errors:
+
+| Measure | English questions for both languages | Language-matched wording |
+| --- | ---: | ---: |
+| Exact purpose + scope + topic matches | 4/56 | 6/56 |
+| English exact matches | 4/28 | 4/28 |
+| Turkish exact matches | 0/28 | 2/28 |
+| Turkish purpose matches | 10/28 | 12/28 |
+| Turkish time-scope matches | 14/28 | 8/28 |
+| Turkish exact topic-set matches | 8/28 | 10/28 |
+| Overall inference median | 536 ms | 582 ms |
+| Overall inference p95 | 648 ms | 711 ms |
+
+The two added passes are one Turkish ambiguity case, "Ne kadar kaldı?", repeated twice.
+Purpose and topic-set scores improve slightly, while time-scope accuracy regresses. Basic
+Turkish position, fuel, gap and full presence-check expectations still fail. This wording
+profile is an experimental comparison, not a fix, training result or live promotion. It does
+not establish that language-specific models are necessary or sufficient.
+
+The detailed ignored reports are `data/benchmarks/laya-language-english-2026-10-10.json`
+and `data/benchmarks/laya-language-matched-2026-10-10.json`. No fixture expectations were
+changed and no model/package was installed, downloaded or trained.
 
 ## Reports, privacy and next investigation
 

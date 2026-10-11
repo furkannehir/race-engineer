@@ -97,7 +97,16 @@ class Installation:
                         "database_path": self.data_root / "race_engineer.sqlite3",
                     }
                 ),
-                "conversation": config.conversation.model_copy(update={"runtime": runtime}),
+                "conversation": config.conversation.model_copy(
+                    update={
+                        "runtime": runtime,
+                        # This draft checkpoint is a source-mode experiment, not a
+                        # downloadable/released component of the packaged application.
+                        "driver_interpreter": config.conversation.driver_interpreter.model_copy(
+                            update={"enabled": False}
+                        ),
+                    }
+                ),
                 "stt": config.stt.model_copy(
                     update={
                         "worker_path": workers

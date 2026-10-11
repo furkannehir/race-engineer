@@ -238,6 +238,7 @@ async def live_dialogue(
             "min_capture_s": stt.min_capture_s,
             "silence_threshold_dbfs": stt.silence_threshold_dbfs,
             "reply_voice_enabled": speaker is not None,
+            "experimental_driver_interpreter": config.conversation.driver_interpreter.enabled,
         },
     )
     try:
@@ -249,6 +250,10 @@ async def live_dialogue(
         _LOGGER.info("ASR runtime ready",
                      extra={"event": "radio_asr_ready", "run_id": run_id,
                             "duration_ms": round((time.perf_counter() - model_started)*1000, 3)})
+        if intelligence is not None:
+            # Warm the persistent optional classifier before the microphone is armed.
+            # Model failures fall back to Qwen; cancellation still stops startup.
+            await intelligence.start()
         if speaker is not None:
             try:
                 await speaker.start()
@@ -655,5 +660,8 @@ async def voice_iracing(
             try:
                 await recognizer.aclose()
             finally:
-                if speaker is not None:
-                    await speaker.aclose()
+                try:
+                    if speaker is not None:
+                        await speaker.aclose()
+                finally:
+                    await intelligence.aclose()

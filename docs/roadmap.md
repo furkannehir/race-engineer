@@ -1,10 +1,28 @@
 # Working roadmap
 
-Updated 2026-10-09. This is the current progress/backlog companion to the original
+Updated 2026-10-11. This is the current progress/backlog companion to the original
 [implementation plan](personalized-ai-race-engineer-implementation-plan.docx), not a claim
 that every original milestone exit criterion has been formally validated.
 
 ## Current checkpoint
+
+Branch decision (2026-10-11): `light-version` owns the interpreter experiments,
+draft datasets, training tools and bounded live pilot. The planned Pitward Light
+pipeline is CPU STT -> trained request interpreter -> shared telemetry/calculation
+engine -> smaller CPU response model -> CPU TTS. Full request extraction and the
+smaller response model remain to be implemented; this branch still uses Qwen-4B.
+The standard GPU/Qwen edition is maintained separately on `main`. No checkpoint,
+draft annotation or existing experiment was discarded in this split.
+
+October 11 checkpoint: the trained MiniLM v2 action pilot is wired into a bounded
+source-mode social shortcut; full telemetry-request extraction is not trained yet.
+The latest live trial submitted six questions: three information actions were detected,
+three had no above-threshold action, all six retained Qwen planning, and five timed out
+at the Context stage. The one spoken gap answer lacked a valid current ahead-gap input.
+Richer request-extraction training, a measured small CPU reply model and missing-gap
+diagnosis remain open. GPU implementation and measurements belong to `main`.
+
+The earlier October 9 checkpoint follows for historical context.
 
 October 9 checkpoint: v6 remains the live development baseline. Correlated radio diagnostics
 now distinguish capture, ASR, interpretation, Core, evidence refresh and voice delivery.
@@ -192,22 +210,70 @@ should share the validated service later. CONV-004 is scheduled in CE-05, not ye
    Ruff lint and mypy.
 8. **Follow-up — strategy models:** normalize track/car pit loss, requested service and field
    trajectory inputs before enabling the existing pit/rejoin capability contracts.
-9. Optional CUDA/Vulkan controls and stable combined-workload benchmarks remain after a
-   stable intelligence workload; AMD support still requires an actual AMD test.
+9. GPU runtime work and measured compute controls belong to the standard edition on
+   `main`. This branch targets CPU-only interpretation and response generation;
+   removing Qwen-4B requires full request-extraction training and a measured smaller
+   response model, not merely disabling the current Qwen fallback.
 10. Proactive usefulness learning remains separate and shadow-only until independently
    labeled evidence justifies promotion.
 
-## Future research: after the MVP
+## Research and domain adaptation
 
-These are explicitly deferred research directions, not MVP dependencies or claims that
-training will automatically improve speed or accuracy. The MVP uses existing local models.
+Dataset preparation for RES-01 was activated on 2026-10-10 by user decision. An
+exploratory draft-label training pilot was authorized and completed on 2026-10-11.
+Production model selection remains pending, not a prerequisite silently added to the
+MVP or a claim that specialization guarantees speed or accuracy. A separately requested
+source-mode v2 social live trial is now wired and enabled in the repository config;
+real-race timing/quality validation is pending. RES-02 remains deferred; Qwen still
+plans factual telemetry requests and generates replies.
 
-- **RES-01: purpose-trained radio interpreter.** Investigate a multilingual sentence encoder
-  such as MiniLM with SetFit or another lightweight learning method for English/Turkish radio
-  interpretation. Cover natural paraphrases, short inputs, dialogue references, mixed purposes,
-  out-of-scope requests and uncertainty rather than a prescribed spoken command set. This
-  needs suitable domain examples, independent evaluation and CPU resource measurements;
-  collecting a training corpus and training a model are not current tasks.
+- **RES-01: purpose-trained radio interpreter — first action-training pilot done;
+  dataset review and reliable interpretation remain in progress.**
+  The review-only v2 corpus has 1,400 assistant-authored drafts (700 English,
+  700 Turkish), preserving the original 800-row first-pilot corpus and 42-example
+  seed unchanged. It has 157 scenarios, 100 provisional grouping IDs,
+  open-vocabulary meaning/request annotations, provenance,
+  contextual feedback, compounds, mixed scopes, and marked synthetic ASR examples.
+  An authored catalog, deterministic materialization check, duplicate validator, coverage
+  inventory and paginated terminal review filters are implemented. All full-row reviews
+  remain draft and splits are unassigned; no model is promoted as a full interpreter. See
+  [driver-meaning dataset and review guide](driver-meaning-dataset.md).
+  Initial owner feedback accepts broad fuel/vent meanings and adds contextual back-off
+  feedback after repeated reminders; full-row reviews remain draft.
+  The [local MiniLM action pilot](driver-interpreter-training-pilot.md) compares
+  unadapted similarities, a trained head and last-two-layer adaptation using a separate
+  group-disjoint 552/126/122 manifest. Both trained candidates reach 50% exact match;
+  the majority sanity check is 42.62%. Warm selected-model CPU inference is 9.225 ms
+  median on this machine. It trains actions/clarification only, using plain PyTorch,
+  not SetFit; full telemetry-request extraction is not implemented. Weak-action
+  generalization and four missing positive-test categories block promotion.
+  A targeted 600-row expansion adds 60 scenarios emphasizing pure/mixed vents,
+  real car symptoms, corrections, preferences, current-reply feedback, ambiguity,
+  weather and social/radio contrasts. Its read-only seed-17 coverage check finds
+  positives for every action plus clarification in 948/216/236 candidate partitions;
+  all reviews remain drafts. A separately authorized second CPU training run is
+  completed with the same settings from the pinned base. On v2, the frozen control
+  has 40.68% test exact match, versus 37.71% for the adapted validation-selected
+  checkpoint (54.63% validation exact, threshold 0.7). The latter has 5.882 ms warm
+  median classification on this machine and matches the two supplied dirty-move
+  and weather development cases; acknowledgments, out-of-scope and other social
+  intents remain weak. These percentages are not directly comparable with v1's
+  different test set. Both checkpoints are preserved and neither is promoted.
+  See [v2 pilot results](driver-interpreter-training-pilot.md#second-pilot-v2-2026-10-11).
+  The inspector
+  defaults to v2; training still defaults to v1 unless a corpus is explicitly selected.
+  Human annotation review, error-driven sampling/training experiments and fresh
+  acceptance data remain. Further methods such as SetFit need a new explicit experiment protocol,
+  covering short inputs, dialogue, mixed purposes, uncertainty and open wording,
+  rather than a prescribed spoken command set. The authorized bounded live trial uses
+  a persistent offline CPU worker for singleton radio-check/greeting/vent shortcuts;
+  uncertainty, mixed and factual turns retain Qwen planning. Qwen still generates every
+  reply and evidence refresh/grounding remain enforced. Warm worker round trips were
+  about 9–10 ms on five development probes, not total spoken-answer latency; common
+  English/Turkish presence checks still fell back. Startup/route/stage logs, failure
+  fallback, process cleanup and config rollback are implemented. Packaged builds retain
+  the existing path. See [race-trial procedure](driver-interpreter-training-pilot.md#experimental-live-race-trial-2026-10-11).
+  Actual race A/B validation and full telemetry-request extraction remain pending.
 - **RES-02: specialize the Core/response model.** Investigate adapting the local conversational
   model to a calm race-engineer teammate style and supported evidence-based reasoning.
   Application code still owns telemetry retrieval, arithmetic, provenance, freshness and final
@@ -215,8 +281,11 @@ training will automatically improve speed or accuracy. The MVP uses existing loc
   that fine-tuning the same model makes inference cheaper. Compare quality and latency against
   the unadapted baseline before adoption.
 
-The immediate Laya experiment evaluates an existing checkpoint without training. Generic
-"copy/checking" acknowledgments remain a later UX discussion, not part of this experiment.
+The isolated Laya and mDeBERTa experiments screen existing checkpoints without training;
+neither earned promotion. Dataset preparation builds on those failures without treating
+already-probed examples as a fresh holdout. The MiniLM pilot is a separate, limited
+adaptation experiment; its synthetic test is not a locked release test. Generic
+"copy/checking" acknowledgments remain a later UX discussion.
 
 ## Constraints carried forward
 

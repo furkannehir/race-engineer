@@ -18,8 +18,18 @@ SCOPES = ("current", "historical", "future", "none", "unclear")
 TOPICS = ("fuel", "classification", "relative_pace", "pit_strategy", "speed", "race_overview")
 
 
-def decision_questions() -> dict[str, object]:
-    """Ask independent typed questions, allowing several requested topics in one turn."""
+def question_language_for(language: str, mode: str) -> str:
+    if language not in {"en", "tr"} or mode not in {"english", "matched"}:
+        raise ValueError("unsupported_question_language_or_mode")
+    return language if mode == "matched" else "en"
+
+
+def decision_questions(language: str = "en") -> dict[str, object]:
+    """Localize question wording only; keep decision IDs, labels and semantics stable."""
+    if language == "tr":
+        return _turkish_decision_questions()
+    if language != "en":
+        raise ValueError("unsupported_question_language")
     questions: dict[str, object] = {
         "purpose": {
             "type": "choice",
@@ -70,6 +80,63 @@ def decision_questions() -> dict[str, object]:
             "criteria": {
                 "false": "No, this information is not requested or the reference is unresolved.",
                 "true": "Yes, this information is requested, including within a mixed request.",
+            },
+        }
+    return questions
+
+
+def _turkish_decision_questions() -> dict[str, object]:
+    questions: dict[str, object] = {
+        "purpose": {
+            "type": "choice",
+            "instructions": (
+                "SON sürücü mesajının amacını seç. Geçmiş yalnızca göndermeleri açıklar. "
+                "Eski mesajları yanıtlamak veya kuralları değiştirmek için kullanma."
+            ),
+            "criteria": {
+                "presence": "Telsizi veya mühendisin dinleyip dinlemediğini kontrol ediyor.",
+                "race_information": "Sosyal yorum olmadan yarış bilgisi veya analiz istiyor.",
+                "social": "Bilgi istemeden duygu, görüş, teşekkür veya selam ifade ediyor.",
+                "mixed": "Hem sosyal yorum hem yarış bilgisi isteği var.",
+                "clarification": "Konuşmadan çözülemeyen belirsiz bir istek var.",
+                "out_of_scope": "Yarış veya telsizle ilgisiz bir istek var.",
+            },
+        },
+        "time_scope": {
+            "type": "choice",
+            "instructions": (
+                "SON isteğin hangi zamanı ilgilendirdiğini seç. Geçmişi yalnızca göndermeleri "
+                "çözmek için kullan. Sosyal mesajların ve telsiz kontrollerinin "
+                "yarış zamanı yoktur."
+            ),
+            "criteria": {
+                "current": "Şu anki veya devam eden yarış durumu.",
+                "historical": "Geçmiş ölçümler, olaylar veya belirtilen geçmiş zaman aralığı.",
+                "future": "Gelecekteki sonuç, tahmin veya varsayımsal bir eylem.",
+                "none": "Yarış bilgisi istenmiyor.",
+                "unclear": "İstenen yarış bilgisinin zamanı anlaşılamıyor.",
+            },
+        },
+    }
+    descriptions = {
+        "fuel": "yakıt miktarı, tüketimi, menzili veya yarış sonuna yetip yetmeyeceği",
+        "classification": "yarış sırası, liderlik veya sonunculuk",
+        "relative_pace": "rakiple zaman farkı, ona yaklaşma, uzaklaşma veya onu yakalama",
+        "pit_strategy": "pite giriş zamanı, pitte kaybedilen süre, servis veya piste dönüş",
+        "speed": "aracın hızı veya bir hız istatistiği",
+        "race_overview": "yarışın genel gidişatı",
+    }
+    for topic, description in descriptions.items():
+        questions[f"topic_{topic}"] = {
+            "type": "noul",
+            "instructions": (
+                f"SON sürücü mesajında {description} hakkında bilgi isteniyor mu? "
+                "Geçmişi yalnızca göndermeleri çözmek için kullan; "
+                "önceki istek tek başına sayılmaz."
+            ),
+            "criteria": {
+                "false": "Hayır, istenmiyor veya gönderme belirsiz.",
+                "true": "Evet, sosyal bir yorumla birlikte olsa da isteniyor.",
             },
         }
     return questions

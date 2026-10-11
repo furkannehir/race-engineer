@@ -1,0 +1,686 @@
+{
+  "schema_version": "driver-meaning-expansion-catalog.v1",
+  "seed_revision": "2026-10-10.expanded-draft1",
+  "dataset_id": "pitward-driver-meaning-coverage-v2",
+  "revision": "2026-10-11.coverage-draft1",
+  "examples_per_language": 700,
+  "annotation_defaults": {"requests": [], "interpretation_status": "clear", "clarification_needed": false, "ambiguities": []},
+  "request_defaults": {"request_id": "r1", "subject": "self", "reference_basis": "radio_convention", "time_scope": "current", "resolution": "clear"},
+  "families": [
+    {
+      "id": "v2-door-slam-vent", "leakage_group": "incident-vent", "prior_exposure": "previously_probed", "coverage_tags": ["vent", "social", "unverified-report", "contrast"],
+      "annotation": {"actions": ["vent"], "meaning": "Complain emotionally about perceived unfair contact without requesting information or reporting a car fault.", "rationale": "A driver's angry opinion does not establish contact, damage or fault. Keep related dirty-move complaints with the already exposed incident family."},
+      "variants": [
+        {"en": "That shove was a filthy move.", "tr": "O itiş tam bir pislikti."},
+        {"en": "He just shut the door on me, what a joke.", "tr": "Resmen kapıyı üstüme kapattı, şaka gibi."},
+        {"en": "That is some disgusting driving from him.", "tr": "Onun bu sürüşü gerçekten rezalet."},
+        {"en": "I'm furious about that door slam.", "tr": "O kapı kapatma hareketine çok sinirlendim."},
+        {"en": "You don't race people like that, bloody hell.", "tr": "İnsanlarla böyle yarışılmaz ya, yeter artık."}
+      ]
+    },
+    {
+      "id": "v2-blocking-vent", "leakage_group": "defending-frustration", "prior_exposure": "newly_authored", "coverage_tags": ["vent", "social", "unverified-report"],
+      "annotation": {"actions": ["vent"], "meaning": "Express frustration with perceived blocking, without asking the engineer to investigate or verify it.", "rationale": "A complaint about defending is not a gap query, a verified rule violation or a mechanical report."},
+      "variants": [
+        {"en": "This blocking is doing my head in.", "tr": "Bu bloklamalar beni çıldırtıyor."},
+        {"en": "Every time I get a run he makes it miserable.", "tr": "Ne zaman yaklaşsam işi çekilmez hâle getiriyor."},
+        {"en": "I'm sick of these stupid defensive moves.", "tr": "Bu saçma savunma hareketlerinden bıktım."},
+        {"en": "Honestly, racing him is such a pain.", "tr": "Gerçekten, onunla yarışmak tam bir eziyet."},
+        {"en": "What a frustrating guy to get past.", "tr": "Geçmeye çalıştığım adam ne kadar sinir bozucu."}
+      ]
+    },
+    {
+      "id": "v2-rejoin-vent", "leakage_group": "incident-vent", "prior_exposure": "previously_probed", "coverage_tags": ["vent", "social", "unverified-report"],
+      "annotation": {"actions": ["vent"], "meaning": "Vent about a perceived reckless rejoin, without requesting a penalty or claiming verified damage.", "rationale": "Keep this exposed unfair-driving complaint with its related family; do not turn an opinion into telemetry evidence."},
+      "variants": [
+        {"en": "What the hell was that rejoin supposed to be?", "tr": "O nasıl bir piste dönüş hareketiydi ya?"},
+        {"en": "Throwing himself back on track like that, unbelievable.", "tr": "Öylece kendini piste atması inanılmaz."},
+        {"en": "That rejoin was absolutely ridiculous.", "tr": "O piste dönüş düpedüz saçmalıktı."},
+        {"en": "I'm so annoyed with that reckless nonsense.", "tr": "Bu düşüncesiz saçmalığa çok sinirlendim."},
+        {"en": "Some people have no common sense coming back on track.", "tr": "Bazılarında piste dönerken hiç sağduyu yok."}
+      ]
+    },
+    {
+      "id": "v2-traffic-vent", "leakage_group": "traffic-frustration", "prior_exposure": "newly_authored", "coverage_tags": ["vent", "social"],
+      "annotation": {"actions": ["vent"], "meaning": "Express irritation about traffic disrupting driving rather than request a traffic analysis.", "rationale": "No gap, position, passing plan or car fault is requested by a bare complaint."},
+      "variants": [
+        {"en": "This traffic is killing the fun.", "tr": "Bu trafik bütün keyfi kaçırıyor."},
+        {"en": "I can't get a peaceful lap, it's so annoying.", "tr": "Bir tur rahat gidemiyorum, çok sinir bozucu."},
+        {"en": "I'm fed up with getting stuck in this mess.", "tr": "Bu karmaşanın içinde takılıp kalmaktan bıktım."},
+        {"en": "All this bunching up is driving me mad.", "tr": "Bu yığılmalar beni deli ediyor."},
+        {"en": "Of course there's traffic again, just my luck.", "tr": "Tabii yine trafik var, tam benim şansım."}
+      ]
+    },
+    {
+      "id": "v2-penalty-vent", "leakage_group": "penalty-frustration", "prior_exposure": "newly_authored", "coverage_tags": ["vent", "social", "unverified-report"],
+      "annotation": {"actions": ["vent"], "meaning": "Complain about a perceived unfair penalty rather than ask for penalty status or appeal action.", "rationale": "Do not verify the penalty, agree on fault or invent a service instruction from emotional wording."},
+      "variants": [
+        {"en": "That penalty feels like an absolute joke.", "tr": "O ceza bana tam bir şaka gibi geliyor."},
+        {"en": "I'm so angry about that stupid penalty.", "tr": "O saçma cezaya çok sinirlendim."},
+        {"en": "Lovely, punished for that nonsense again.", "tr": "Harika, yine o saçmalık yüzünden ceza yedik."},
+        {"en": "This penalty business is ruining my mood.", "tr": "Bu ceza işi bütün moralimi bozuyor."},
+        {"en": "I really hate how unfair that felt.", "tr": "Bana bu kadar haksız gelmesi gerçekten canımı sıkıyor."}
+      ]
+    },
+    {
+      "id": "v2-car-frustration", "leakage_group": "car-frustration", "prior_exposure": "newly_authored", "coverage_tags": ["vent", "social", "contrast"],
+      "annotation": {"actions": ["vent"], "meaning": "Express dislike of the car without specifying a fault, measurable symptom or request for setup advice.", "rationale": "Negative words about the car are not automatically a mechanical problem report."},
+      "variants": [
+        {"en": "I hate this bloody car today.", "tr": "Bugün bu lanet arabadan nefret ediyorum."},
+        {"en": "This car is making me lose my patience.", "tr": "Bu araba sabrımı taşırıyor."},
+        {"en": "I'm just not enjoying this thing at all.", "tr": "Bu araçtan hiç keyif almıyorum."},
+        {"en": "What a miserable car to race right now.", "tr": "Şu an bununla yarışmak ne kadar keyifsiz."},
+        {"en": "I'm annoyed with the car, that's all.", "tr": "Arabaya sinirliyim, hepsi bu."}
+      ]
+    },
+    {
+      "id": "v2-rain-frustration", "leakage_group": "wet-weather-episode", "prior_exposure": "newly_authored", "coverage_tags": ["vent", "weather", "contrast"],
+      "annotation": {"actions": ["vent"], "meaning": "Express frustration about racing in wet conditions without asking for a weather update.", "rationale": "Weather vocabulary alone does not make an information request; rain is a driver-described situation, not verified telemetry."},
+      "variants": [
+        {"en": "This bloody rain has ruined my evening.", "tr": "Bu lanet yağmur akşamımı mahvetti."},
+        {"en": "I'm so sick of racing in this wet mess.", "tr": "Bu ıslak karmaşada yarışmaktan çok sıkıldım."},
+        {"en": "I was hoping for a nice race, not this rain nonsense.", "tr": "Güzel bir yarış umuyordum, bu yağmur saçmalığını değil."},
+        {"en": "Rain again, that's just fantastic, isn't it.", "tr": "Yine yağmur, gerçekten şahane oldu ya."},
+        {"en": "I hate these miserable wet races.", "tr": "Bu berbat yağmurlu yarışlardan nefret ediyorum."}
+      ]
+    },
+    {
+      "id": "v2-vibration-and-vent", "leakage_group": "steering-vibration", "prior_exposure": "newly_authored", "coverage_tags": ["vent", "problem-report", "mixed-actions", "contrast"],
+      "annotation": {"actions": ["vent", "report_problem"], "meaning": "Report steering-wheel vibration and express frustration about it without requesting information.", "rationale": "Retain both a concrete symptom and emotional reaction; do not label either as a confirmed damage diagnosis."},
+      "variants": [
+        {"en": "The wheel's shaking on the straight, and it's really pissing me off.", "tr": "Düzlükte direksiyon titriyor, bu beni çok sinirlendiriyor."},
+        {"en": "I'm getting steering vibration, bloody annoying thing.", "tr": "Direksiyonda titreşim var, ne sinir bozucu şey."},
+        {"en": "That shake through the wheel is back, I hate this.", "tr": "Direksiyondaki titreme geri geldi, bundan nefret ediyorum."},
+        {"en": "This vibration in my steering is doing my head in.", "tr": "Direksiyonumdaki bu titreme beni çıldırtıyor."},
+        {"en": "The steering keeps shuddering, what a miserable situation.", "tr": "Direksiyon sürekli sarsılıyor, ne berbat bir durum."}
+      ]
+    },
+    {
+      "id": "v2-dirty-windscreen", "leakage_group": "windscreen-visibility", "prior_exposure": "newly_authored", "coverage_tags": ["problem-report", "contrast", "unverified-report"],
+      "annotation": {"actions": ["report_problem"], "meaning": "Report restricted visibility due to a dirty windscreen without venting or asking a question.", "rationale": "Dirty describes a concrete visibility symptom here, not an opponent's unfair move. Preserve the driver's report without verifying it."},
+      "variants": [
+        {"en": "The windscreen is covered in dirt and I can't see the apex.", "tr": "Ön cam kir içinde, virajın iç noktasını göremiyorum."},
+        {"en": "Dirt on the screen is blocking my view.", "tr": "Camdaki kir görüşümü kapatıyor."},
+        {"en": "My windscreen is so dirty I can't pick out the braking board.", "tr": "Ön cam o kadar kirli ki fren tabelasını seçemiyorum."},
+        {"en": "I'm losing visibility through this dirty glass.", "tr": "Bu kirli cam yüzünden görüşüm azalıyor."},
+        {"en": "There's grime right across my line of sight.", "tr": "Görüş hattımın tam üstünde kir tabakası var."}
+      ]
+    },
+    {
+      "id": "v2-steering-vibration", "leakage_group": "steering-vibration", "prior_exposure": "newly_authored", "coverage_tags": ["problem-report", "contrast", "unverified-report"],
+      "annotation": {"actions": ["report_problem"], "meaning": "Report steering vibration neutrally, without an emotional complaint or information request.", "rationale": "The symptom does not prove a flat spot, suspension damage or another cause. Keep this pure report with its mixed vent contrast."},
+      "variants": [
+        {"en": "I can feel a vibration through the steering wheel.", "tr": "Direksiyonda bir titreşim hissediyorum."},
+        {"en": "The wheel shakes when I reach the straight.", "tr": "Düzlüğe çıkınca direksiyon titriyor."},
+        {"en": "There's a shudder in the steering at speed.", "tr": "Hızlanınca direksiyonda sarsıntı oluyor."},
+        {"en": "Steering vibration has started on this lap.", "tr": "Bu turda direksiyon titremeye başladı."},
+        {"en": "I'm getting repeated shaking through the wheel.", "tr": "Direksiyonda sürekli tekrar eden bir titreme var."}
+      ]
+    },
+    {
+      "id": "v2-missed-gear", "leakage_group": "gear-selection", "prior_exposure": "newly_authored", "coverage_tags": ["problem-report", "unverified-report"],
+      "annotation": {"actions": ["report_problem"], "meaning": "Report a gear-selection symptom rather than ask for a gearbox diagnosis.", "rationale": "No mechanical cause or repair decision is supplied by the driver's symptom report."},
+      "variants": [
+        {"en": "It won't select third gear when I pull the paddle.", "tr": "Kulakçığı çekince üçüncü vitese geçmiyor."},
+        {"en": "Third keeps refusing to engage.", "tr": "Üçüncü vites bir türlü geçmiyor."},
+        {"en": "I'm missing the shift from second to third repeatedly.", "tr": "İkiden üçe geçiş sürekli boşa gidiyor."},
+        {"en": "The next gear isn't going in when I request it.", "tr": "İstediğimde bir sonraki vites geçmiyor."},
+        {"en": "Gear selection is hanging between second and third.", "tr": "Vites geçişi iki ile üç arasında takılıyor."}
+      ]
+    },
+    {
+      "id": "v2-throttle-sticking", "leakage_group": "throttle-sticking", "prior_exposure": "newly_authored", "coverage_tags": ["problem-report", "unverified-report"],
+      "annotation": {"actions": ["report_problem"], "meaning": "Report that throttle response does not fully release when the driver lifts.", "rationale": "Treat this as a potentially important driver report, not a proven pedal fault, frustration alone or an implicit fuel request."},
+      "variants": [
+        {"en": "The throttle stays partly open when I lift off.", "tr": "Gazı bırakınca biraz açık kalıyor."},
+        {"en": "I'm off the pedal but the engine is still pulling.", "tr": "Pedaldan ayağımı çektim ama motor hâlâ çekiyor."},
+        {"en": "The accelerator isn't returning to zero for me.", "tr": "Gaz pedalı bende sıfıra dönmüyor."},
+        {"en": "It keeps feeding throttle after I release the pedal.", "tr": "Pedalı bırakınca da gaz vermeye devam ediyor."},
+        {"en": "My throttle input seems stuck above zero.", "tr": "Gaz girişim sıfırın üstünde takılı kalmış gibi."}
+      ]
+    },
+    {
+      "id": "v2-engine-stumble", "leakage_group": "engine-stumble", "prior_exposure": "newly_authored", "coverage_tags": ["problem-report", "unverified-report"],
+      "annotation": {"actions": ["report_problem"], "meaning": "Report intermittent engine hesitation without asking for a fuel or damage calculation.", "rationale": "Preserve the perceived symptom, but do not diagnose fuel shortage or engine damage."},
+      "variants": [
+        {"en": "The engine hesitates when I get back on the throttle.", "tr": "Yeniden gaza basınca motor tekliyor."},
+        {"en": "Power keeps cutting briefly on corner exit.", "tr": "Viraj çıkışında güç kısa kısa kesiliyor."},
+        {"en": "I'm feeling the engine stumble under acceleration.", "tr": "Hızlanırken motorun teklediğini hissediyorum."},
+        {"en": "It pauses before pulling when I accelerate.", "tr": "Gaza basınca çekmeye başlamadan önce duraklıyor."},
+        {"en": "The engine response has become intermittent.", "tr": "Motorun tepkisi kesik kesik gelmeye başladı."}
+      ]
+    },
+    {
+      "id": "v2-brake-fade", "leakage_group": "brake-report", "prior_exposure": "newly_authored", "coverage_tags": ["problem-report", "brakes", "unverified-report"],
+      "annotation": {"actions": ["report_problem"], "meaning": "Report reduced braking response without requesting an adjustment or diagnosis.", "rationale": "Related brake symptoms remain in the original brake group. Neither temperature nor confirmed brake failure is supplied."},
+      "variants": [
+        {"en": "I'm pressing as hard as before but the car isn't slowing as much.", "tr": "Eskisi kadar basıyorum ama araba aynı şekilde yavaşlamıyor."},
+        {"en": "The brake pedal feels soft on this lap.", "tr": "Bu turda fren pedalı yumuşak geliyor."},
+        {"en": "Stopping power seems to be fading away.", "tr": "Frenleme gücü azalıyor gibi."},
+        {"en": "I need noticeably more pedal pressure to stop.", "tr": "Durmak için belirgin şekilde daha fazla pedal kuvveti gerekiyor."},
+        {"en": "Braking response is weaker than earlier in the stint.", "tr": "Fren tepkisi stintin başına göre daha zayıf."}
+      ]
+    },
+    {
+      "id": "v2-correct-rain-forecast", "leakage_group": "weather-forecast", "prior_exposure": "newly_authored", "coverage_tags": ["correction", "weather", "dialogue", "negation"],
+      "dialogue": {"en": [{"role": "driver", "text": "Any rain before we finish?"}, {"role": "engineer", "text": "Are you asking for the current air temperature?"}], "tr": [{"role": "driver", "text": "Bitirmeden yağmur gelecek mi?"}, {"role": "engineer", "text": "Mevcut hava sıcaklığını mı soruyorsun?"}]},
+      "annotation": {"actions": ["correction", "request_information"], "meaning": "Correct an air-temperature interpretation and ask about rain before the race finish.", "requests": [{"focus": "rain_forecast", "question": "Is rain expected before this race finishes?", "subject": "track", "reference_basis": "dialogue", "time_scope": "future_counterfactual"}], "rationale": "Correction updates the question, not the weather facts; forecasting availability is a later capability check."},
+      "variants": [
+        {"en": "No, I meant whether rain is coming before the finish.", "tr": "Hayır, finişten önce yağmur gelip gelmeyeceğini kastettim."},
+        {"en": "Not temperature, the rain forecast for the rest of the race.", "tr": "Sıcaklığı değil, yarışın kalanı için yağmur tahminini."},
+        {"en": "I was asking if it will rain before we're done.", "tr": "Biz bitirmeden yağmur yağacak mı diye soruyordum."},
+        {"en": "You've got that wrong; I want the chance of rain before the flag.", "tr": "Yanlış anlamışsın; bayrağa kadar yağmur ihtimalini istiyorum."},
+        {"en": "Rain later in this race, not how warm it is now.", "tr": "Şu an havanın sıcaklığını değil, bu yarışta sonra yağmur olup olmayacağını."}
+      ]
+    },
+    {
+      "id": "v2-correct-time-window", "leakage_group": "historical-speed", "prior_exposure": "newly_authored", "coverage_tags": ["correction", "historical", "dialogue", "window"],
+      "dialogue": {"en": [{"role": "driver", "text": "What's my average speed over the last twenty seconds?"}, {"role": "engineer", "text": "Do you mean over the previous lap?"}], "tr": [{"role": "driver", "text": "Son yirmi saniyedeki ortalama hızım ne?"}, {"role": "engineer", "text": "Önceki tur boyunca mı demek istiyorsun?"}]},
+      "annotation": {"actions": ["correction", "request_information"], "meaning": "Correct the averaging window to twenty seconds for the supplied speed question.", "requests": [{"focus": "speed_mean", "question": "What was the driver's average speed over the most recent twenty seconds?", "reference_basis": "dialogue", "time_scope": "historical", "window_seconds": 20}], "rationale": "Retain the latest explicit window; do not substitute a lap or calculate a value from the utterance."},
+      "variants": [
+        {"en": "Twenty seconds, not a whole lap.", "tr": "Tam tur değil, yirmi saniye."},
+        {"en": "No, use only the most recent twenty seconds.", "tr": "Hayır, sadece en son yirmi saniyeyi kullan."},
+        {"en": "I meant the average for the last twenty seconds.", "tr": "Son yirmi saniyenin ortalamasını kastettim."},
+        {"en": "Wrong window, I asked for twenty seconds.", "tr": "Yanlış aralık, yirmi saniye istemiştim."},
+        {"en": "Keep it to the previous twenty seconds of speed.", "tr": "Hız için önceki yirmi saniyeyle sınırlı tut."}
+      ]
+    },
+    {
+      "id": "v2-correct-class-domain", "leakage_group": "class-position", "prior_exposure": "newly_authored", "coverage_tags": ["correction", "classification", "dialogue", "multiclass"],
+      "dialogue": {"en": [{"role": "driver", "text": "Where am I in my class?"}, {"role": "engineer", "text": "You want the overall order?"}], "tr": [{"role": "driver", "text": "Kendi sınıfımda kaçıncıyım?"}, {"role": "engineer", "text": "Genel sıralamayı mı istiyorsun?"}]},
+      "annotation": {"actions": ["correction", "request_information"], "meaning": "Correct overall-position routing to the driver's class position.", "requests": [{"focus": "class_position", "question": "What is the driver's position in their own class?", "reference_basis": "dialogue"}], "rationale": "Class and overall ranks are not interchangeable, even though this pilot only learns the actions."},
+      "variants": [
+        {"en": "My class only, not all the cars.", "tr": "Tüm araçları değil, sadece kendi sınıfımı."},
+        {"en": "No, where I stand among my class rivals.", "tr": "Hayır, sınıfımdaki rakipler arasında nerede olduğumu."},
+        {"en": "I asked for class position, not overall.", "tr": "Genel sıramı değil, sınıf sıramı sordum."},
+        {"en": "The class standings are what I meant.", "tr": "Sınıf sıralamasını demek istemiştim."},
+        {"en": "Wrong category; give me my own-class rank.", "tr": "Yanlış kategori; kendi sınıfımdaki sıramı söyle."}
+      ]
+    },
+    {
+      "id": "v2-correct-service-time", "leakage_group": "pit-service-duration", "prior_exposure": "newly_authored", "coverage_tags": ["correction", "pit", "dialogue", "negation"],
+      "dialogue": {"en": [{"role": "driver", "text": "How long will the planned pit service take?"}, {"role": "engineer", "text": "You mean total time lost including pit lane?"}], "tr": [{"role": "driver", "text": "Planlanan pit servisi ne kadar sürecek?"}, {"role": "engineer", "text": "Pit yolu dâhil toplam zaman kaybını mı diyorsun?"}]},
+      "annotation": {"actions": ["correction", "request_information"], "meaning": "Correct total pit-loss routing to stationary planned service time.", "requests": [{"focus": "pit_service_duration", "question": "How long is the planned stationary pit service expected to take?", "reference_basis": "dialogue", "time_scope": "future_counterfactual"}], "rationale": "Stationary work and transit loss differ. Preserve the requested scope without inventing an estimate."},
+      "variants": [
+        {"en": "Only the stationary service, not the drive through pit lane.", "tr": "Pit yolundaki sürüşü değil, sadece dururken yapılan servisi."},
+        {"en": "No, the time at the box itself.", "tr": "Hayır, pit kutusunda geçen sürenin kendisini."},
+        {"en": "I mean how long the planned work takes while stopped.", "tr": "Dururken planlanan işlemlerin ne kadar süreceğini kastediyorum."},
+        {"en": "Exclude pit entry and exit; just give me service duration.", "tr": "Pit giriş çıkışını hariç tut; sadece servis süresini söyle."},
+        {"en": "That's the wrong estimate, I'm asking for time standing at the box.", "tr": "O yanlış tahmin, kutuda hareketsiz geçen süreyi soruyorum."}
+      ]
+    },
+    {
+      "id": "v2-correct-previous-wording", "leakage_group": "driver-wording-correction", "prior_exposure": "newly_authored", "coverage_tags": ["correction", "dialogue", "social"],
+      "dialogue": {"en": [{"role": "driver", "text": "That was a silly thing for me to say."}, {"role": "engineer", "text": "You are criticizing the other driver?"}], "tr": [{"role": "driver", "text": "Bunu söylemem saçmaydı."}, {"role": "engineer", "text": "Diğer sürücüyü mü eleştiriyorsun?"}]},
+      "annotation": {"actions": ["correction"], "meaning": "Correct whose words the driver was referring to, without a new telemetry request or fresh vent.", "rationale": "The supplied history supports a meaning correction, not a car fault, complaint about another driver or information query."},
+      "variants": [
+        {"en": "No, I meant what I said, not what he did.", "tr": "Hayır, onun yaptığını değil, benim söylediğimi kastettim."},
+        {"en": "I was talking about my own comment.", "tr": "Kendi sözümden bahsediyordum."},
+        {"en": "You've misunderstood; the wording was mine.", "tr": "Yanlış anlamışsın; o söz benimdi."},
+        {"en": "Not the other driver, I was correcting myself.", "tr": "Diğer sürücüyü değil, kendimi düzeltiyordum."},
+        {"en": "I meant my remark, not his driving.", "tr": "Onun sürüşünü değil, kendi sözümü kastettim."}
+      ]
+    },
+    {
+      "id": "v2-correct-surface-temperature", "leakage_group": "track-temperature", "prior_exposure": "newly_authored", "coverage_tags": ["correction", "weather", "dialogue", "temperature"],
+      "dialogue": {"en": [{"role": "driver", "text": "What's the surface temperature?"}, {"role": "engineer", "text": "Do you want air temperature?"}], "tr": [{"role": "driver", "text": "Zemin sıcaklığı kaç?"}, {"role": "engineer", "text": "Hava sıcaklığını mı istiyorsun?"}]},
+      "annotation": {"actions": ["correction", "request_information"], "meaning": "Correct a temperature target from air to the track surface.", "requests": [{"focus": "track_temperature", "question": "What is the current track-surface temperature?", "subject": "track", "reference_basis": "dialogue"}], "rationale": "Track, air and tyre temperatures are different quantities; no temperature value follows from the correction."},
+      "variants": [
+        {"en": "The asphalt, not the air.", "tr": "Havayı değil, asfaltı."},
+        {"en": "No, the temperature of the racing surface.", "tr": "Hayır, yarış yüzeyinin sıcaklığını."},
+        {"en": "I meant track temperature, not ambient.", "tr": "Ortam sıcaklığını değil, pist sıcaklığını kastettim."},
+        {"en": "Read the surface temperature instead.", "tr": "Onun yerine zemin sıcaklığını oku."},
+        {"en": "Wrong measurement, I asked how hot the tarmac is.", "tr": "Yanlış ölçüm, asfaltın ne kadar sıcak olduğunu sordum."}
+      ]
+    },
+    {
+      "id": "v2-prefer-metric", "leakage_group": "communication-units", "prior_exposure": "newly_authored", "coverage_tags": ["preference", "measurement", "negation"],
+      "annotation": {"actions": ["preference_change"], "meaning": "Request metric units as the ongoing communication format rather than ask for a current measurement.", "rationale": "The requested unit convention is separate from telemetry retrieval. Annotation does not authorize saving a profile preference."},
+      "variants": [
+        {"en": "Use metric units for your calls from now on.", "tr": "Bundan sonra anonslarında metrik birimleri kullan."},
+        {"en": "I'd like litres and kilometres per hour in future replies.", "tr": "Sonraki cevaplarında litre ve kilometre/saat kullanmanı istiyorum."},
+        {"en": "Please stop using gallons and miles when you talk to me.", "tr": "Benimle konuşurken galon ve mil kullanmayı bırak lütfen."},
+        {"en": "Make metric the normal unit system on my radio.", "tr": "Benim telsizimde normal birim sistemi metrik olsun."},
+        {"en": "For all our sessions, give measurements in metric.", "tr": "Bütün seanslarımızda ölçümleri metrik olarak söyle."}
+      ]
+    },
+    {
+      "id": "v2-prefer-number-first", "leakage_group": "brief-replies", "prior_exposure": "newly_authored", "coverage_tags": ["preference", "contrast"],
+      "annotation": {"actions": ["preference_change"], "meaning": "Ask for a concise number-first reply style in subsequent conversations.", "rationale": "An ongoing style request differs from criticizing one recent long reply; retain the conservative existing brevity group."},
+      "variants": [
+        {"en": "In future answers, lead with the number and keep it brief.", "tr": "Sonraki cevaplarında önce sayıyı söyle, kısa tut."},
+        {"en": "I want the figure first whenever I ask for a measurement.", "tr": "Ne zaman ölçüm sorsam önce değeri duymak istiyorum."},
+        {"en": "Always give the result before the explanation, please.", "tr": "Her zaman açıklamadan önce sonucu söyle lütfen."},
+        {"en": "Make your normal replies short and put numbers up front.", "tr": "Normal cevapların kısa olsun, sayıları başta söyle."},
+        {"en": "From now on, one brief answer before any detail.", "tr": "Bundan sonra ayrıntıdan önce tek kısa cevap ver."}
+      ]
+    },
+    {
+      "id": "v2-prefer-fewer-routine-calls", "leakage_group": "routine-call-frequency", "prior_exposure": "newly_authored", "coverage_tags": ["preference", "negation", "contrast"],
+      "annotation": {"actions": ["preference_change"], "meaning": "Request fewer routine unsolicited announcements as a lasting style preference, while keeping important calls.", "rationale": "Explicit ongoing scope differs from temporary silence during a battle. Do not automatically change critical-call behavior or saved settings."},
+      "variants": [
+        {"en": "For future races, make fewer routine calls but keep the important ones.", "tr": "Sonraki yarışlarda sıradan anonsları azalt ama önemli olanları söyle."},
+        {"en": "I generally prefer less unsolicited chatter, with urgent warnings left on.", "tr": "Genelde kendiliğinden konuşmaları daha az istiyorum, acil uyarılar açık kalsın."},
+        {"en": "Make a quieter radio my default, except for important warnings.", "tr": "Önemli uyarılar dışında telsizim varsayılan olarak daha sessiz olsun."},
+        {"en": "In every session, avoid frequent routine updates unless I ask.", "tr": "Her seansta ben sormadıkça sık sık sıradan güncelleme verme."},
+        {"en": "Going forward, cut the regular chatter without losing critical calls.", "tr": "Bundan sonra kritik anonsları kaybetmeden normal konuşmaları azalt."}
+      ]
+    },
+    {
+      "id": "v2-prefer-no-name", "leakage_group": "driver-addressing", "prior_exposure": "newly_authored", "coverage_tags": ["preference", "social", "negation"],
+      "annotation": {"actions": ["preference_change"], "meaning": "Request that the engineer stop using the driver's name in routine replies.", "rationale": "This is a communication-style request, not a question about identity or an instruction to erase a profile."},
+      "variants": [
+        {"en": "Don't use my name in every answer anymore.", "tr": "Artık her cevapta adımı söyleme."},
+        {"en": "I'd rather you left my name out of radio calls.", "tr": "Telsiz anonslarında adımı kullanmamanı tercih ederim."},
+        {"en": "Just speak to me normally without repeating my name.", "tr": "Adımı tekrarlamadan normal şekilde konuş benimle."},
+        {"en": "For future replies, no personal name at the start.", "tr": "Sonraki cevapların başında kişisel ismim olmasın."},
+        {"en": "Make the calls less name-heavy from now on.", "tr": "Bundan sonra anonslarda adımı daha az kullan."}
+      ]
+    },
+    {
+      "id": "v2-prefer-serious-tone", "leakage_group": "engineer-tone-preference", "prior_exposure": "newly_authored", "coverage_tags": ["preference", "social", "negation"],
+      "annotation": {"actions": ["preference_change"], "meaning": "Ask for a serious engineer tone without jokes in subsequent radio communication.", "rationale": "An explicit future style preference is not a report of a car problem or a fresh race query."},
+      "variants": [
+        {"en": "Keep the tone serious on the radio from now on.", "tr": "Bundan sonra telsizde ciddi bir üslup kullan."},
+        {"en": "I prefer straightforward calls without jokes.", "tr": "Şakasız, doğrudan anonsları tercih ediyorum."},
+        {"en": "No banter in future sessions, please.", "tr": "Sonraki seanslarda şakalaşma olmasın lütfen."},
+        {"en": "Make a calm professional tone your usual style with me.", "tr": "Benimle konuşurken normal üslubun sakin ve profesyonel olsun."},
+        {"en": "Always skip the humour and stick to the useful stuff.", "tr": "Her zaman espriyi atla ve faydalı konularla sınırlı kal."}
+      ]
+    },
+    {
+      "id": "v2-prefer-turkish", "leakage_group": "english-replies", "prior_exposure": "newly_authored", "coverage_tags": ["preference", "language", "contrast"],
+      "annotation": {"actions": ["preference_change"], "meaning": "Request Turkish as the future reply language, regardless of the current transcript language.", "rationale": "Keep output-language variants with the existing language preference family. This changes intended reply language, not a telemetry topic."},
+      "variants": [
+        {"en": "I'd like you to use Turkish for replies from now on.", "tr": "Bundan sonra cevaplarında Türkçe kullanmanı istiyorum."},
+        {"en": "Make Turkish our normal radio language.", "tr": "Normal telsiz dilimiz Türkçe olsun."},
+        {"en": "Use Turkish in future answers even if I ask in English.", "tr": "İngilizce sorsam bile sonraki cevaplarında Türkçe kullan."},
+        {"en": "Switch the language of your calls to Turkish permanently.", "tr": "Anonslarının dilini kalıcı olarak Türkçeye çevir."},
+        {"en": "Going forward, I prefer hearing the engineer in Turkish.", "tr": "Bundan sonra mühendisi Türkçe duymayı tercih ediyorum."}
+      ]
+    },
+    {
+      "id": "v2-bad-call-timing", "leakage_group": "call-timing-feedback", "prior_exposure": "newly_authored", "coverage_tags": ["communication-feedback", "temporary-scope", "contrast"],
+      "annotation": {"actions": ["communication_feedback"], "meaning": "Criticize a badly timed recent call during braking without setting a permanent communication preference.", "rationale": "Feedback about this interruption differs from a general future call policy. Do not infer permanent silence or a mechanical brake issue."},
+      "variants": [
+        {"en": "That call came right in my braking zone and distracted me.", "tr": "O anons tam frenleme noktamda geldi ve dikkatimi dağıttı."},
+        {"en": "You interrupted me in the middle of that corner.", "tr": "O virajın ortasında dikkatimi böldün."},
+        {"en": "The timing of that last message was awful for me.", "tr": "O son mesajın zamanlaması benim için berbattı."},
+        {"en": "I was busy braking when you started that explanation.", "tr": "O açıklamaya başladığında frenlemeyle uğraşıyordum."},
+        {"en": "That was the worst moment to start talking to me.", "tr": "Benimle konuşmaya başlamak için en kötü andı."}
+      ]
+    },
+    {
+      "id": "v2-repeated-damage-reminder", "leakage_group": "damage-reminder-feedback", "prior_exposure": "newly_authored", "coverage_tags": ["communication-feedback", "dialogue", "temporary-scope"],
+      "dialogue": {"en": [{"role": "engineer", "text": "Be mindful of the damage we discussed."}, {"role": "driver", "text": "I heard the reminder."}, {"role": "engineer", "text": "Remember that damage again."}], "tr": [{"role": "engineer", "text": "Konuştuğumuz hasarı aklında tut."}, {"role": "driver", "text": "Hatırlatmayı duydum."}, {"role": "engineer", "text": "O hasarı tekrar hatırlatayım."}]},
+      "annotation": {"actions": ["communication_feedback"], "meaning": "Ask the engineer to stop repeating an already acknowledged damage reminder in this exchange.", "rationale": "The current driver turn is back-off feedback, not a new damage report or permission to disable future safety warnings."},
+      "variants": [
+        {"en": "You've told me about that already, let it go now.", "tr": "Bunu zaten söyledin, şimdi bırak artık."},
+        {"en": "I got the reminder, no need to keep repeating it.", "tr": "Hatırlatmayı aldım, sürekli tekrarlamana gerek yok."},
+        {"en": "Yes, I remember, please stop bringing it up this lap.", "tr": "Evet, hatırlıyorum, bu turda tekrar tekrar açma konuyu lütfen."},
+        {"en": "I haven't forgotten what you said, give me room to drive.", "tr": "Söylediğini unutmadım, bırak da süreyim."},
+        {"en": "Enough reminders about that now, I heard you.", "tr": "Şimdi bu konudaki hatırlatmalar yeter, seni duydum."}
+      ]
+    },
+    {
+      "id": "v2-long-answer-feedback", "leakage_group": "recent-long-answer", "prior_exposure": "newly_authored", "coverage_tags": ["communication-feedback", "contrast"],
+      "annotation": {"actions": ["communication_feedback"], "meaning": "Criticize the length of one recent engineer reply without explicitly changing future preferences.", "rationale": "Past-turn feedback must not be silently converted into a durable brevity setting or an information request."},
+      "variants": [
+        {"en": "That last answer was far too long for me to follow.", "tr": "O son cevap takip edemeyeceğim kadar uzundu."},
+        {"en": "You gave me a whole essay just then.", "tr": "Az önce bana resmen bir kompozisyon okudun."},
+        {"en": "I lost the point halfway through your explanation.", "tr": "Açıklamanın yarısında asıl konuyu kaçırdım."},
+        {"en": "That reply had way more words than I could take in.", "tr": "O cevap anlayabileceğimden çok daha fazla kelime içeriyordu."},
+        {"en": "The message you just gave me was too much to process.", "tr": "Az önce verdiğin mesaj benim için işlenemeyecek kadar uzundu."}
+      ]
+    },
+    {
+      "id": "v2-quiet-reply-feedback", "leakage_group": "reply-audibility-feedback", "prior_exposure": "newly_authored", "coverage_tags": ["communication-feedback", "radio", "contrast"],
+      "annotation": {"actions": ["communication_feedback"], "meaning": "Report that the engineer's recent spoken reply was too quiet, without asking whether the driver's microphone is received.", "rationale": "This is feedback on received engineer audio, not a car fault or a driver-to-engineer radio check. Do not change volume automatically."},
+      "variants": [
+        {"en": "Your last call was too quiet for me to hear properly.", "tr": "Son anonsun düzgün duyamayacağım kadar kısıktı."},
+        {"en": "I could barely hear what you just said.", "tr": "Az önce söylediğini zar zor duydum."},
+        {"en": "That reply got buried under the engine sound.", "tr": "O cevap motor sesinin altında kayboldu."},
+        {"en": "The volume of your message was really low just then.", "tr": "Az önce mesajının sesi gerçekten çok düşüktü."},
+        {"en": "Your voice was too faint on that last transmission.", "tr": "Son telsiz konuşmanda sesin çok zayıftı."}
+      ]
+    },
+    {
+      "id": "v2-stale-call-feedback", "leakage_group": "stale-radio-feedback", "prior_exposure": "newly_authored", "coverage_tags": ["communication-feedback", "historical", "contrast"],
+      "annotation": {"actions": ["communication_feedback"], "meaning": "Tell the engineer that its previous information arrived too late rather than request the same information again.", "rationale": "This is a driver critique of freshness, not verified telemetry or a fresh rank/gap calculation."},
+      "variants": [
+        {"en": "That update was already out of date when you said it.", "tr": "O güncelleme sen söylediğinde çoktan eskimişti."},
+        {"en": "Your last call came after the situation had changed.", "tr": "Son anonsun durum değiştikten sonra geldi."},
+        {"en": "I needed that earlier, not after the moment passed.", "tr": "Bunu an geçtikten sonra değil, daha önce duymam gerekiyordu."},
+        {"en": "The information you just gave was too late to be useful.", "tr": "Az önce verdiğin bilgi işe yaramak için fazla geç geldi."},
+        {"en": "You were talking about something that had already happened.", "tr": "Çoktan olup bitmiş bir şeyden bahsediyordun."}
+      ]
+    },
+    {
+      "id": "v2-pause-for-corners", "leakage_group": "quiet-for-now", "prior_exposure": "newly_authored", "coverage_tags": ["communication-feedback", "temporary-scope", "contrast"],
+      "annotation": {"actions": ["communication_feedback"], "meaning": "Ask for a brief pause in nonessential communication until a demanding corner sequence is over.", "rationale": "The finite episode differs from an ongoing profile preference. Keep related temporary quiet requests grouped and preserve critical-call policy."},
+      "variants": [
+        {"en": "Hold the explanation until I'm through this section.", "tr": "Bu bölümü geçene kadar açıklamayı beklet."},
+        {"en": "Give me a moment of quiet until the next straight.", "tr": "Bir sonraki düzlüğe kadar biraz sessizlik ver bana."},
+        {"en": "Pause the extra talking just for these corners.", "tr": "Ek konuşmayı sadece bu virajlar için durdur."},
+        {"en": "Let me finish this corner sequence before we chat.", "tr": "Konuşmadan önce bırak şu viraj serisini bitireyim."},
+        {"en": "Not another explanation right now, wait for the straight.", "tr": "Şimdi başka bir açıklama olmasın, düzlüğü bekle."}
+      ]
+    },
+    {
+      "id": "v2-unfinished-utterance", "leakage_group": "unfinished-utterance", "prior_exposure": "newly_authored", "coverage_tags": ["ambiguity", "short-input"],
+      "annotation": {"actions": ["unclear"], "meaning": "An incomplete driver utterance does not identify a recoverable action or question.", "interpretation_status": "ambiguous", "clarification_needed": true, "ambiguities": ["The sentence stops before a request, referent or complete social meaning is supplied."], "rationale": "Ask for the missing part rather than inventing fuel, position or an acknowledgment from a fragment."},
+      "variants": [
+        {"en": "I was going to ask you about...", "tr": "Sana şununla ilgili soracaktım..."},
+        {"en": "Could you, um, the...", "tr": "Şey, acaba sen şu..."},
+        {"en": "Just tell me... no, hang on...", "tr": "Bana söyle... yok, bir dakika..."},
+        {"en": "What I mean is, uh...", "tr": "Demek istediğim şey, ıı..."},
+        {"en": "Before that, can you...", "tr": "Ondan önce acaba sen..."}
+      ]
+    },
+    {
+      "id": "v2-missing-comparison", "leakage_group": "undefined-comparison", "prior_exposure": "newly_authored", "coverage_tags": ["ambiguity", "reference", "short-input"],
+      "annotation": {"actions": ["unclear", "request_information"], "meaning": "Ask for a comparison whose quantities and reference are absent from the supplied input.", "interpretation_status": "ambiguous", "clarification_needed": true, "ambiguities": ["Neither the compared item nor the baseline is identified by text or dialogue."], "requests": [{"focus": "unspecified", "question": "Which quantity or situation should be compared with which baseline?", "subject": "unresolved", "reference_basis": "unresolved", "time_scope": "unclear", "resolution": "ambiguous"}], "rationale": "A question is apparent, but comparison meaning is not. Do not assume lap pace, fuel or a particular opponent."},
+      "variants": [
+        {"en": "Is that better than the other one?", "tr": "O, ötekinden daha mı iyi?"},
+        {"en": "How does it compare to before?", "tr": "Öncesine göre nasıl?"},
+        {"en": "Are we doing more or less of that?", "tr": "Onu daha çok mu, daha az mı yapıyoruz?"},
+        {"en": "Is this closer than that was?", "tr": "Bu, ondan daha mı yakın?"},
+        {"en": "Which of those is better for us?", "tr": "Onlardan hangisi bizim için daha iyi?"}
+      ]
+    },
+    {
+      "id": "v2-dangling-command", "leakage_group": "undefined-adjustment", "prior_exposure": "newly_authored", "coverage_tags": ["ambiguity", "reference", "short-input"],
+      "annotation": {"actions": ["unclear"], "meaning": "Issue an incomplete command without identifying what should be changed.", "interpretation_status": "ambiguous", "clarification_needed": true, "ambiguities": ["No supplied context identifies the target or intended operation."], "rationale": "Do not assume a driver preference, car control or executable action; request clarification of the intended change."},
+      "variants": [
+        {"en": "Set that one.", "tr": "Şunu ayarla."},
+        {"en": "Change it for me.", "tr": "Onu benim için değiştir."},
+        {"en": "Put it the other way.", "tr": "Onu öbür şekilde yap."},
+        {"en": "Do the thing we need.", "tr": "Gereken şeyi yap."},
+        {"en": "Switch that, please.", "tr": "Şunu değiştir lütfen."}
+      ]
+    },
+    {
+      "id": "v2-cut-off-capture", "leakage_group": "cut-off-capture", "prior_exposure": "newly_authored", "coverage_tags": ["ambiguity", "synthetic-asr", "unrecoverable-noise"], "input_kind": "synthetic_asr",
+      "annotation": {"actions": ["unclear"], "meaning": "The illustrative captured fragment is insufficient to recover a reliable driver message.", "interpretation_status": "ambiguous", "clarification_needed": true, "ambiguities": ["The observed capture loses the words needed to determine the action or question."], "rationale": "Synthetic author-intended text is not available to the interpreter. Request repetition; do not assign the hidden intended topic."},
+      "variants": [
+        {"en": "Er ... [dropout] the ... [cut]", "tr": "Ee ... [kopma] o ... [kesildi]", "intended": {"en": "Is rain expected soon?", "tr": "Yakında yağmur bekleniyor mu?"}},
+        {"en": "Could ... [crackle] ...", "tr": "Acaba ... [cızırtı] ...", "intended": {"en": "Could you shorten your replies?", "tr": "Cevaplarını kısaltır mısın?"}},
+        {"en": "[dropout] not ... [clipped]", "tr": "[kopma] değil ... [kesik]", "intended": {"en": "Not that driver, the one behind.", "tr": "O sürücü değil, arkadaki."}},
+        {"en": "Uh ... [static burst] ... yes ...", "tr": "Iı ... [parazit] ... evet ...", "intended": {"en": "Yes, I received the warning.", "tr": "Evet, uyarıyı aldım."}},
+        {"en": "[clipped] ... there ... [dropout]", "tr": "[kesik] ... orada ... [kopma]", "intended": {"en": "Can you hear me clearly?", "tr": "Beni net duyabiliyor musun?"}}
+      ]
+    },
+    {
+      "id": "v2-ambiguous-reaction", "leakage_group": "uncertain-social", "prior_exposure": "newly_authored", "coverage_tags": ["ambiguity", "social", "short-input"],
+      "annotation": {"actions": ["unclear"], "meaning": "An isolated reaction may be agreement, surprise or sarcasm; supplied text does not settle the social intent.", "interpretation_status": "ambiguous", "ambiguities": ["Missing tone and dialogue prevent confidently assigning acknowledgment or venting."], "rationale": "Keep similar uncertain social reactions grouped. Uncertain tone alone need not produce an intrusive clarification request."},
+      "variants": [
+        {"en": "Well, there we go.", "tr": "Eh, işte böyle."},
+        {"en": "Oh, brilliant then.", "tr": "O zaman müthiş olmuş."},
+        {"en": "Would you look at that.", "tr": "Şuna bir bak."},
+        {"en": "That's something, I suppose.", "tr": "Bu da bir şeydir herhâlde."},
+        {"en": "Well, that happened.", "tr": "Eh, bu da oldu."}
+      ]
+    },
+    {
+      "id": "v2-undefined-adjustment", "leakage_group": "undefined-adjustment", "prior_exposure": "newly_authored", "coverage_tags": ["ambiguity", "reference", "short-input"],
+      "annotation": {"actions": ["unclear"], "meaning": "Request an adjustment without stating the quantity, setting or subject to adjust.", "interpretation_status": "ambiguous", "clarification_needed": true, "ambiguities": ["The direction of change is present, but its target cannot be recovered from the supplied input."], "rationale": "Do not apply a preference or infer fuel, brake bias or volume from a bare adjustment fragment."},
+      "variants": [
+        {"en": "A little more of it, please.", "tr": "Ondan biraz daha fazla lütfen."},
+        {"en": "Turn that down a bit.", "tr": "Şunu biraz azalt."},
+        {"en": "Increase it slightly.", "tr": "Onu azıcık artır."},
+        {"en": "Less of the same thing.", "tr": "Aynı şeyden daha az."},
+        {"en": "Move it up one notch.", "tr": "Onu bir kademe yükselt."}
+      ]
+    },
+    {
+      "id": "v2-microphone-quality-check", "leakage_group": "microphone-quality", "prior_exposure": "newly_authored", "coverage_tags": ["radio", "contrast"],
+      "annotation": {"actions": ["radio_check"], "meaning": "Ask whether the engineer receives clear microphone audio, not a racing measurement.", "rationale": "Speech-audibility checks are separate from telemetry questions and feedback about hearing the engineer's own reply."},
+      "variants": [
+        {"en": "Is my voice coming through clearly or distorted?", "tr": "Sesim net mi geliyor, bozuk mu?"},
+        {"en": "Can you hear the words clearly from this microphone?", "tr": "Bu mikrofondan kelimeleri net duyabiliyor musun?"},
+        {"en": "Does my mic sound clean at your end?", "tr": "Benim mikrofonun sesi sana temiz geliyor mu?"},
+        {"en": "Let me know whether my transmission sounds muffled.", "tr": "Benim telsiz sesim boğuk geliyor mu, söyle."},
+        {"en": "Am I too quiet for you to hear on the radio?", "tr": "Telsizde beni duyabilmen için sesim fazla mı kısık?"}
+      ]
+    },
+    {
+      "id": "v2-message-receipt-check", "leakage_group": "message-receipt", "prior_exposure": "newly_authored", "coverage_tags": ["radio", "dialogue", "distractor-history"],
+      "dialogue": {"en": [{"role": "driver", "text": "I have a question about the planned stop."}, {"role": "engineer", "text": "Your microphone cut off before the question finished."}], "tr": [{"role": "driver", "text": "Planlanan duruşla ilgili bir sorum var."}, {"role": "engineer", "text": "Soru bitmeden mikrofonun kesildi."}]},
+      "annotation": {"actions": ["radio_check"], "meaning": "Check receipt of the driver's transmission after a reported cutoff, rather than repeat the pit question.", "rationale": "Current-message receipt is the goal. Do not inherit the prior stop topic as a new information request."},
+      "variants": [
+        {"en": "Did any of my last transmission get through?", "tr": "Son konuşmamdan herhangi bir şey sana ulaştı mı?"},
+        {"en": "Have you received my voice again now?", "tr": "Şimdi sesimi yeniden alıyor musun?"},
+        {"en": "Did the radio pick up what I just said?", "tr": "Telsiz az önce söylediğimi aldı mı?"},
+        {"en": "Confirm you got this transmission, please.", "tr": "Bu konuşmayı aldığını onaylar mısın lütfen?"},
+        {"en": "Are my words reaching you after that cutoff?", "tr": "O kesintiden sonra sözlerim sana ulaşıyor mu?"}
+      ]
+    },
+    {
+      "id": "v2-radio-test-count", "leakage_group": "radio-test-transmission", "prior_exposure": "newly_authored", "coverage_tags": ["radio", "short-input"],
+      "annotation": {"actions": ["radio_check"], "meaning": "Perform an explicit test transmission rather than request race facts.", "rationale": "Test counting and explicit test labels indicate a radio check, not fuel or field-size numbers."},
+      "variants": [
+        {"en": "Testing radio, one two three.", "tr": "Telsiz deneme, bir iki üç."},
+        {"en": "Mic test only, one two.", "tr": "Sadece mikrofon denemesi, bir iki."},
+        {"en": "This is a test transmission to check my button.", "tr": "Bu, düğmemi kontrol etmek için bir deneme konuşması."},
+        {"en": "One two, checking the radio button.", "tr": "Bir iki, telsiz düğmesini deniyorum."},
+        {"en": "Just testing push-to-talk, no race question.", "tr": "Sadece bas-konuşu deniyorum, yarış sorusu yok."}
+      ]
+    },
+    {
+      "id": "v2-presence-after-weather", "leakage_group": "weather-followup", "prior_exposure": "newly_authored", "coverage_tags": ["radio", "dialogue", "distractor-history", "weather"],
+      "dialogue": {"en": [{"role": "driver", "text": "How is the rainfall changing?"}, {"role": "engineer", "text": "I am checking the recent rainfall readings."}], "tr": [{"role": "driver", "text": "Yağış nasıl değişiyor?"}, {"role": "engineer", "text": "Son yağış ölçümlerine bakıyorum."}]},
+      "annotation": {"actions": ["radio_check"], "meaning": "Check that the engineer is still connected after the weather exchange, without requesting another weather update.", "rationale": "Role-aware current-turn intent takes precedence over the preceding weather topic. Group with the related weather follow-up contrast."},
+      "variants": [
+        {"en": "Connection still okay? I'm just checking you're with me.", "tr": "Bağlantı hâlâ iyi mi? Sadece benimle misin diye kontrol ediyorum."},
+        {"en": "Did I lose the radio connection while you were checking?", "tr": "Sen bakarken telsiz bağlantısı mı koptu?"},
+        {"en": "Can you still receive my voice after that?", "tr": "Ondan sonra sesimi hâlâ alabiliyor musun?"},
+        {"en": "I'm checking the connection, not asking for another weather call.", "tr": "Başka hava anonsu istemiyorum, bağlantıyı kontrol ediyorum."},
+        {"en": "Give me a sign you're still on the radio.", "tr": "Hâlâ telsizde olduğuna dair bir işaret ver."}
+      ]
+    },
+    {
+      "id": "v2-ack-strategy", "leakage_group": "strategy-acknowledgment", "prior_exposure": "newly_authored", "coverage_tags": ["social", "dialogue", "fuel"],
+      "dialogue": {"en": [{"role": "engineer", "text": "Stick to the fuel-saving plan we discussed."}], "tr": [{"role": "engineer", "text": "Konuştuğumuz yakıt tasarrufu planına sadık kal."}]},
+      "annotation": {"actions": ["acknowledge"], "meaning": "Acknowledge the supplied strategy reminder rather than ask for new fuel information.", "rationale": "Receiving a plan is not a question about its arithmetic, a report that fuel is sufficient or a new preference."},
+      "variants": [
+        {"en": "Copy the plan, I'll stick with it.", "tr": "Planı aldım, ona sadık kalacağım."},
+        {"en": "Understood, staying with what we agreed.", "tr": "Anlaşıldı, konuştuğumuza bağlı kalıyorum."},
+        {"en": "Yes, I've got the strategy reminder.", "tr": "Evet, strateji hatırlatmasını aldım."},
+        {"en": "Received that, carrying on with the plan.", "tr": "Mesaj alındı, planla devam ediyorum."},
+        {"en": "Okay, I know which plan you mean.", "tr": "Tamam, hangi planı kastettiğini biliyorum."}
+      ]
+    },
+    {
+      "id": "v2-ack-warning", "leakage_group": "warning-acknowledgment", "prior_exposure": "newly_authored", "coverage_tags": ["social", "dialogue", "radio"],
+      "dialogue": {"en": [{"role": "engineer", "text": "Be cautious through the next section."}], "tr": [{"role": "engineer", "text": "Sonraki bölümden dikkatli geç."}]},
+      "annotation": {"actions": ["acknowledge"], "meaning": "Confirm receipt of a caution message without requesting new hazard information.", "rationale": "Acknowledgment does not verify the hazard, ask a flags question or suppress further important warnings."},
+      "variants": [
+        {"en": "Warning received, I'll be careful.", "tr": "Uyarıyı aldım, dikkatli olacağım."},
+        {"en": "Got your caution, taking it easy there.", "tr": "Dikkat uyarını aldım, orada temkinli gidiyorum."},
+        {"en": "Thanks for the warning, understood.", "tr": "Uyarı için sağ ol, anlaşıldı."},
+        {"en": "I heard the caution call clearly.", "tr": "Dikkat anonsunu net duydum."},
+        {"en": "Yes, taking note of that warning.", "tr": "Evet, o uyarıyı dikkate alıyorum."}
+      ]
+    },
+    {
+      "id": "v2-ack-coaching", "leakage_group": "coaching-acknowledgment", "prior_exposure": "newly_authored", "coverage_tags": ["social", "dialogue"],
+      "dialogue": {"en": [{"role": "engineer", "text": "Try a smoother approach rather than forcing the corner."}], "tr": [{"role": "engineer", "text": "Virajı zorlamak yerine daha yumuşak bir yaklaşım dene."}]},
+      "annotation": {"actions": ["acknowledge"], "meaning": "Accept or appreciate the immediately preceding driving advice, without asking another coaching question.", "rationale": "Affirmation of advice is not a request to explain it again or a report of a confirmed improvement."},
+      "variants": [
+        {"en": "Good point, I'll try that approach.", "tr": "İyi nokta, o yaklaşımı deneyeceğim."},
+        {"en": "That advice makes sense to me, thanks.", "tr": "O tavsiye bana mantıklı geldi, teşekkürler."},
+        {"en": "Got the suggestion, I'll work on it.", "tr": "Öneriyi aldım, üzerinde çalışacağım."},
+        {"en": "You're right about that approach, cheers.", "tr": "O yaklaşım konusunda haklısın, sağ ol."},
+        {"en": "I follow what you're suggesting now.", "tr": "Ne önerdiğini şimdi anladım."}
+      ]
+    },
+    {
+      "id": "v2-ack-helpful-reply", "leakage_group": "helpful-reply-acknowledgment", "prior_exposure": "newly_authored", "coverage_tags": ["social", "dialogue", "contrast"],
+      "dialogue": {"en": [{"role": "driver", "text": "Can you explain the difference between those two estimates?"}, {"role": "engineer", "text": "They cover different assumptions; we need to keep their scopes separate."}], "tr": [{"role": "driver", "text": "O iki tahmin arasındaki farkı açıklar mısın?"}, {"role": "engineer", "text": "Farklı varsayımları kapsıyorlar; kapsamlarını ayrı tutmamız gerekiyor."}]},
+      "annotation": {"actions": ["acknowledge"], "meaning": "Thank the engineer for clarifying an earlier distinction, rather than ask another question.", "rationale": "The current turn expresses receipt and gratitude. The history's question does not remain the current action."},
+      "variants": [
+        {"en": "That cleared it up for me, thank you.", "tr": "Bu benim için konuyu netleştirdi, teşekkür ederim."},
+        {"en": "Now I understand the difference, cheers.", "tr": "Farkı şimdi anladım, sağ ol."},
+        {"en": "Appreciate the explanation, I've got it.", "tr": "Açıklama için sağ ol, anladım."},
+        {"en": "That was helpful, no more questions from me.", "tr": "Bu faydalı oldu, başka sorum yok."},
+        {"en": "Thanks for sorting that out, all clear now.", "tr": "Konuyu çözdüğün için teşekkürler, şimdi her şey net."}
+      ]
+    },
+    {
+      "id": "v2-pre-race-greeting", "leakage_group": "greeting", "prior_exposure": "newly_authored", "coverage_tags": ["social", "short-input"],
+      "annotation": {"actions": ["greeting"], "meaning": "Greet the engineer at the start of a race session without a question or radio diagnostic.", "rationale": "Keep close ordinary greeting paraphrases with the existing greeting family, not as artificial independent test groups."},
+      "variants": [
+        {"en": "Hey engineer, good to see you for this race.", "tr": "Selam mühendis, bu yarışta seni görmek güzel."},
+        {"en": "Hello team, welcome to our race evening.", "tr": "Merhaba ekip, yarış akşamımıza hoş geldiniz."},
+        {"en": "Hi engineer, glad we're racing together today.", "tr": "Selam mühendis, bugün birlikte yarıştığımıza sevindim."},
+        {"en": "Good afternoon, race engineer.", "tr": "Tünaydın yarış mühendisi."},
+        {"en": "A big hello to the pit wall today.", "tr": "Bugün pit duvarına kocaman bir merhaba."}
+      ]
+    },
+    {
+      "id": "v2-return-greeting", "leakage_group": "returning-driver-greeting", "prior_exposure": "newly_authored", "coverage_tags": ["social", "dialogue"],
+      "dialogue": {"en": [{"role": "driver", "text": "I'm taking a short break from the radio."}, {"role": "engineer", "text": "All right, we can resume when you return."}], "tr": [{"role": "driver", "text": "Telsize kısa bir ara veriyorum."}, {"role": "engineer", "text": "Tamam, dönünce devam ederiz."}]},
+      "annotation": {"actions": ["greeting"], "meaning": "Greet the engineer on returning from a break, without asking whether the radio works.", "rationale": "Resuming a social exchange differs from an explicit connection question. No telemetry topic is inherited."},
+      "variants": [
+        {"en": "Hey again, I'm back with you now.", "tr": "Yeniden selam, şimdi geri geldim."},
+        {"en": "Hello once more, back from my break.", "tr": "Tekrar merhaba, aradan döndüm."},
+        {"en": "Hi again, nice to be back on our radio.", "tr": "Yine selam, telsizimize dönmek güzel."},
+        {"en": "Good to be talking with you again, hello.", "tr": "Seninle tekrar konuşmak güzel, merhaba."},
+        {"en": "I'm back, hey engineer.", "tr": "Geri geldim, selam mühendis."}
+      ]
+    },
+    {
+      "id": "v2-new-driver-greeting", "leakage_group": "new-driver-introduction", "prior_exposure": "newly_authored", "coverage_tags": ["social", "radio"],
+      "annotation": {"actions": ["greeting"], "meaning": "Greet and introduce oneself as the driver at the beginning of an interaction.", "rationale": "A greeting with an introduction is not a profile-write command, an identity lookup or a microphone check."},
+      "variants": [
+        {"en": "Hello, I'm your driver for today's session.", "tr": "Merhaba, bugünkü seansta sürücün benim."},
+        {"en": "Hi team, this is our first race together.", "tr": "Selam ekip, bu birlikte ilk yarışımız."},
+        {"en": "Nice to meet you, engineer, I'm new on this radio.", "tr": "Tanıştığımıza sevindim mühendis, bu telsizde yeniyim."},
+        {"en": "Hello from your new driver, good to meet you.", "tr": "Yeni sürücünden merhaba, tanışmak güzel."},
+        {"en": "Hey pit wall, pleased to join you for my first session.", "tr": "Selam pit duvarı, ilk seansımda size katılmak güzel."}
+      ]
+    },
+    {
+      "id": "v2-weather-greeting", "leakage_group": "current-weather", "prior_exposure": "previously_probed", "coverage_tags": ["social", "weather", "contrast"],
+      "annotation": {"actions": ["greeting"], "meaning": "Greet the team while making a pleasant weather remark, without asking for a weather update.", "rationale": "An explicit greeting is present but no question is asked. Keep this weather-wording contrast with the exposed current-weather family."},
+      "variants": [
+        {"en": "Morning team, lovely weather for racing.", "tr": "Günaydın ekip, yarışmak için hava güzel."},
+        {"en": "Hello engineer, what a nice sunny morning.", "tr": "Merhaba mühendis, ne güzel güneşli bir sabah."},
+        {"en": "Hey team, a beautiful racing day to you.", "tr": "Selam ekip, güzel bir yarış günü olsun."},
+        {"en": "Good morning, I'm glad to see this nice weather.", "tr": "Günaydın, bu güzel havayı görmek beni mutlu etti."},
+        {"en": "Hi pit wall, here's to a pleasant day on track.", "tr": "Selam pit duvarı, pistte keyifli bir gün olsun."}
+      ]
+    },
+    {
+      "id": "v2-holiday-weather", "leakage_group": "holiday-weather-request", "prior_exposure": "newly_authored", "coverage_tags": ["out-of-scope", "weather", "contrast"],
+      "annotation": {"actions": ["out_of_scope"], "meaning": "Ask for a real-world holiday weather forecast explicitly unrelated to the current race.", "rationale": "Weather questions are not always track-weather requests. The named holiday context is outside the racing information scope; no web request is executed."},
+      "variants": [
+        {"en": "What's the weather forecast in Istanbul for my holiday next week?", "tr": "Gelecek haftaki tatilim için İstanbul'da hava tahmini nasıl?"},
+        {"en": "Check the weather for my beach trip, not this race.", "tr": "Bu yarışın değil, plaj gezimin hava durumuna bak."},
+        {"en": "Will it rain on my family holiday in Antalya?", "tr": "Antalya'daki aile tatilimde yağmur yağacak mı?"},
+        {"en": "I need a forecast for the city I'm visiting after this weekend.", "tr": "Bu hafta sonundan sonra ziyaret edeceğim şehir için hava tahmini lazım."},
+        {"en": "Tell me whether my vacation destination will be sunny.", "tr": "Tatil yerimde havanın güneşli olup olmayacağını söyle."}
+      ]
+    },
+    {
+      "id": "v2-coding-help", "leakage_group": "coding-assistance", "prior_exposure": "newly_authored", "coverage_tags": ["out-of-scope", "contrast"],
+      "annotation": {"actions": ["out_of_scope"], "meaning": "Ask for software-development assistance unrelated to engineering the current race.", "rationale": "A clearly understood non-racing task is outside scope, not ambiguous driver speech. It must not create a telemetry query."},
+      "variants": [
+        {"en": "Help me debug a Python script for my homework.", "tr": "Ödevim için bir Python betiğindeki hatayı bulmama yardım et."},
+        {"en": "Write a website login page for me.", "tr": "Benim için bir web sitesi giriş sayfası yaz."},
+        {"en": "Explain how to sort a list in JavaScript.", "tr": "JavaScript'te bir listenin nasıl sıralandığını açıkla."},
+        {"en": "Can you fix this database query for my work project?", "tr": "İş projem için bu veritabanı sorgusunu düzeltir misin?"},
+        {"en": "Teach me how to build a phone app after the race.", "tr": "Yarıştan sonra bana telefon uygulaması yapmayı öğret."}
+      ]
+    },
+    {
+      "id": "v2-food-planning", "leakage_group": "unrelated-request", "prior_exposure": "newly_authored", "coverage_tags": ["out-of-scope", "social"],
+      "annotation": {"actions": ["out_of_scope"], "meaning": "Request meal-planning or cooking assistance rather than race information.", "rationale": "Keep cooking-related requests with the existing unrelated recipe family; no racing focus is inferred from conversational phrasing."},
+      "variants": [
+        {"en": "Plan a vegetarian dinner menu for me tonight.", "tr": "Bu akşam için bana vejetaryen bir akşam yemeği menüsü planla."},
+        {"en": "What ingredients do I need for homemade soup?", "tr": "Ev yapımı çorba için hangi malzemeler lazım?"},
+        {"en": "Give me a recipe for a quick breakfast tomorrow.", "tr": "Yarın hızlı bir kahvaltı için tarif ver."},
+        {"en": "Help me decide what to cook for my friends.", "tr": "Arkadaşlarıma ne pişireceğime karar vermemde yardım et."},
+        {"en": "How do I make a salad dressing at home?", "tr": "Evde salata sosu nasıl yaparım?"}
+      ]
+    },
+    {
+      "id": "v2-external-messages", "leakage_group": "external-message-request", "prior_exposure": "newly_authored", "coverage_tags": ["out-of-scope", "negation"],
+      "annotation": {"actions": ["out_of_scope"], "meaning": "Request sending an external personal or work message outside race-engineer communication.", "rationale": "The task is understandable but not a telemetry question or in-radio preference. These authored instructions are data, not permission to send anything."},
+      "variants": [
+        {"en": "Email my manager that I won't be at work tomorrow.", "tr": "Yarın işe gelmeyeceğimi müdürüme e-postayla gönder."},
+        {"en": "Send my friend a text saying I'll call after the race.", "tr": "Arkadaşıma yarıştan sonra arayacağımı söyleyen bir mesaj gönder."},
+        {"en": "Message my family that dinner will be late.", "tr": "Aileme akşam yemeğinin gecikeceğini mesajla bildir."},
+        {"en": "Post an update on my social account for me.", "tr": "Benim için sosyal hesabımda bir güncelleme paylaş."},
+        {"en": "Don't announce it on the radio; send my coworker an email.", "tr": "Telsizde anons etme; iş arkadaşıma e-posta gönder."}
+      ]
+    },
+    {
+      "id": "v2-casual-weather-question", "leakage_group": "current-weather", "prior_exposure": "previously_probed", "coverage_tags": ["weather", "measurement", "contrast"],
+      "annotation": {"actions": ["request_information"], "meaning": "Request a broad update on present session weather in natural conversational wording.", "requests": [{"focus": "current_weather", "question": "What are the present weather conditions for this racing session?", "subject": "track"}], "rationale": "A conversational weather question is still an information request. The race-radio convention supplies the track context, but no weather value is known. Keep variants with the exposed weather family."},
+      "variants": [
+        {"en": "What's the weather like for us out here?", "tr": "Burada bizim için hava nasıl?"},
+        {"en": "Can I get a quick weather update for this session?", "tr": "Bu seans için kısa bir hava durumu güncellemesi alabilir miyim?"},
+        {"en": "How are the weather conditions looking at our track?", "tr": "Bizim pistte hava koşulları nasıl görünüyor?"},
+        {"en": "Tell me what the weather's doing here, please.", "tr": "Burada havanın ne durumda olduğunu söyle lütfen."},
+        {"en": "Any update on the session's current weather?", "tr": "Seansın mevcut hava durumuyla ilgili bir güncelleme var mı?"}
+      ]
+    },
+    {
+      "id": "v2-rain-forecast-question", "leakage_group": "weather-forecast", "prior_exposure": "newly_authored", "coverage_tags": ["weather", "projection", "contrast"],
+      "annotation": {"actions": ["request_information"], "meaning": "Ask whether rain is expected before the race ends rather than ask for a current measurement.", "requests": [{"focus": "rain_forecast", "question": "Is rain expected at the track before the race finishes?", "subject": "track", "time_scope": "future_counterfactual"}], "rationale": "The future question is clear even if forecasting is unsupported. Missing capability is not linguistic ambiguity or a reason to invent weather."},
+      "variants": [
+        {"en": "Are we expecting any rain before this race is over?", "tr": "Bu yarış bitmeden yağmur bekliyor muyuz?"},
+        {"en": "Could rain arrive while we're still racing?", "tr": "Biz hâlâ yarışırken yağmur gelebilir mi?"},
+        {"en": "What's the chance of rain before the chequered flag?", "tr": "Damalı bayrağa kadar yağmur ihtimali ne?"},
+        {"en": "Do the forecasts suggest a wet finish today?", "tr": "Tahminler bugün finişin yağmurlu olacağını mı gösteriyor?"},
+        {"en": "Will the rest of our race stay rain-free?", "tr": "Yarışımızın geri kalanı yağmursuz kalacak mı?"}
+      ]
+    },
+    {
+      "id": "v2-track-wetness-question", "leakage_group": "wet-weather-episode", "prior_exposure": "newly_authored", "coverage_tags": ["weather", "measurement", "contrast"],
+      "annotation": {"actions": ["request_information"], "meaning": "Ask about current track wetness without merely venting about the rain.", "requests": [{"focus": "track_wetness", "question": "What is the current wetness state of the racing surface?", "subject": "track"}], "rationale": "Wetness may differ from current rainfall. Pair with the emotional wet-race contrast without making up a measured surface condition."},
+      "variants": [
+        {"en": "How wet is the track surface at the moment?", "tr": "Pist yüzeyi şu anda ne kadar ıslak?"},
+        {"en": "Are we on a dry, damp or fully wet track now?", "tr": "Şu an pist kuru mu, nemli mi, tamamen ıslak mı?"},
+        {"en": "Give me the current wetness of the asphalt.", "tr": "Asfaltın mevcut ıslaklık durumunu söyle."},
+        {"en": "Is there still water on the racing surface?", "tr": "Yarış yüzeyinde hâlâ su var mı?"},
+        {"en": "What's the surface-water situation out on track?", "tr": "Pistte yüzey suyu durumu ne?"}
+      ]
+    },
+    {
+      "id": "v2-wind-question", "leakage_group": "wind-conditions", "prior_exposure": "newly_authored", "coverage_tags": ["weather", "measurement"],
+      "annotation": {"actions": ["request_information"], "meaning": "Request current wind conditions at the racing venue rather than report a car handling fault.", "requests": [{"focus": "wind_conditions", "question": "What are the current wind strength and direction at the track?", "subject": "track"}], "rationale": "Wind information is one weather update, not a verified explanation for handling symptoms. No numerical readings or direction are supplied."},
+      "variants": [
+        {"en": "What's the wind doing at the circuit?", "tr": "Pistte rüzgâr ne durumda?"},
+        {"en": "Can you give me the wind conditions here?", "tr": "Buradaki rüzgâr koşullarını söyler misin?"},
+        {"en": "How strong is the wind and which way is it blowing?", "tr": "Rüzgâr ne kadar kuvvetli, hangi yönden esiyor?"},
+        {"en": "Current wind update for the track, please.", "tr": "Pist için güncel rüzgâr bilgisi lütfen."},
+        {"en": "Tell me about the wind we're racing in now.", "tr": "Şu an içinde yarıştığımız rüzgârın durumunu söyle."}
+      ]
+    },
+    {
+      "id": "v2-weather-followup", "leakage_group": "weather-followup", "prior_exposure": "newly_authored", "coverage_tags": ["weather", "dialogue", "reference", "contrast"],
+      "dialogue": {"en": [{"role": "driver", "text": "How is the rainfall changing?"}, {"role": "engineer", "text": "I am checking the recent rainfall readings."}], "tr": [{"role": "driver", "text": "Yağış nasıl değişiyor?"}, {"role": "engineer", "text": "Son yağış ölçümlerine bakıyorum."}]},
+      "annotation": {"actions": ["request_information"], "meaning": "Follow up on the supplied rainfall discussion and ask about its present trend.", "requests": [{"focus": "rain_trend", "question": "Is the rainfall currently increasing, decreasing or remaining steady?", "subject": "track", "reference_basis": "dialogue"}], "rationale": "Supplied dialogue resolves the omitted weather topic. Keep with the radio-presence contrast; do not reuse an old topic when the current message is only a connection check."},
+      "variants": [
+        {"en": "Is it getting worse now?", "tr": "Şimdi daha kötüye mi gidiyor?"},
+        {"en": "Any sign of it easing off?", "tr": "Hafiflediğine dair bir işaret var mı?"},
+        {"en": "Are we seeing more or less of it at the moment?", "tr": "Şu anda daha çok mu, daha az mı görüyoruz?"},
+        {"en": "Has it started to settle down?", "tr": "Sakinleşmeye başladı mı?"},
+        {"en": "Which way is that heading right now?", "tr": "Şu anda o ne yönde ilerliyor?"}
+      ]
+    },
+    {
+      "id": "v2-rain-since-start", "leakage_group": "rainfall-since-start", "prior_exposure": "newly_authored", "coverage_tags": ["weather", "historical", "comparison"],
+      "annotation": {"actions": ["request_information"], "meaning": "Compare rainfall now with rainfall at this race's start.", "requests": [{"focus": "rain_change", "question": "How does current rainfall compare with rainfall at the race start?", "subject": "track", "time_scope": "historical"}], "rationale": "The explicit race-start baseline is not a fixed twenty-second window or a future forecast. No measured rainfall difference is supplied."},
+      "variants": [
+        {"en": "Is it raining harder than when this race started?", "tr": "Bu yarış başladığından daha kuvvetli mi yağmur yağıyor?"},
+        {"en": "How has the rain changed since the start?", "tr": "Başlangıçtan beri yağmur nasıl değişti?"},
+        {"en": "Are we getting less rain than at the green flag?", "tr": "Yeşil bayrağa göre daha az mı yağmur alıyoruz?"},
+        {"en": "Compare the current rainfall with what we had at the start.", "tr": "Mevcut yağışı başlangıçtaki yağışla karşılaştır."},
+        {"en": "Has the rainfall increased or eased since lights out?", "tr": "Işıklar söndüğünden beri yağış arttı mı, hafifledi mi?"}
+      ]
+    }
+  ]
+}

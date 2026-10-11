@@ -234,6 +234,9 @@ def test_live_dialogue_retains_configured_history_across_long_conversations(
             )
 
     class Intelligence:
+        async def start(self):
+            pass
+
         async def prepare(self, turn):
             prepared_turns.append(turn)
             return turn

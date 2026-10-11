@@ -1,0 +1,489 @@
+{
+  "schema_version": "driver-meaning-dataset.v1",
+  "dataset_id": "pitward-driver-meaning-seed",
+  "revision": "2026-10-10.draft2",
+  "purpose": "annotation_review",
+  "context_assumptions": [
+    "The current speaker is the driver talking to their own race engineer during a live race.",
+    "No live telemetry values or verified incidents are supplied. Annotate the intended question, never its factual answer.",
+    "Only supplied dialogue resolves omitted topics or references. Conventional short radio requests may refer to the driver's current race state."
+  ],
+  "examples": [
+    {
+      "example_id": "dm01-en", "scenario_id": "radio-presence", "leakage_group": "radio-presence",
+      "language": "en", "speaker": "driver", "text": "Are you there?", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["radio_check"], "meaning": "Check whether the engineer is listening.", "requests": [],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "In the declared radio setting this is a presence check, not a request for position or other race facts."
+      }
+    },
+    {
+      "example_id": "dm01-tr", "scenario_id": "radio-presence", "leakage_group": "radio-presence",
+      "language": "tr", "speaker": "driver", "text": "Beni duyuyor musun?", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["radio_check"], "meaning": "Check whether the engineer can hear the driver.", "requests": [],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "The driver is checking the radio; no telemetry is requested."
+      }
+    },
+    {
+      "example_id": "dm02-en", "scenario_id": "ranking-last", "leakage_group": "fuel-ranking-composition",
+      "language": "en", "speaker": "driver", "text": "Am I last?", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["request_information"], "meaning": "Ask whether the driver is currently last in the race standings.",
+        "requests": [{"request_id": "r1", "source_span": "Am I last?", "focus": "race_classification", "question": "Does the driver's current rank equal the last rank in the race field?", "subject": "self", "reference_basis": "explicit", "time_scope": "current", "resolution": "clear"}],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "Preserve the is-last predicate. No rank, field size, or answer is known. Class-vs-overall scope needs future multiclass examples."
+      }
+    },
+    {
+      "example_id": "dm02-tr", "scenario_id": "ranking-last", "leakage_group": "fuel-ranking-composition",
+      "language": "tr", "speaker": "driver", "text": "Sonuncu muyum?", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["request_information"], "meaning": "Ask whether the driver is currently last in the race standings.",
+        "requests": [{"request_id": "r1", "source_span": "Sonuncu muyum?", "focus": "race_classification", "question": "Does the driver's current rank equal the last rank in the race field?", "subject": "self", "reference_basis": "radio_convention", "time_scope": "current", "resolution": "clear"}],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "Turkish encodes the first-person question without a separate pronoun. Preserve last-place meaning, not a generic position reply."
+      }
+    },
+    {
+      "example_id": "dm03-en", "scenario_id": "ranking-first", "leakage_group": "fuel-ranking-composition",
+      "language": "en", "speaker": "driver", "text": "Am I first?", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["request_information"], "meaning": "Ask whether the driver is currently leading the race.",
+        "requests": [{"request_id": "r1", "source_span": "Am I first?", "focus": "race_classification", "question": "Is the driver's current race rank first?", "subject": "self", "reference_basis": "explicit", "time_scope": "current", "resolution": "clear"}],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "This differs from is-last despite sharing a classification topic. Never generate a yes/no answer without evidence."
+      }
+    },
+    {
+      "example_id": "dm03-tr", "scenario_id": "ranking-first", "leakage_group": "fuel-ranking-composition",
+      "language": "tr", "speaker": "driver", "text": "Şu an lider ben miyim?", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["request_information"], "meaning": "Ask whether the driver currently leads the race.",
+        "requests": [{"request_id": "r1", "source_span": "Şu an lider ben miyim?", "focus": "race_classification", "question": "Is the driver's current race rank first?", "subject": "self", "reference_basis": "explicit", "time_scope": "current", "resolution": "clear"}],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "Leadership and current time are explicit. Do not turn it into a last-place question."
+      }
+    },
+    {
+      "example_id": "dm04-en", "scenario_id": "fuel-short", "leakage_group": "fuel-ranking-composition",
+      "language": "en", "speaker": "driver", "text": "Fuel.", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["request_information"], "meaning": "Request a current fuel-status update using radio shorthand.",
+        "requests": [{"request_id": "r1", "source_span": "Fuel.", "focus": "fuel_status", "question": "What is the driver's current fuel situation?", "subject": "self", "reference_basis": "radio_convention", "time_scope": "current", "resolution": "clear"}],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "The radio setting supports a broad fuel-status request, not necessarily a pit plan or finish-sufficiency calculation."
+      }
+    },
+    {
+      "example_id": "dm04-tr", "scenario_id": "fuel-short", "leakage_group": "fuel-ranking-composition",
+      "language": "tr", "speaker": "driver", "text": "Yakıt?", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["request_information"], "meaning": "Request a current fuel-status update using radio shorthand.",
+        "requests": [{"request_id": "r1", "source_span": "Yakıt?", "focus": "fuel_status", "question": "What is the driver's current fuel situation?", "subject": "self", "reference_basis": "radio_convention", "time_scope": "current", "resolution": "clear"}],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "One word can be a valid request. This labels the supplied transcript, not whether ASR captured it correctly."
+      }
+    },
+    {
+      "example_id": "dm05-en", "scenario_id": "gap-ahead", "leakage_group": "gap-ahead-family",
+      "language": "en", "speaker": "driver", "text": "Gap ahead.", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["request_information"], "meaning": "Request the current gap to the car ahead.",
+        "requests": [{"request_id": "r1", "source_span": "Gap ahead.", "focus": "time_gap", "question": "What is the current time gap from the driver to the car ahead?", "subject": "car_ahead", "reference_basis": "explicit", "time_scope": "current", "resolution": "clear"}],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "The radio convention interprets gap as time gap. Target direction is ahead, not behind, and no gap value is supplied."
+      }
+    },
+    {
+      "example_id": "dm05-tr", "scenario_id": "gap-ahead", "leakage_group": "gap-ahead-family",
+      "language": "tr", "speaker": "driver", "text": "Öndekiyle fark?", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["request_information"], "meaning": "Request the current gap to the car ahead.",
+        "requests": [{"request_id": "r1", "source_span": "Öndekiyle fark?", "focus": "time_gap", "question": "What is the current time gap from the driver to the car ahead?", "subject": "car_ahead", "reference_basis": "explicit", "time_scope": "current", "resolution": "clear"}],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "The omitted verb does not erase the opponent direction or imply a fuel request."
+      }
+    },
+    {
+      "example_id": "dm06-en", "scenario_id": "incident-vent", "leakage_group": "incident-vent",
+      "language": "en", "speaker": "driver", "text": "That was dirty.", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["vent"], "meaning": "Express frustration at perceived unfair behavior without requesting race facts.", "requests": [],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "The conversational action is clear even though the incident is unknown. Do not assert contact occurred or that the engineer witnessed it."
+      }
+    },
+    {
+      "example_id": "dm06-tr", "scenario_id": "incident-vent", "leakage_group": "incident-vent",
+      "language": "tr", "speaker": "driver", "text": "Bu yaptığı hiç adil değildi.", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["vent"], "meaning": "Express frustration at perceived unfair behavior without requesting race facts.", "requests": [],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "Do not verify wrongdoing from an opinion. An unresolved nonessential incident reference need not trigger an intrusive clarification."
+      }
+    },
+    {
+      "example_id": "dm07-en", "scenario_id": "self-assertion", "leakage_group": "self-assertion",
+      "language": "en", "speaker": "driver", "text": "I know what I am doing.", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["unclear"], "meaning": "Assert confidence in their own actions; no racing information is explicitly requested.", "requests": [],
+        "interpretation_status": "ambiguous", "clarification_needed": false,
+        "ambiguities": ["Without dialogue or tone this could be defensive feedback, reassurance, or frustration."],
+        "rationale": "Without context do not force a back-off, vent, or reassurance label. The contextual back-off contrast is dm21-en. Do not inherit an unsupplied fuel topic."
+      }
+    },
+    {
+      "example_id": "dm07-tr", "scenario_id": "self-assertion", "leakage_group": "self-assertion",
+      "language": "tr", "speaker": "driver", "text": "Ne yaptığımı biliyorum.", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["unclear"], "meaning": "Assert confidence in their own actions without requesting race facts.", "requests": [],
+        "interpretation_status": "ambiguous", "clarification_needed": false,
+        "ambiguities": ["Missing tone and dialogue prevent distinguishing defensive feedback from reassurance or frustration."],
+        "rationale": "Preserve uncertainty without context; dm21-tr illustrates back-off feedback after repeated reminders. Do not invent a fuel question."
+      }
+    },
+    {
+      "example_id": "dm08-en", "scenario_id": "vent-and-gap", "leakage_group": "gap-ahead-family",
+      "language": "en", "speaker": "driver", "text": "This guy's an idiot. What's the gap ahead?", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["vent", "request_information"], "meaning": "Vent about another driver and request the current gap ahead.",
+        "requests": [{"request_id": "r1", "source_span": "What's the gap ahead?", "focus": "time_gap", "question": "What is the current time gap from the driver to the car ahead?", "subject": "car_ahead", "reference_basis": "explicit", "time_scope": "current", "resolution": "clear"}],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "Retain both actions. The explicit gap target can be resolved without assuming the insult refers to that car."
+      }
+    },
+    {
+      "example_id": "dm08-tr", "scenario_id": "vent-and-gap", "leakage_group": "gap-ahead-family",
+      "language": "tr", "speaker": "driver", "text": "Bu adam yarışmayı bilmiyor. Öndekiyle aramız ne kadar?", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["vent", "request_information"], "meaning": "Vent about another driver and request the current gap ahead.",
+        "requests": [{"request_id": "r1", "source_span": "Öndekiyle aramız ne kadar?", "focus": "time_gap", "question": "What is the current time gap from the driver to the car ahead?", "subject": "car_ahead", "reference_basis": "explicit", "time_scope": "current", "resolution": "clear"}],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "Do not let the vent hide the question or claim misconduct is verified."
+      }
+    },
+    {
+      "example_id": "dm09-en", "scenario_id": "fuel-and-last", "leakage_group": "fuel-ranking-composition",
+      "language": "en", "speaker": "driver", "text": "How much fuel is left, and am I last?", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["request_information"], "meaning": "Ask two distinct questions: current fuel quantity and whether the driver is last.",
+        "requests": [
+          {"request_id": "r1", "source_span": "How much fuel is left", "focus": "fuel_quantity", "question": "How much fuel remains in the driver's car?", "subject": "self", "reference_basis": "radio_convention", "time_scope": "current", "resolution": "clear"},
+          {"request_id": "r2", "source_span": "am I last?", "focus": "race_classification", "question": "Does the driver's current rank equal the last rank in the race field?", "subject": "self", "reference_basis": "explicit", "time_scope": "current", "resolution": "clear"}
+        ],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "Keep separate questions and source spans; multiple requests are not themselves a social/racing mixed purpose."
+      }
+    },
+    {
+      "example_id": "dm09-tr", "scenario_id": "fuel-and-last", "leakage_group": "fuel-ranking-composition",
+      "language": "tr", "speaker": "driver", "text": "Ne kadar yakıt kaldı, bir de sonuncu muyum?", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["request_information"], "meaning": "Ask for remaining fuel quantity and a last-place determination.",
+        "requests": [
+          {"request_id": "r1", "source_span": "Ne kadar yakıt kaldı", "focus": "fuel_quantity", "question": "How much fuel remains in the driver's car?", "subject": "self", "reference_basis": "radio_convention", "time_scope": "current", "resolution": "clear"},
+          {"request_id": "r2", "source_span": "sonuncu muyum?", "focus": "race_classification", "question": "Does the driver's current rank equal the last rank in the race field?", "subject": "self", "reference_basis": "radio_convention", "time_scope": "current", "resolution": "clear"}
+        ],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "Do not lose either request or replace the last-place predicate with a position-only topic label."
+      }
+    },
+    {
+      "example_id": "dm10-en", "scenario_id": "reachability-no-context", "leakage_group": "reachability-family",
+      "language": "en", "speaker": "driver", "text": "Can we make it?", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["request_information"], "meaning": "Ask about an unspecified future outcome.",
+        "requests": [{"request_id": "r1", "source_span": "Can we make it?", "focus": "unspecified", "question": "Can the driver achieve the unspecified outcome?", "subject": "self", "reference_basis": "radio_convention", "time_scope": "future_counterfactual", "resolution": "ambiguous"}],
+        "interpretation_status": "ambiguous", "clarification_needed": true,
+        "ambiguities": ["The intended outcome could be finishing on fuel, reaching a rival, or another goal; no dialogue resolves it."],
+        "rationale": "Ask what outcome is meant rather than assuming fuel. A clearly future question may still have an unresolved topic."
+      }
+    },
+    {
+      "example_id": "dm10-tr", "scenario_id": "reachability-no-context", "leakage_group": "reachability-family",
+      "language": "tr", "speaker": "driver", "text": "Yetişir miyiz?", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["request_information"], "meaning": "Ask whether an unspecified goal can be reached.",
+        "requests": [{"request_id": "r1", "source_span": "Yetişir miyiz?", "focus": "unspecified", "question": "Can the driver achieve the unspecified outcome?", "subject": "self", "reference_basis": "radio_convention", "time_scope": "future_counterfactual", "resolution": "ambiguous"}],
+        "interpretation_status": "ambiguous", "clarification_needed": true,
+        "ambiguities": ["There is no stated destination, rival, time limit, or fuel goal."],
+        "rationale": "Do not fill in a missing goal from a favorite topic or from other dataset examples."
+      }
+    },
+    {
+      "example_id": "dm11-en", "scenario_id": "reachability-fuel-context", "leakage_group": "reachability-family",
+      "language": "en", "speaker": "driver", "text": "Can we make it?",
+      "recent_dialogue": [{"role": "driver", "text": "Do we have enough fuel to reach the finish?"}, {"role": "engineer", "text": "I'm checking the fuel range."}],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["request_information"], "meaning": "Follow up on whether the available fuel can reach the finish.",
+        "requests": [{"request_id": "r1", "source_span": "Can we make it?", "focus": "fuel_sufficiency", "question": "Can the driver reach the finish on the available fuel?", "subject": "self", "reference_basis": "dialogue", "time_scope": "future_counterfactual", "resolution": "clear"}],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "The conversation resolves the omitted goal. It does not supply a range estimate or guarantee sufficiency."
+      }
+    },
+    {
+      "example_id": "dm11-tr", "scenario_id": "reachability-fuel-context", "leakage_group": "reachability-family",
+      "language": "tr", "speaker": "driver", "text": "Yetişir miyiz?",
+      "recent_dialogue": [{"role": "driver", "text": "Bu yakıtla finişi görebilir miyiz?"}, {"role": "engineer", "text": "Yakıtın ne kadar yeteceğine bakıyorum."}],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["request_information"], "meaning": "Follow up on whether the available fuel can reach the finish.",
+        "requests": [{"request_id": "r1", "source_span": "Yetişir miyiz?", "focus": "fuel_sufficiency", "question": "Can the driver reach the finish on the available fuel?", "subject": "self", "reference_basis": "dialogue", "time_scope": "future_counterfactual", "resolution": "clear"}],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "The preceding fuel question identifies the intended goal; the current words alone would be ambiguous."
+      }
+    },
+    {
+      "example_id": "dm12-en", "scenario_id": "reachability-opponent-context", "leakage_group": "reachability-family",
+      "language": "en", "speaker": "driver", "text": "Can we make it?",
+      "recent_dialogue": [{"role": "driver", "text": "Can we catch the car ahead before the finish?"}, {"role": "engineer", "text": "I'm comparing our pace."}],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["request_information"], "meaning": "Follow up on catching the car ahead before the race ends.",
+        "requests": [{"request_id": "r1", "source_span": "Can we make it?", "focus": "catch_feasibility", "question": "Can the driver catch the car ahead before the finish?", "subject": "car_ahead", "reference_basis": "dialogue", "time_scope": "future_counterfactual", "resolution": "clear"}],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "Identical current wording to the fuel follow-up, but history changes the goal. Do not invent an estimate or inherit fuel."
+      }
+    },
+    {
+      "example_id": "dm12-tr", "scenario_id": "reachability-opponent-context", "leakage_group": "reachability-family",
+      "language": "tr", "speaker": "driver", "text": "Yetişir miyiz?",
+      "recent_dialogue": [{"role": "driver", "text": "Yarış bitmeden öndekini yakalar mıyız?"}, {"role": "engineer", "text": "Tempomuzu karşılaştırıyorum."}],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["request_information"], "meaning": "Follow up on catching the car ahead before the finish.",
+        "requests": [{"request_id": "r1", "source_span": "Yetişir miyiz?", "focus": "catch_feasibility", "question": "Can the driver catch the car ahead before the finish?", "subject": "car_ahead", "reference_basis": "dialogue", "time_scope": "future_counterfactual", "resolution": "clear"}],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "Dialogue, not a phrase dictionary, resolves this as a catching question."
+      }
+    },
+    {
+      "example_id": "dm13-en", "scenario_id": "pit-rejoin", "leakage_group": "pit-rejoin",
+      "language": "en", "speaker": "driver", "text": "Where would I rejoin if I pit this lap?", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["request_information"], "meaning": "Request a projected race position after a hypothetical pit stop this lap.",
+        "requests": [{"request_id": "r1", "source_span": "Where would I rejoin if I pit this lap?", "focus": "pit_rejoin_position", "question": "What race position would the driver rejoin in after pitting this lap?", "subject": "self", "reference_basis": "explicit", "time_scope": "future_counterfactual", "resolution": "clear"}],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "Clear meaning does not imply an available calculation. Pit loss, service assumptions, traffic, and the answer belong to the race engine."
+      }
+    },
+    {
+      "example_id": "dm13-tr", "scenario_id": "pit-rejoin", "leakage_group": "pit-rejoin",
+      "language": "tr", "speaker": "driver", "text": "Bu tur pite girsem kaçıncı dönerim?", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["request_information"], "meaning": "Request the race position after a hypothetical pit stop this lap.",
+        "requests": [{"request_id": "r1", "source_span": "Bu tur pite girsem kaçıncı dönerim?", "focus": "pit_rejoin_position", "question": "What race position would the driver rejoin in after pitting this lap?", "subject": "self", "reference_basis": "radio_convention", "time_scope": "future_counterfactual", "resolution": "clear"}],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "The conditional asks for a projected position, not current rank or permission to execute a pit stop."
+      }
+    },
+    {
+      "example_id": "dm14-en", "scenario_id": "historical-speed", "leakage_group": "historical-speed",
+      "language": "en", "speaker": "driver", "text": "What was my average speed over the last twenty seconds?", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["request_information"], "meaning": "Request mean speed over an explicit elapsed twenty-second window.",
+        "requests": [{"request_id": "r1", "source_span": "What was my average speed over the last twenty seconds?", "focus": "speed_mean", "question": "What was the driver's mean speed over the most recent twenty seconds?", "subject": "self", "reference_basis": "explicit", "time_scope": "historical", "window_seconds": 20, "resolution": "clear"}],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "Twenty seconds is extracted from the requested window, not a measured race value. Preserve mean rather than latest or maximum."
+      }
+    },
+    {
+      "example_id": "dm14-tr", "scenario_id": "historical-speed", "leakage_group": "historical-speed",
+      "language": "tr", "speaker": "driver", "text": "Son yirmi saniyede ortalama hızım neydi?", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["request_information"], "meaning": "Request mean speed over the most recent twenty seconds.",
+        "requests": [{"request_id": "r1", "source_span": "Son yirmi saniyede ortalama hızım neydi?", "focus": "speed_mean", "question": "What was the driver's mean speed over the most recent twenty seconds?", "subject": "self", "reference_basis": "explicit", "time_scope": "historical", "window_seconds": 20, "resolution": "clear"}],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "Do not drop the elapsed window or turn an average-speed request into a current-speed answer."
+      }
+    },
+    {
+      "example_id": "dm15-en", "scenario_id": "race-overview", "leakage_group": "race-overview",
+      "language": "en", "speaker": "driver", "text": "How's the race looking?", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["request_information"], "meaning": "Request a broad assessment of how the driver's race is going.",
+        "requests": [{"request_id": "r1", "source_span": "How's the race looking?", "focus": "race_assessment", "question": "How is the driver's race going overall?", "subject": "self", "reference_basis": "radio_convention", "time_scope": "current", "resolution": "clear"}],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "A broad assessment is valid. Do not reduce it to a presence check, vent, or yes/no ranking predicate. Evidence selection is a later task."
+      }
+    },
+    {
+      "example_id": "dm15-tr", "scenario_id": "race-overview", "leakage_group": "race-overview",
+      "language": "tr", "speaker": "driver", "text": "Yarış nasıl gidiyor?", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["request_information"], "meaning": "Request an overall assessment of the driver's race.",
+        "requests": [{"request_id": "r1", "source_span": "Yarış nasıl gidiyor?", "focus": "race_assessment", "question": "How is the driver's race going overall?", "subject": "self", "reference_basis": "radio_convention", "time_scope": "current", "resolution": "clear"}],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "Do not invent a position or preselect exactly one measurement as the meaning of an overview request."
+      }
+    },
+    {
+      "example_id": "dm16-en", "scenario_id": "tyre-report-and-request", "leakage_group": "tyre-report-and-request",
+      "language": "en", "speaker": "driver", "text": "My fronts are gone. Can I stay out another lap?", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "newly_authored", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["report_problem", "request_information"], "meaning": "Report perceived front-tyre loss of performance and ask whether continuing for another lap is viable.",
+        "requests": [{"request_id": "r1", "source_span": "Can I stay out another lap?", "focus": "tyre_stint_feasibility", "question": "Is it viable to continue another lap given the driver's reported front-tyre problem?", "subject": "self", "reference_basis": "explicit", "time_scope": "future_counterfactual", "resolution": "clear"}],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "The report supplies the tyre context within this message. Condition is driver-reported, not sensor-confirmed; the calculation may be unavailable."
+      }
+    },
+    {
+      "example_id": "dm16-tr", "scenario_id": "tyre-report-and-request", "leakage_group": "tyre-report-and-request",
+      "language": "tr", "speaker": "driver", "text": "Ön lastikler bitti. Bir tur daha dayanır mı?", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "newly_authored", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["report_problem", "request_information"], "meaning": "Report perceived front-tyre degradation and ask whether the tyres can last another lap.",
+        "requests": [{"request_id": "r1", "source_span": "Bir tur daha dayanır mı?", "focus": "tyre_stint_feasibility", "question": "Can the driver's front tyres last another lap given the reported problem?", "subject": "self", "reference_basis": "explicit", "time_scope": "future_counterfactual", "resolution": "clear"}],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "Keep report and question separate. This open-vocabulary focus extends beyond the old six topics without adding a live routing rule."
+      }
+    },
+    {
+      "example_id": "dm17-en", "scenario_id": "acknowledgment", "leakage_group": "acknowledgment",
+      "language": "en", "speaker": "driver", "text": "Copy, thanks.", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "newly_authored", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["acknowledge"], "meaning": "Acknowledge receipt and thank the engineer.", "requests": [],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "Acknowledgment is not a fresh request to retrieve telemetry or repeat a previous answer."
+      }
+    },
+    {
+      "example_id": "dm17-tr", "scenario_id": "acknowledgment", "leakage_group": "acknowledgment",
+      "language": "tr", "speaker": "driver", "text": "Anlaşıldı, sağ ol.", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "newly_authored", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["acknowledge"], "meaning": "Acknowledge receipt and thank the engineer.", "requests": [],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "No new race facts are requested. Whether to reply or remain silent is a later response decision."
+      }
+    },
+    {
+      "example_id": "dm18-en", "scenario_id": "communication-preference", "leakage_group": "communication-preference",
+      "language": "en", "speaker": "driver", "text": "Stop announcing every position change.", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "newly_authored", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["preference_change"], "meaning": "Ask the engineer to stop proactive position-change announcements.", "requests": [],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "This concerns communication, not current rank. Annotation does not authorize profile writes, retention choices, or muting critical calls."
+      }
+    },
+    {
+      "example_id": "dm18-tr", "scenario_id": "communication-preference", "leakage_group": "communication-preference",
+      "language": "tr", "speaker": "driver", "text": "Her sıra değiştiğinde haber verme artık.", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "newly_authored", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["preference_change"], "meaning": "Ask the engineer to stop proactive position-change announcements.", "requests": [],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "Do not confuse a communication instruction with a race-position question or execute it from this dataset."
+      }
+    },
+    {
+      "example_id": "dm19-en", "scenario_id": "gap-direction-correction", "leakage_group": "gap-ahead-family",
+      "language": "en", "speaker": "driver", "text": "No, behind us.",
+      "recent_dialogue": [{"role": "driver", "text": "What's the gap?"}, {"role": "engineer", "text": "Do you mean the car ahead?"}],
+      "origin": "assistant_authored", "prior_exposure": "newly_authored", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["correction", "request_information"], "meaning": "Correct the opponent direction and request the gap to the car behind.",
+        "requests": [{"request_id": "r1", "source_span": "No, behind us.", "focus": "time_gap", "question": "What is the current time gap from the driver to the car behind?", "subject": "car_behind", "reference_basis": "dialogue", "time_scope": "current", "resolution": "clear"}],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "History supplies the gap request; the current turn corrects the target. Do not retain the engineer's car-ahead guess."
+      }
+    },
+    {
+      "example_id": "dm19-tr", "scenario_id": "gap-direction-correction", "leakage_group": "gap-ahead-family",
+      "language": "tr", "speaker": "driver", "text": "Yok, arkadakini soruyorum.",
+      "recent_dialogue": [{"role": "driver", "text": "Aramızdaki fark ne kadar?"}, {"role": "engineer", "text": "Öndeki araçla olan farkı mı soruyorsun?"}],
+      "origin": "assistant_authored", "prior_exposure": "newly_authored", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["correction", "request_information"], "meaning": "Correct the opponent direction and ask for the gap to the car behind.",
+        "requests": [{"request_id": "r1", "source_span": "Yok, arkadakini soruyorum.", "focus": "time_gap", "question": "What is the current time gap from the driver to the car behind?", "subject": "car_behind", "reference_basis": "dialogue", "time_scope": "current", "resolution": "clear"}],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "Use the current correction to revise the reference. Do not answer the engineer's earlier guess instead of the driver."
+      }
+    },
+    {
+      "example_id": "dm20-en", "scenario_id": "unrelated-request", "leakage_group": "unrelated-request",
+      "language": "en", "speaker": "driver", "text": "Give me a chocolate cake recipe.", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["out_of_scope"], "meaning": "Request cooking instructions unrelated to racing-radio tasks.", "requests": [],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "Requests here inventory racing-information requests only. Preserve the unrelated request in meaning without inventing a racing topic."
+      }
+    },
+    {
+      "example_id": "dm20-tr", "scenario_id": "unrelated-request", "leakage_group": "unrelated-request",
+      "language": "tr", "speaker": "driver", "text": "Bana çikolatalı kek tarifi verir misin?", "recent_dialogue": [],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["out_of_scope"], "meaning": "Request cooking instructions unrelated to racing-radio tasks.", "requests": [],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "A question can be understood yet outside Pitward's scope. Do not force it into a racing-information label."
+      }
+    },
+    {
+      "example_id": "dm21-en", "scenario_id": "back-off-after-reminders", "leakage_group": "self-assertion",
+      "language": "en", "speaker": "driver", "text": "I know what I am doing.",
+      "recent_dialogue": [
+        {"role": "engineer", "text": "You've got ten seconds to the car behind, but they're closing."},
+        {"role": "driver", "text": "Copy."},
+        {"role": "engineer", "text": "They're still closing. Keep an eye on your pace."},
+        {"role": "engineer", "text": "The gap behind is coming down. You need to respond."}
+      ],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["communication_feedback"], "meaning": "Push back against repeated unsolicited pace reminders: stop nagging about the closing car and let the driver concentrate on racing.", "requests": [],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "Repeated reminders after acknowledgment support the owner's explained back-off interpretation. Not a gap query, an invitation to repeat advice, a permanent profile preference, or a command to mute every alert. The context is authored, not real telemetry; full example review is pending."
+      }
+    },
+    {
+      "example_id": "dm21-tr", "scenario_id": "back-off-after-reminders", "leakage_group": "self-assertion",
+      "language": "tr", "speaker": "driver", "text": "Ne yaptığımı biliyorum.",
+      "recent_dialogue": [
+        {"role": "engineer", "text": "Arkadakiyle on saniye fark var ama yaklaşıyor."},
+        {"role": "driver", "text": "Anlaşıldı."},
+        {"role": "engineer", "text": "Hâlâ yaklaşıyor, tempoya dikkat et."},
+        {"role": "engineer", "text": "Arkadakiyle fark kapanıyor. Bir şey yapman gerekiyor."}
+      ],
+      "origin": "assistant_authored", "prior_exposure": "previously_probed", "split": "unassigned", "review": {"status": "draft"},
+      "annotation": {
+        "actions": ["communication_feedback"], "meaning": "Ask the engineer to back off repeated pace reminders and let the driver focus on racing.", "requests": [],
+        "interpretation_status": "clear", "clarification_needed": false, "ambiguities": [],
+        "rationale": "The supplied reminders explain the implicit request to stop nagging. Do not answer with another gap report, argue, or invent a permanent preference change. This Turkish adaptation and its full annotation remain draft."
+      }
+    }
+  ]
+}

@@ -104,6 +104,7 @@ async def intelligence_replay(
         recent_dialogue=tuple(recent_dialogue),
     )
     try:
+        await engineer.start()
         prepared = await engineer.prepare(turn)
         grounded = await engineer.ground(prepared)
     except (
@@ -122,6 +123,8 @@ async def intelligence_replay(
         if hint is not None:
             print(hint)
         return 1
+    finally:
+        await engineer.aclose()
 
     state = {
         "fixture_id": fixture.manifest.fixture_id,

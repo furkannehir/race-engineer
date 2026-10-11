@@ -78,6 +78,9 @@ def test_live_attempts_report_no_speech_timeouts_silence_and_tts_failures(
     class Intelligence:
         calls = 0
 
+        async def start(self):
+            pass
+
         async def prepare(self, turn):
             self.calls += 1
             if self.calls == 1:

@@ -22,6 +22,13 @@ FIXTURE = ROOT / "fixtures/synthetic/intelligence"
 class FixtureEngineer:
     def __init__(self, memory) -> None:
         self.memory = memory
+        self.started = self.closed = False
+
+    async def start(self):
+        self.started = True
+
+    async def aclose(self):
+        self.closed = True
 
     async def prepare(self, turn: DriverTurn) -> PreparedEngineerResponse:
         current = self.memory.latest_context()
@@ -80,7 +87,8 @@ def test_intelligence_replay_uses_latest_fixture_history_by_default(monkeypatch,
 
     def factory(config, memory):
         captured["samples"] = memory.sample_count
-        return FixtureEngineer(memory)
+        captured["engineer"] = FixtureEngineer(memory)
+        return captured["engineer"]
 
     monkeypatch.setattr(
         "race_engineer.application.intelligence_cli.live_intelligence",
@@ -98,6 +106,7 @@ def test_intelligence_replay_uses_latest_fixture_history_by_default(monkeypatch,
     output = capsys.readouterr().out
     assert code == 0
     assert captured["samples"] == 3
+    assert captured["engineer"].started and captured["engineer"].closed
     assert "frame 2/2" in output
     assert "Yes, you are last." in output
 
@@ -140,6 +149,12 @@ def test_intelligence_replay_reports_local_model_failure(
     expected_hint,
 ):
     class FailingEngineer:
+        async def start(self):
+            pass
+
+        async def aclose(self):
+            pass
+
         async def prepare(self, turn):
             raise LocalIntelligenceError(reason)
 

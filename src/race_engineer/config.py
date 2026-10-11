@@ -146,6 +146,18 @@ class ConversationRuntimeConfig(ConfigModel):
         return self
 
 
+class DriverInterpreterConfig(ConfigModel):
+    """Source-mode, draft-model race trial; not a full telemetry interpreter."""
+
+    enabled: bool = False
+    python_path: Path = Path("data/stt-prototype/runtime/Scripts/python.exe")
+    base_model_path: Path = Path("data/driver-interpreter-pilot/base")
+    model_path: Path = Path("data/driver-interpreter-pilot/run-v2-seed17")
+    threads: int = Field(default=8, ge=1, le=64)
+    startup_timeout_s: float = Field(default=60, gt=0, le=180, allow_inf_nan=False)
+    timeout_s: float = Field(default=2, gt=0, le=10, allow_inf_nan=False)
+
+
 class ConversationConfig(ConfigModel):
     adapter: Literal["llama-cpp"] = "llama-cpp"
     model: str = Field(
@@ -161,6 +173,7 @@ class ConversationConfig(ConfigModel):
     max_snapshot_age_s: float = Field(default=3.0, gt=0, le=30, allow_inf_nan=False)
     default_language: Literal["en", "tr"] = "en"
     runtime: ConversationRuntimeConfig = ConversationRuntimeConfig()
+    driver_interpreter: DriverInterpreterConfig = DriverInterpreterConfig()
 
     @property
     def history_entry_limit(self) -> int:
