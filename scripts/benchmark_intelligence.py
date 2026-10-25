@@ -33,6 +33,7 @@ from race_engineer.intelligence.context_planner import (
     PLANNER_ID,
     PLANNER_V5_ID,
     PLANNER_V6_ID,
+    PLANNER_V7_ID,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -279,7 +280,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--candidate",
-        choices=(PLANNER_V5_ID, PLANNER_V6_ID),
+        choices=(PLANNER_V5_ID, PLANNER_V6_ID, PLANNER_V7_ID),
         default=PLANNER_ID,
         help="planner prompt candidate to benchmark",
     )

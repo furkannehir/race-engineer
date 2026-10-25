@@ -187,6 +187,7 @@ def _plan_matches(plan: ContextPlan | None, expected: ExpectedContextPlan) -> bo
         == sorted(expected.capability_ids)
         and actual_queries == expected_queries
         and (expected.purpose is None or purpose == expected.purpose)
+        and set(expected.required_situation).issubset(plan.situation)
     )
 
 
@@ -322,11 +323,13 @@ async def measure_intelligence_turn(
         None
         if packet is None
         else "no_evidence"
+        if not kinds and not unknowns
+        else "unavailable"
         if not kinds
         else "unavailable"
         if all(kind == "unknown" for kind in kinds)
         else "partial"
-        if "unknown" in kinds
+        if "unknown" in kinds or unknowns
         else "available"
     )
     observed_plan = _plan_diagnostic_value(planner.last_plan)

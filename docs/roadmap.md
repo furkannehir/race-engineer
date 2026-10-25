@@ -1,10 +1,29 @@
 # Working roadmap
 
-Updated 2026-10-11. This is the current progress/backlog companion to the original
+Updated 2026-10-25. This is the current progress/backlog companion to the original
 [implementation plan](personalized-ai-race-engineer-implementation-plan.docx), not a claim
 that every original milestone exit criterion has been formally validated.
 
 ## Current checkpoint
+
+Priority decision, October 12: stabilize Qwen request understanding before adding
+race-start features or doing further speed tuning. Reproduce the observed failures
+with typed questions (without STT), expand bilingual short/social/unsupported and
+dialogue controls, then compare a separately evaluated candidate against v6 before
+changing the live path. Do not replace this work with a fixed spoken-command table.
+The race-start briefing (actual grid position plus an evidence-backed expected finish)
+is deferred under [RACE-001](known-issues.md#race-001-announce-starting-grid-and-an-expected-finishing-position).
+See [the interpretation follow-up](known-issues.md#int-004-context-planner-completeness-relevance-and-social-purpose-errors).
+
+The first understanding slice is implemented as `qwen-context-v7`, with
+44 bilingual development controls and 12 disjoint validation paraphrases. Common
+exact-plan/evidence credit improved from v6's 67/102 to 95/102 on the matched CUDA
+workload. On October 25, the user selected v7 as the development/live-test default;
+v6 remains an explicit rollback, and all seven known failures remain open. Twelve fresh
+full text-pipeline checks passed with a 0.609 s median, excluding STT/TTS and game
+load. Next: incomplete compounds, unresolved references, the remaining Turkish
+grid/relief mistakes, bounded planner recovery, then live-catalog/race acceptance.
+See [the comparison and testing instructions](intelligence-evaluation.md#october-12-understanding-candidate-v7).
 
 October 11 branch split: the standard edition on `main` now uses Qwen3-4B for
 Context planning and Core/reply generation with NVIDIA/CUDA selected in the normal
@@ -147,8 +166,9 @@ should share the validated service later. CONV-004 is scheduled in CE-05, not ye
    queries, social abstention, temporal scope and authoritative unavailable results. A
    content-free runner reports exact plan/evidence scores, first/subsequent-call latency,
    optional server prompt/generation timings, model errors, candidate revisions, input and
-   implementation fingerprints, and machine metadata. `qwen-context-v6` is the
-   runnable portable baseline; the enhanced profile fails closed until a learned temporal
+   implementation fingerprints, and machine metadata. `qwen-context-v7` is the
+   current development/live-test default, with v6 available as an explicit rollback;
+   the enhanced profile fails closed until a learned temporal
    adapter exists. The first CPU Qwen report is recorded: the original contract timed out on
    17/24 turns, while a compact development-only iteration cut mean planning from 29.5 to
    11.8 seconds but still passed 0/12 exact turns. Qwen is therefore an unpromoted baseline.

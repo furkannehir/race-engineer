@@ -41,7 +41,7 @@ its scores become a release gate.
 
 | Profile | Current state | Intended use |
 | --- | --- | --- |
-| `portable` | Runnable with `qwen-context-v6` | One local general model selects catalog-bound evidence; deterministic code executes it |
+| `portable` | Default `qwen-context-v7`; v6 rollback available | One local general model selects catalog-bound evidence; deterministic code executes it |
 | `enhanced` | Reserved, fails closed | A learned temporal component may add typed signals/capabilities before the same planning boundary |
 
 MiniLM and Laya remain evaluation candidates, not dependencies or selected architecture.
@@ -544,6 +544,117 @@ The full report is available locally at
 `data/benchmarks/intelligence-core-compact-v6-30-turn.json`; the content-free report records
 plans and timings, while reply text and the optional temporary requested-fact inventory are
 shown only in the console during review.
+
+## October 12 understanding candidate v7
+
+At its initial October 12 evaluation, `qwen-context-v7` was opt-in and v6 remained
+the default. On October 25, the user selected v7 for the next live race test:
+`PLANNER_ID`, generic configuration defaults and `config/default.toml` now select v7.
+The app, typed replay, evaluation and latency benchmark defaults are aligned.
+This is a development rollout, not release promotion or closure of the seven failures.
+The v5/v6 planner prompts and wire contracts are unchanged. V7 retains their retrieval guidance while replacing
+the social boolean with one typed kind: greeting, radio check, vent, acknowledgment,
+other, or none. A factual inventory and explicit missing-information reason remain.
+It uses the same Qwen model and one Context inference, not a new classifier or
+phrase matcher. Core instructions now consume the social tags and require honest
+limitations for unsupported facts; both reply candidates used these same Core
+instructions in the matched checks.
+
+The bounded flat v7 decoding contract uses the current advertised catalog. Python
+still rejects unknown tools, invalid operations, wrong temporal scopes, duplicate
+work, empty factual/none plans and social plans requesting evidence before execution.
+No telemetry arithmetic or final evidence/placeholder checks moved into the model.
+
+The new `development-understanding.json` has 44 turns, 22 per language. It covers
+short greetings/presence checks, classification shorthand, venting/relief, unavailable
+damage and original-grid information, partial compounds, target correction, explicit
+topic changes and unresolved references. This set was used during prompt iteration;
+it is not a blind accuracy estimate. The 12-turn `development-understanding-validation.json`
+contains disjoint authored paraphrases added after freezing the final prompt. It
+remains a small development check, not a promotion-grade locked workload.
+
+Matched fresh, owned CUDA planner runs (Qwen3-4B-Instruct-2507 Q4_K_M, b10964,
+RTX 5080, context 8192, one parallel slot) produced:
+
+| Common-contract exact turns | V6 | V7 |
+| --- | ---: | ---: |
+| Existing four development datasets | 53/58 | 57/58 |
+| New understanding controls | 14/44 | 38/44 |
+| Combined | 67/102 | 95/102 |
+| English combined | 35/51 | 48/51 |
+| Turkish combined | 32/51 | 47/51 |
+
+The common contract checks purpose, factual scope, exact tool/query selection,
+evidence outcome and unknown reasons. V6 cannot emit v7 social-subtype tags, so
+comparing their strict enriched `passed` counts would unfairly penalize v6.
+Reports now retain strict credit and separately expose `common_contract_passed` /
+`common_contract_accuracy` and subtype checks. V7 passed 21/22 subtype-bearing
+turns; there were no subtype-only errors beyond its common-contract failures.
+Unavailable-only facts can now be expected without a fabricated telemetry tool;
+partly supported requests must preserve both supported evidence and unknown reasons.
+Reports retain whitelisted subtype tags, never driver transcripts.
+
+Seven v7 failures remain: the English three-fact draft fails structural validation;
+one Turkish relief utterance invents factual work; one Turkish original-grid
+paraphrase selects present classification; two damage/speed compounds lose or add
+retrieval; and two unresolved references guess gap behind. V6 had six empty-plan
+rejections on the new set; v7 had none there, but the broader invalid draft can
+still result in silence. There is no planner-repair or spoken-failure implementation
+in this slice. Do not claim all driver questions are understood or that v7 has
+passed release promotion gates.
+
+Full production text-path checks used the same planner, Core, evidence refresh and
+grounding as the app. Eight matched short prompts completed 7/8 with v6 (3/8 exact
+plans, one Core error), versus 8/8 exact/completed with v7. An additional 12 candidate
+paraphrase checks brought the selected v7 sample to 20/20 with no Core repairs.
+Manual review found greetings/radio checks without unrelated telemetry and honest
+damage/grid limitations. Turkish wording remains stiff, and a mixed radio/fuel reply
+says "Sesim geliyor" rather than acknowledging the driver's voice. Pipeline completion
+and placeholder grounding are not an automatic conversational truth/naturalness score.
+
+The final shuffled, independently saved 12-turn validation benchmark completed
+12/12 with exact plans/evidence and zero repairs: median 0.609 s, sample p95 0.877 s,
+max 1.066 s. Median Context time was 0.321 s and Core time 0.279 s. Its owned CUDA
+startup took 2.756 s outside turn timing. There was no microphone, STT, TTS or race
+load, and the synthetic catalog was small; larger live catalogs/history and context
+capacity still need validation. The content-free local report is
+`data/benchmarks/understanding-v7-validation-20261012.json`, ignored by Git.
+Source/input fingerprints and effective owned CUDA metadata are recorded; neither
+changed during that run. The parent revision is `79fc243` with this slice uncommitted.
+
+To try a typed candidate without changing the live configuration, start the local
+server in one terminal and ask in another:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\start_conversation_model.py --config config\default.toml
+```
+
+```powershell
+.\.venv\Scripts\python.exe -m race_engineer intelligence-replay `
+  --fixture fixtures\synthetic\intelligence-capabilities `
+  --candidate qwen-context-v7 --question "Are you there?"
+```
+
+`--candidate` overrides only that replay; it does not edit the configuration file.
+Evaluation/latency commands also accept v7. To reproduce the full text benchmark,
+close the app/managed server first so its configured port is free. The benchmark
+starts and closes its own server and refuses an external/unverified runtime:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\benchmark_intelligence.py `
+  --candidate qwen-context-v7 `
+  --dataset fixtures\intelligence-evaluation\development-understanding-validation.json `
+  --repeats 1 --require-owned-runtime --expect-backend cuda --show-replies `
+  --output data\benchmarks\understanding-v7-validation-repeat.json
+```
+
+Choose a new output filename for each run. The normal app configuration now uses
+`[conversation] context_planner = "qwen-context-v7"` for the user-approved live trial.
+Close and reopen the app to load the updated configuration. To roll back, change
+that value to `"qwen-context-v6"` and reopen the app. For a single typed replay,
+use `--candidate qwen-context-v6` without editing the live configuration.
+Explicit custom-config choices are still honored. Starting-grid
+normalization, forecasts and automatic race-start briefings remain deferred (RACE-001).
 
 ## Promotion rules
 

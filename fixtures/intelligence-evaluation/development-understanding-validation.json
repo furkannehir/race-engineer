@@ -1,0 +1,69 @@
+{
+  "schema_version": "intelligence-eval.v1",
+  "dataset_id": "intelligence-development-understanding-validation",
+  "revision": "2026-10-12.seed1",
+  "split": "development",
+  "fixture": "fixtures/synthetic/intelligence-capabilities",
+  "groups": [
+    {
+      "id": "fresh-greeting-en", "family": "fresh-greeting-en-20261012",
+      "category": "greeting", "language": "en", "questions": ["Morning, engineer."],
+      "expected": {"purpose": "social", "temporal_scope": "social", "evidence_outcome": "no_evidence", "required_situation": ["driver_greeting"]}
+    },
+    {
+      "id": "fresh-greeting-tr", "family": "fresh-greeting-tr-20261012",
+      "category": "greeting", "language": "tr", "questions": ["Mühendis, selam."],
+      "expected": {"purpose": "social", "temporal_scope": "social", "evidence_outcome": "no_evidence", "required_situation": ["driver_greeting"]}
+    },
+    {
+      "id": "fresh-radio-en", "family": "fresh-radio-en-20261012",
+      "category": "radio-check", "language": "en", "questions": ["Can you copy me?"],
+      "expected": {"purpose": "social", "temporal_scope": "social", "evidence_outcome": "no_evidence", "required_situation": ["driver_radio_check"]}
+    },
+    {
+      "id": "fresh-radio-tr", "family": "fresh-radio-tr-20261012",
+      "category": "radio-check", "language": "tr", "questions": ["Mühendis, sesimi alabiliyor musun?"],
+      "expected": {"purpose": "social", "temporal_scope": "social", "evidence_outcome": "no_evidence", "required_situation": ["driver_radio_check"]}
+    },
+    {
+      "id": "fresh-position-en", "family": "fresh-position-en-20261012",
+      "category": "classification", "language": "en", "questions": ["What place are we in right now?"],
+      "expected": {"purpose": "race_information", "temporal_scope": "current", "capability_ids": ["current_classification"], "evidence_outcome": "available"}
+    },
+    {
+      "id": "fresh-position-tr", "family": "fresh-position-tr-20261012",
+      "category": "classification", "language": "tr", "questions": ["Şu an kaçıncı sırada gidiyorum?"],
+      "expected": {"purpose": "race_information", "temporal_scope": "current", "capability_ids": ["current_classification"], "evidence_outcome": "available"}
+    },
+    {
+      "id": "fresh-damage-en", "family": "fresh-damage-en-20261012",
+      "category": "unsupported-damage", "language": "en", "questions": ["What does the damage telemetry say?"],
+      "expected": {"purpose": "race_information", "temporal_scope": "current", "evidence_outcome": "unavailable", "required_unknowns": ["requested_analysis_unavailable"]}
+    },
+    {
+      "id": "fresh-damage-tr", "family": "fresh-damage-tr-20261012",
+      "category": "unsupported-damage", "language": "tr", "questions": ["Arabanın hasar durumunu görebiliyor musun?"],
+      "expected": {"purpose": "race_information", "temporal_scope": "current", "evidence_outcome": "unavailable", "required_unknowns": ["requested_analysis_unavailable"]}
+    },
+    {
+      "id": "fresh-grid-en", "family": "fresh-grid-en-20261012",
+      "category": "unsupported-starting-grid", "language": "en", "questions": ["Which grid slot did I start from?"],
+      "expected": {"purpose": "race_information", "temporal_scope": "historical", "evidence_outcome": "unavailable", "required_unknowns": ["requested_analysis_unavailable"]}
+    },
+    {
+      "id": "fresh-grid-tr", "family": "fresh-grid-tr-20261012",
+      "category": "unsupported-starting-grid", "language": "tr", "questions": ["Yarışa başladığım grid sırası neydi?"],
+      "expected": {"purpose": "race_information", "temporal_scope": "historical", "evidence_outcome": "unavailable", "required_unknowns": ["requested_analysis_unavailable"]}
+    },
+    {
+      "id": "fresh-mixed-en", "family": "fresh-mixed-en-20261012",
+      "category": "mixed-radio-fuel", "language": "en", "questions": ["Can you hear me, and how much fuel is left?"],
+      "expected": {"purpose": "mixed", "temporal_scope": "current", "queries": [{"source": "player", "signal": "fuel_l", "operation": "latest"}], "evidence_outcome": "available", "required_situation": ["driver_radio_check"]}
+    },
+    {
+      "id": "fresh-mixed-tr", "family": "fresh-mixed-tr-20261012",
+      "category": "mixed-radio-fuel", "language": "tr", "questions": ["Sesim geliyor mu, depoda kaç litre yakıt kaldı?"],
+      "expected": {"purpose": "mixed", "temporal_scope": "current", "queries": [{"source": "player", "signal": "fuel_l", "operation": "latest"}], "evidence_outcome": "available", "required_situation": ["driver_radio_check"]}
+    }
+  ]
+}

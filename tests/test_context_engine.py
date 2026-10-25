@@ -27,7 +27,6 @@ from race_engineer.intelligence.context_engine import (
     QueryDrivenContextEngineer,
 )
 from race_engineer.intelligence.context_planner import (
-    PLANNER_ID,
     PLANNER_V5_ID,
     PLANNER_V6_ID,
     QwenContextQueryPlanner,
@@ -258,6 +257,8 @@ def test_context_engine_rejects_planner_scope_and_unknown_refresh_ids():
 
 
 class FakeJsonModel:
+    """Legacy v5/v6 wire fixtures; corresponding planner tests select v6 explicitly."""
+
     def __init__(self, result: object) -> None:
         self.result = wire_plan(result)
         self.captured: dict[str, object] | None = None
@@ -298,7 +299,7 @@ def test_v6_prompt_is_separately_selected_and_reports_only_requested_fact_invent
     assert "Suppose I box now" in model.captured["system_prompt"]
 
 
-def test_v6_prompt_is_used_by_the_live_intelligence_factory(monkeypatch):
+def test_v6_prompt_remains_selectable_in_the_live_intelligence_factory(monkeypatch):
     model = FakeJsonModel(
         {
             "social_comment": True,
@@ -309,16 +310,14 @@ def test_v6_prompt_is_used_by_the_live_intelligence_factory(monkeypatch):
             "missing_information": "none",
         }
     )
-    monkeypatch.setattr(
-        "race_engineer.intelligence.factory.LocalJsonModel", lambda config: model
-    )
+    monkeypatch.setattr("race_engineer.intelligence.factory.LocalJsonModel", lambda config: model)
     memory = BoundedTelemetryMemory()
     memory.update(race_context(1, 0))
-    engineer = live_intelligence(ConversationConfig(), memory)
+    engineer = live_intelligence(ConversationConfig(context_planner=PLANNER_V6_ID), memory)
 
     packet = asyncio.run(engineer._context.analyze(driver_turn("That guy hasn't got a clue.")))
 
-    assert PLANNER_ID == PLANNER_V6_ID
+    assert packet.situation == ("driver_social_turn",)
     assert packet.evidence == ()
     assert "driver_social_turn" in packet.situation
     assert model.captured is not None
@@ -362,7 +361,7 @@ def test_qwen_context_planner_receives_schema_not_raw_values_and_returns_queries
             ],
         }
     )
-    planner = QwenContextQueryPlanner(ConversationConfig(), model=model)
+    planner = QwenContextQueryPlanner(ConversationConfig(), planner_id=PLANNER_V6_ID, model=model)
     capabilities = DeterministicRaceCapabilities(memory).catalog()
 
     result = asyncio.run(planner.plan(driver_turn(), memory.signal_catalog(), capabilities))
@@ -400,7 +399,7 @@ def test_model_selected_field_aggregate_can_supply_last_place_evidence():
     )
     engine = QueryDrivenContextEngineer(
         memory,
-        QwenContextQueryPlanner(ConversationConfig(), model=model),
+        QwenContextQueryPlanner(ConversationConfig(), planner_id=PLANNER_V6_ID, model=model),
     )
 
     packet = asyncio.run(engine.analyze(driver_turn("Am I last?")))
@@ -424,7 +423,7 @@ def test_qwen_context_planner_selects_advertised_deterministic_capability():
     )
     engine = QueryDrivenContextEngineer(
         memory,
-        QwenContextQueryPlanner(ConversationConfig(), model=model),
+        QwenContextQueryPlanner(ConversationConfig(), planner_id=PLANNER_V6_ID, model=model),
         registry,
     )
 
@@ -466,7 +465,7 @@ def test_qwen_context_planner_verifies_driver_telemetry_claims():
     )
     engine = QueryDrivenContextEngineer(
         memory,
-        QwenContextQueryPlanner(ConversationConfig(), model=model),
+        QwenContextQueryPlanner(ConversationConfig(), planner_id=PLANNER_V6_ID, model=model),
     )
 
     packet = asyncio.run(engine.analyze(driver_turn("I'm P6 in a ten-car grid.")))
@@ -489,7 +488,7 @@ def test_qwen_context_planner_marks_unsupported_pit_projection():
             "missing_information": "unsupported_projection",
         }
     )
-    planner = QwenContextQueryPlanner(ConversationConfig(), model=model)
+    planner = QwenContextQueryPlanner(ConversationConfig(), planner_id=PLANNER_V6_ID, model=model)
 
     result = asyncio.run(
         planner.plan(
@@ -518,7 +517,7 @@ def test_future_rejoin_capability_returns_its_authoritative_unavailable_reason()
     )
     engine = QueryDrivenContextEngineer(
         memory,
-        QwenContextQueryPlanner(ConversationConfig(), model=model),
+        QwenContextQueryPlanner(ConversationConfig(), planner_id=PLANNER_V6_ID, model=model),
         DeterministicRaceCapabilities(memory),
     )
 
@@ -544,12 +543,15 @@ def test_qwen_context_planner_rejects_unadvertised_or_malformed_output():
             ]
         }
     )
-    planner = QwenContextQueryPlanner(ConversationConfig(), model=invented)
+    planner = QwenContextQueryPlanner(
+        ConversationConfig(), planner_id=PLANNER_V6_ID, model=invented
+    )
     with pytest.raises(LocalIntelligenceError, match="unknown_signal"):
         asyncio.run(planner.plan(driver_turn("How are the tires?"), memory.signal_catalog(), ()))
 
     malformed = QwenContextQueryPlanner(
         ConversationConfig(),
+        planner_id=PLANNER_V6_ID,
         model=FakeJsonModel({"queries": [], "answer": "You're P6"}),
     )
     with pytest.raises(LocalIntelligenceError, match="response_invalid"):
@@ -560,7 +562,7 @@ def test_signal_schema_enumerates_complete_catalog_ids_and_operation_rules():
     memory = BoundedTelemetryMemory()
     memory.update(race_context(1, 0, opponent_positions=(5, 7)))
     model = FakeJsonModel({"purpose": "social", "temporal_scope": None})
-    planner = QwenContextQueryPlanner(ConversationConfig(), model=model)
+    planner = QwenContextQueryPlanner(ConversationConfig(), planner_id=PLANNER_V6_ID, model=model)
     asyncio.run(planner.plan(driver_turn(), memory.signal_catalog(), ()))
 
     payload = json.loads(model.captured["content"])
@@ -602,7 +604,7 @@ def test_signal_binding_maps_opponent_id_without_model_authored_subject():
         }
     )
     engine = QueryDrivenContextEngineer(
-        memory, QwenContextQueryPlanner(ConversationConfig(), model=model)
+        memory, QwenContextQueryPlanner(ConversationConfig(), planner_id=PLANNER_V6_ID, model=model)
     )
     packet = asyncio.run(engine.analyze(driver_turn()))
     assert packet.evidence[0].value == 7
@@ -611,7 +613,7 @@ def test_signal_binding_maps_opponent_id_without_model_authored_subject():
 
 def test_empty_catalog_does_not_advertise_any_queries_or_capabilities():
     model = FakeJsonModel({"purpose": "social", "temporal_scope": None})
-    planner = QwenContextQueryPlanner(ConversationConfig(), model=model)
+    planner = QwenContextQueryPlanner(ConversationConfig(), planner_id=PLANNER_V6_ID, model=model)
     asyncio.run(planner.plan(driver_turn("Thanks"), (), ()))
     for branch in model.captured["schema"]["oneOf"]:
         properties = branch["properties"]
@@ -626,7 +628,7 @@ def test_catalog_binding_is_order_independent_and_rebuilt_when_opponent_changes(
     model = FakeJsonModel(
         {"queries": [{"signal_id": "opponent_0.position", "operation": "latest"}]}
     )
-    planner = QwenContextQueryPlanner(ConversationConfig(), model=model)
+    planner = QwenContextQueryPlanner(ConversationConfig(), planner_id=PLANNER_V6_ID, model=model)
     first = asyncio.run(planner.plan(driver_turn(), signals, ()))
     first_payload = model.captured["content"]
     reordered = asyncio.run(planner.plan(driver_turn(), tuple(reversed(signals)), ()))
@@ -675,7 +677,7 @@ def test_invalid_query_preserves_known_selection_but_rejects_entire_turn(query, 
     memory = BoundedTelemetryMemory()
     memory.update(race_context(1, 0))
     model = FakeJsonModel({"capability_ids": ["current_classification"], "queries": [query]})
-    planner = QwenContextQueryPlanner(ConversationConfig(), model=model)
+    planner = QwenContextQueryPlanner(ConversationConfig(), planner_id=PLANNER_V6_ID, model=model)
     with pytest.raises(ContextPlanRejection, match=reason) as caught:
         asyncio.run(
             planner.plan(
@@ -702,7 +704,7 @@ def test_capability_and_raw_query_can_coexist_for_compound_question():
     )
     engine = QueryDrivenContextEngineer(
         memory,
-        QwenContextQueryPlanner(ConversationConfig(), model=model),
+        QwenContextQueryPlanner(ConversationConfig(), planner_id=PLANNER_V6_ID, model=model),
         DeterministicRaceCapabilities(memory),
     )
     packet = asyncio.run(engine.analyze(driver_turn("What is my position and speed?")))
@@ -716,7 +718,7 @@ def test_model_selected_social_purpose_needs_no_telemetry_or_unknown(question):
     memory.update(race_context(1, 0))
     model = FakeJsonModel({"purpose": "social", "temporal_scope": None})
     engine = QueryDrivenContextEngineer(
-        memory, QwenContextQueryPlanner(ConversationConfig(), model=model)
+        memory, QwenContextQueryPlanner(ConversationConfig(), planner_id=PLANNER_V6_ID, model=model)
     )
     packet = asyncio.run(engine.analyze(driver_turn(question)))
     assert packet.evidence == ()
@@ -733,6 +735,7 @@ def test_mixed_social_and_factual_turn_keeps_both_purposes():
     memory.update(race_context(1, 0))
     planner = QwenContextQueryPlanner(
         ConversationConfig(),
+        planner_id=PLANNER_V6_ID,
         model=FakeJsonModel(
             {
                 "purpose": "mixed",
@@ -783,7 +786,9 @@ def test_invalid_purpose_scope_or_unknown_never_executes(raw, monkeypatch):
     memory = BoundedTelemetryMemory()
     memory.update(race_context(1, 0))
     monkeypatch.setattr(memory, "query_many", lambda _: pytest.fail("invalid plan executed"))
-    planner = QwenContextQueryPlanner(ConversationConfig(), model=FakeJsonModel(raw))
+    planner = QwenContextQueryPlanner(
+        ConversationConfig(), planner_id=PLANNER_V6_ID, model=FakeJsonModel(raw)
+    )
     with pytest.raises(ContextPlanRejection):
         asyncio.run(QueryDrivenContextEngineer(memory, planner).analyze(driver_turn()))
 
@@ -793,6 +798,7 @@ def test_historical_signal_and_specific_unsupported_analysis_are_preserved():
     memory.update(race_context(1, 0))
     planner = QwenContextQueryPlanner(
         ConversationConfig(),
+        planner_id=PLANNER_V6_ID,
         model=FakeJsonModel(
             {
                 "temporal_scope": "historical",
@@ -820,7 +826,7 @@ def test_model_selected_historical_operator_is_executed_without_substitution(ope
         }
     )
     engine = QueryDrivenContextEngineer(
-        memory, QwenContextQueryPlanner(ConversationConfig(), model=model)
+        memory, QwenContextQueryPlanner(ConversationConfig(), planner_id=PLANNER_V6_ID, model=model)
     )
     packet = asyncio.run(engine.analyze(driver_turn("Authored operation execution control")))
     assert len(packet.evidence) == 1
@@ -841,7 +847,8 @@ def test_inventory_guides_the_model_but_never_becomes_evidence_or_session_contex
     )
     packet = asyncio.run(
         QueryDrivenContextEngineer(
-            memory, QwenContextQueryPlanner(ConversationConfig(), model=model)
+            memory,
+            QwenContextQueryPlanner(ConversationConfig(), planner_id=PLANNER_V6_ID, model=model),
         ).analyze(driver_turn("A different wording"))
     )
     assert packet.situation == ("driver_social_turn", "race_information_request")
@@ -881,7 +888,7 @@ def test_forged_inventory_metadata_is_rejected_before_execution(metadata, monkey
         {**metadata, "queries": [{"signal_id": "player.speed_mps", "operation": "latest"}]}
     )
     engine = QueryDrivenContextEngineer(
-        memory, QwenContextQueryPlanner(ConversationConfig(), model=model)
+        memory, QwenContextQueryPlanner(ConversationConfig(), planner_id=PLANNER_V6_ID, model=model)
     )
     with pytest.raises(ContextPlanRejection):
         asyncio.run(engine.analyze(driver_turn()))

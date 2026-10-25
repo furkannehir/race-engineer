@@ -204,13 +204,13 @@ def _failure_stage(error: Exception) -> str:
     return "evidence_execution"
 
 
-def _evidence_outcome(evidence_kinds: tuple[str, ...]) -> str:
+def _evidence_outcome(evidence_kinds: tuple[str, ...], *, missing: bool = False) -> str:
     if not evidence_kinds:
-        return "no_evidence"
+        return "unavailable" if missing else "no_evidence"
     unknown = sum(kind == "unknown" for kind in evidence_kinds)
     if unknown == len(evidence_kinds):
         return "unavailable"
-    if unknown:
+    if unknown or missing:
         return "partial"
     return "available"
 
@@ -285,6 +285,9 @@ async def _evaluate_turn(
     expected_plan = _expected_value(expected)
     observed_purpose = _purpose(timed.last_plan)
     purpose_passed = expected.purpose is None or expected.purpose == observed_purpose
+    situation_passed = timed.last_plan is not None and set(expected.required_situation).issubset(
+        timed.last_plan.situation
+    )
     temporal_scope_passed = (
         observed_plan is not None
         and observed_plan["temporal_scope"] == expected_plan["temporal_scope"]
@@ -301,9 +304,12 @@ async def _evaluate_turn(
         and capability_selection_passed
         and query_selection_passed
         and purpose_passed
+        and situation_passed
     )
     if packet is not None:
-        observed_outcome = _evidence_outcome(tuple(item.kind for item in packet.evidence))
+        observed_outcome = _evidence_outcome(
+            tuple(item.kind for item in packet.evidence), missing=bool(packet.unknowns)
+        )
     elif failure_stage == "plan_validation":
         observed_outcome = "plan_rejected"
     elif failure_stage == "evidence_execution":
@@ -333,6 +339,7 @@ async def _evaluate_turn(
         bool(selection["required_selection_present"])
         and temporal_scope_passed
         and purpose_passed
+        and situation_passed
         and outcome_passed
         and unknowns_passed
         and failure_stage is None
@@ -354,6 +361,20 @@ async def _evaluate_turn(
         "expected_purpose": expected.purpose,
         "observed_purpose": observed_purpose,
         "purpose_passed": purpose_passed,
+        "required_situation": list(expected.required_situation),
+        "observed_social_tags": [
+            tag
+            for tag in (timed.last_plan.situation if timed.last_plan is not None else ())
+            if tag
+            in {
+                "driver_greeting",
+                "driver_radio_check",
+                "driver_vent",
+                "driver_acknowledgment",
+                "driver_other",
+            }
+        ],
+        "situation_passed": situation_passed,
         "observed_plan": observed_plan,
         "rejected_draft": rejected_draft,
         "rejected_draft_selection": (
@@ -373,6 +394,14 @@ async def _evaluate_turn(
         "capability_selection_passed": capability_selection_passed,
         "query_selection_passed": query_selection_passed,
         "plan_passed": plan_passed,
+        "common_contract_passed": (
+            temporal_scope_passed
+            and capability_selection_passed
+            and query_selection_passed
+            and purpose_passed
+            and outcome_passed
+            and unknowns_passed
+        ),
         "outcome_passed": outcome_passed,
         "unknowns_passed": unknowns_passed,
         "passed": plan_passed and outcome_passed and unknowns_passed,
@@ -415,6 +444,10 @@ def _score(results: list[dict[str, object]]) -> dict[str, object]:
     ]
     accepted_correct = sum(bool(result["plan_passed"]) for result in accepted)
     purpose_cases = [result for result in results if result["expected_purpose"] is not None]
+    common_passed = sum(
+        bool(result.get("common_contract_passed", result["passed"])) for result in results
+    )
+    social_cases = [result for result in results if result.get("required_situation")]
     return {
         "turns": total,
         "purpose_cases": len(purpose_cases),
@@ -428,6 +461,20 @@ def _score(results: list[dict[str, object]]) -> dict[str, object]:
             else None
         ),
         "passed": passed,
+        # V6 has no social-subtype wire field. Keep strict exact credit unchanged;
+        # expose a separate common-boundary metric for honest cross-version comparison.
+        "common_contract_passed": common_passed,
+        "common_contract_accuracy": round(common_passed / total, 6) if total else None,
+        "social_subtype_cases": len(social_cases),
+        "social_subtype_accuracy": (
+            round(
+                sum(bool(result["situation_passed"]) for result in social_cases)
+                / len(social_cases),
+                6,
+            )
+            if social_cases
+            else None
+        ),
         "exact_turn_accuracy": round(passed / total, 6) if total else None,
         "exact_plan_accuracy": round(plan_passed / total, 6) if total else None,
         "temporal_scope_accuracy": (round(temporal_scope_passed / total, 6) if total else None),

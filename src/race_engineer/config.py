@@ -110,9 +110,7 @@ class ConversationRuntimeConfig(ConfigModel):
         max_length=100,
         pattern=r"^[A-Za-z0-9_.:-]+$",
     )
-    model_path: Path = Path(
-        "data/conversation-prototype/Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
-    )
+    model_path: Path = Path("data/conversation-prototype/Qwen3-4B-Instruct-2507-Q4_K_M.gguf")
     runtime_revision: str = Field(
         default="b10964", min_length=1, max_length=100, pattern=r"^[A-Za-z0-9_.+-]+$"
     )
@@ -149,6 +147,9 @@ class ConversationRuntimeConfig(ConfigModel):
 
 class ConversationConfig(ConfigModel):
     adapter: Literal["llama-cpp"] = "llama-cpp"
+    context_planner: Literal["qwen-context-v5", "qwen-context-v6", "qwen-context-v7"] = (
+        "qwen-context-v7"
+    )
     model: str = Field(
         default="Qwen3-4B-Instruct-2507",
         min_length=1,

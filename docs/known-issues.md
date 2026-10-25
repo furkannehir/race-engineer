@@ -162,6 +162,68 @@ Five older follow-up/composition failures remain, and full spoken quality and re
 still need broader evaluation. See the candidate comparison in
 [INT-07 evaluation](intelligence-evaluation.md).
 
+**Live follow-up and current priority, 2026-10-12:**
+
+The October 11 GPU sessions showed that faster inference does not resolve request
+understanding. A greeting was mapped to lap telemetry; factual position requests
+produced `planner_empty_selection`; damage questions were treated as social content
+or substituted with speed. Direct typed probes on October 12 reproduced greeting/
+presence checks as classification, a one-word position request as a gap request,
+an unsupported starting-grid request as an empty plan, and damage as social content.
+These probes used synthetic telemetry and no STT, microphone or TTS, so this is not
+solely a speech-recognition problem. They do not recreate the live telemetry catalog
+or establish a general accuracy percentage.
+
+The unchanged v6 planner was also rerun against the four existing bilingual
+development datasets on a fresh owned CUDA server: 53/58 exact turns passed
+(English 27/29, Turkish 26/29), with zero transport/model/validation errors.
+This is consistent with the earlier development result, but those datasets do
+not adequately represent the everyday short greeting/presence/unsupported cases
+above. Planner-only median was 285 ms and sample p95 534 ms on this idle host;
+these are not microphone-to-audio or game-load measurements. No prompt, model,
+decoder contract or live routing was changed during these checks.
+
+The next slice is Qwen interpretation correctness: expand bilingual development
+coverage for short natural utterances, social/presence checks, available and
+unavailable facts, and recent-dialogue references; compare a separately evaluated
+prompt/output-contract candidate with v6 before live adoption. Do not introduce
+phrase-specific routing, weaken evidence checks, silently substitute current rank
+for starting grid, or infer that a fast/schema-valid plan is semantically correct.
+Empty plans need bounded recovery or an honest failure response, not an invented
+telemetry answer. Race-start briefings remain deferred under RACE-001.
+
+October 12 implementation: `qwen-context-v7` was initially an opt-in candidate,
+not the live default. It uses one social-kind decision plus a factual request inventory in the
+existing Qwen planner call, without transcript keyword routing or another model.
+Application validation still owns catalog IDs, query/scope legality, evidence and math.
+Forty-four bilingual development turns now cover greetings, radio checks, short
+classification questions, unsupported damage/grid facts, compounds and dialogue.
+Twelve disjoint post-freeze paraphrases are also available for development validation.
+
+On the same 102-turn CUDA development workload, common-contract exact credit rose
+from v6's 67/102 to v7's 95/102. This excludes social-subtype checks for a fair
+comparison: v6 has no such output field. V7 passed 21/22 subtype-bearing turns.
+Existing 58-turn coverage improved from 53/58 to 57/58; new coverage improved from
+14/44 to 38/44. The seven remaining failures are an invalid English three-fact
+draft, Turkish relief misread as facts, one Turkish original-grid paraphrase mapped
+to live classification, incomplete/extra retrieval on two damage-plus-speed turns,
+and two unresolved references guessed as a gap behind. These are not fixed.
+Bounded planner repair and an audible failure path remain follow-ups, not implemented
+by this candidate; unsupported facts that are correctly interpreted now carry a
+stable unknown instead of an empty factual plan.
+
+Twenty selected candidate text-pipeline checks completed with matching plans and
+evidence. The final separately saved 12-paraphrase CUDA replay also passed 12/12
+with no Core repairs: median 0.609 s, sample p95 0.877 s, maximum 1.066 s. These
+exclude microphone/STT/TTS, server startup and racing load. Manual review found
+honest grid/damage limitations but awkward Turkish phrasing (including the wrong
+speaker perspective in a mixed radio check). Qualitative factual truth is not
+mechanically proven by numeric grounding. On October 25, the user selected v7 as
+the development/live-test default because it outperformed v6 in the matched tests.
+V6 remains an explicit rollback. This rollout decision does not fix the seven
+misses or establish real-catalog/game-load acceptance. Details
+and repeat commands are in [INT-07 evaluation](intelligence-evaluation.md#october-12-understanding-candidate-v7).
+
 ## INT-005: Silent Core response uses an invalid empty speech string
 
 **Status:** Fixed in synthetic local-model replay - live validation pending
@@ -246,6 +308,24 @@ Configuration and dialogue contracts now share a maximum of twelve complete exch
 their entry count from the validated configuration. Evaluation history uses the same bound.
 Regressions cover zero, default and maximum history, continuing beyond buffer rollover while
 retaining the most recent complete exchanges. Oversized contract history remains rejected.
+
+## RACE-001: Announce starting grid and an expected finishing position
+
+**Status:** Deferred feature - after Qwen request-understanding work
+
+**Requested:** 2026-10-12
+
+At the start of a race, the engineer should brief the driver on their actual
+starting-grid position and an evidence-backed expected finishing position or range.
+Starting grid is a distinct, session-scoped fact, not a synonym for current live
+classification. The finishing estimate requires a separately validated prediction
+method, suitable inputs and explicit uncertainty; do not derive or invent it merely
+from current position. Missing inputs must produce an honest limitation.
+
+Later implementation should define the briefing window, retain the authoritative
+grid snapshot, prevent duplicate briefings on reconnect, and respect critical-radio
+priority. No grid capability, prediction model or automatic briefing is enabled by
+this backlog entry. Improve Qwen's understanding first (INT-004).
 
 ## CONV-004: Add contextual race-engineer acknowledgments and reassurance
 

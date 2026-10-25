@@ -30,8 +30,7 @@ def _failure_hint(reason: str) -> str | None:
         return "The local Qwen server is not reachable. Start it, then try again."
     if reason.endswith("model_timeout"):
         return (
-            "The local Qwen model timed out. It may still be loading or busy; "
-            "check the server log."
+            "The local Qwen model timed out. It may still be loading or busy; check the server log."
         )
     if "model_http_" in reason:
         return (
@@ -75,10 +74,17 @@ async def intelligence_replay(
     frame_index: int = -1,
     reply_language: RadioLanguage | None = None,
     json_output: bool = False,
+    candidate_id: str | None = None,
 ) -> int:
     """Run one typed question through the real Context/Core/Qwen/grounding path."""
 
     config = load_config(config_path)
+    if candidate_id is not None:
+        # Validate the override normally; model_copy(update=...) would bypass validation.
+        config = type(config).model_validate(
+            config.model_dump()
+            | {"conversation": config.conversation.model_dump() | {"context_planner": candidate_id}}
+        )
     configure_logging(config.logging)
     fixture = load_fixture(directory)
     contexts = _contexts(fixture, config.policy.context)

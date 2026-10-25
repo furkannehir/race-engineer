@@ -1,0 +1,593 @@
+{
+  "schema_version": "intelligence-eval.v1",
+  "dataset_id": "intelligence-development-understanding",
+  "revision": "2026-10-12.seed1",
+  "split": "development",
+  "fixture": "fixtures/synthetic/intelligence-capabilities",
+  "groups": [
+    {
+      "id": "understand-greeting-en",
+      "family": "understanding-greeting-en-20261012",
+      "category": "greeting",
+      "language": "en",
+      "questions": [
+        "Hey there.",
+        "Hello.",
+        "Hi engineer."
+      ],
+      "expected": {
+        "purpose": "social",
+        "temporal_scope": "social",
+        "evidence_outcome": "no_evidence",
+        "required_situation": [
+          "driver_greeting"
+        ]
+      },
+      "tags": [
+        "authored-development",
+        "typed-understanding"
+      ]
+    },
+    {
+      "id": "understand-greeting-tr",
+      "family": "understanding-greeting-tr-20261012",
+      "category": "greeting",
+      "language": "tr",
+      "questions": [
+        "Selam.",
+        "Merhaba.",
+        "İyi akşamlar."
+      ],
+      "expected": {
+        "purpose": "social",
+        "temporal_scope": "social",
+        "evidence_outcome": "no_evidence",
+        "required_situation": [
+          "driver_greeting"
+        ]
+      },
+      "tags": [
+        "authored-development",
+        "typed-understanding"
+      ]
+    },
+    {
+      "id": "understand-radio-check-en",
+      "family": "understanding-radio-check-en-20261012",
+      "category": "radio-check",
+      "language": "en",
+      "questions": [
+        "Are you there?",
+        "Do you copy?",
+        "You still with me?"
+      ],
+      "expected": {
+        "purpose": "social",
+        "temporal_scope": "social",
+        "evidence_outcome": "no_evidence",
+        "required_situation": [
+          "driver_radio_check"
+        ]
+      },
+      "tags": [
+        "authored-development",
+        "typed-understanding"
+      ]
+    },
+    {
+      "id": "understand-radio-check-tr",
+      "family": "understanding-radio-check-tr-20261012",
+      "category": "radio-check",
+      "language": "tr",
+      "questions": [
+        "Orada mısın?",
+        "Sesim geliyor mu?",
+        "Beni duyabiliyor musun?"
+      ],
+      "expected": {
+        "purpose": "social",
+        "temporal_scope": "social",
+        "evidence_outcome": "no_evidence",
+        "required_situation": [
+          "driver_radio_check"
+        ]
+      },
+      "tags": [
+        "authored-development",
+        "typed-understanding"
+      ]
+    },
+    {
+      "id": "understand-short-position-en",
+      "family": "understanding-short-position-en-20261012",
+      "category": "short-position",
+      "language": "en",
+      "questions": [
+        "Position.",
+        "What is the current position?",
+        "What's my place?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": [
+          "current_classification"
+        ],
+        "queries": [],
+        "evidence_outcome": "available"
+      },
+      "tags": [
+        "authored-development",
+        "typed-understanding"
+      ]
+    },
+    {
+      "id": "understand-short-position-tr",
+      "family": "understanding-short-position-tr-20261012",
+      "category": "short-position",
+      "language": "tr",
+      "questions": [
+        "Sıra?",
+        "Şu an kaçıncıyım?",
+        "Kaçıncı gidiyoruz?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": [
+          "current_classification"
+        ],
+        "queries": [],
+        "evidence_outcome": "available"
+      },
+      "tags": [
+        "authored-development",
+        "typed-understanding"
+      ]
+    },
+    {
+      "id": "understand-vent-en",
+      "family": "understanding-vent-en-20261012",
+      "category": "vent",
+      "language": "en",
+      "questions": [
+        "That was dirty.",
+        "Such a stupid move."
+      ],
+      "expected": {
+        "purpose": "social",
+        "temporal_scope": "social",
+        "evidence_outcome": "no_evidence",
+        "required_situation": [
+          "driver_vent"
+        ]
+      },
+      "tags": [
+        "authored-development",
+        "typed-understanding"
+      ]
+    },
+    {
+      "id": "understand-vent-tr",
+      "family": "understanding-vent-tr-20261012",
+      "category": "vent",
+      "language": "tr",
+      "questions": [
+        "Bu yaptığı çok pis bir hareketti.",
+        "Ne aptalca bir hamle."
+      ],
+      "expected": {
+        "purpose": "social",
+        "temporal_scope": "social",
+        "evidence_outcome": "no_evidence",
+        "required_situation": [
+          "driver_vent"
+        ]
+      },
+      "tags": [
+        "authored-development",
+        "typed-understanding"
+      ]
+    },
+    {
+      "id": "understand-relief-en",
+      "family": "understanding-relief-en-20261012",
+      "category": "relief",
+      "language": "en",
+      "questions": [
+        "There we go.",
+        "That's a relief."
+      ],
+      "expected": {
+        "purpose": "social",
+        "temporal_scope": "social",
+        "evidence_outcome": "no_evidence",
+        "required_situation": [
+          "driver_other"
+        ]
+      },
+      "tags": [
+        "authored-development",
+        "typed-understanding"
+      ]
+    },
+    {
+      "id": "understand-relief-tr",
+      "family": "understanding-relief-tr-20261012",
+      "category": "relief",
+      "language": "tr",
+      "questions": [
+        "İşte bu.",
+        "Oh, rahatladım."
+      ],
+      "expected": {
+        "purpose": "social",
+        "temporal_scope": "social",
+        "evidence_outcome": "no_evidence",
+        "required_situation": [
+          "driver_other"
+        ]
+      },
+      "tags": [
+        "authored-development",
+        "typed-understanding"
+      ]
+    },
+    {
+      "id": "understand-damage-en",
+      "family": "understanding-damage-en-20261012",
+      "category": "damage",
+      "language": "en",
+      "questions": [
+        "Do I have any damage?",
+        "Is anything damaged on the car?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": [],
+        "queries": [],
+        "evidence_outcome": "unavailable",
+        "required_unknowns": [
+          "requested_analysis_unavailable"
+        ]
+      },
+      "tags": [
+        "authored-development",
+        "typed-understanding"
+      ]
+    },
+    {
+      "id": "understand-damage-tr",
+      "family": "understanding-damage-tr-20261012",
+      "category": "damage",
+      "language": "tr",
+      "questions": [
+        "Araçta hasar var mı?",
+        "Arabada bir şey hasar gördü mü?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": [],
+        "queries": [],
+        "evidence_outcome": "unavailable",
+        "required_unknowns": [
+          "requested_analysis_unavailable"
+        ]
+      },
+      "tags": [
+        "authored-development",
+        "typed-understanding"
+      ]
+    },
+    {
+      "id": "understand-starting-grid-en",
+      "family": "understanding-starting-grid-en-20261012",
+      "category": "starting-grid",
+      "language": "en",
+      "questions": [
+        "What is the starting position?",
+        "Where did we start?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "historical",
+        "capability_ids": [],
+        "queries": [],
+        "evidence_outcome": "unavailable",
+        "required_unknowns": [
+          "requested_analysis_unavailable"
+        ]
+      },
+      "tags": [
+        "authored-development",
+        "typed-understanding"
+      ]
+    },
+    {
+      "id": "understand-starting-grid-tr",
+      "family": "understanding-starting-grid-tr-20261012",
+      "category": "starting-grid",
+      "language": "tr",
+      "questions": [
+        "Başlangıç sıram neydi?",
+        "Yarışa kaçıncı başladık?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "historical",
+        "capability_ids": [],
+        "queries": [],
+        "evidence_outcome": "unavailable",
+        "required_unknowns": [
+          "requested_analysis_unavailable"
+        ]
+      },
+      "tags": [
+        "authored-development",
+        "typed-understanding"
+      ]
+    },
+    {
+      "id": "understand-mixed-radio-position-en",
+      "family": "understanding-mixed-radio-position-en-20261012",
+      "category": "mixed-radio-position",
+      "language": "en",
+      "questions": [
+        "Are you there? Tell me my position."
+      ],
+      "expected": {
+        "purpose": "mixed",
+        "temporal_scope": "current",
+        "capability_ids": [
+          "current_classification"
+        ],
+        "queries": [],
+        "evidence_outcome": "available",
+        "required_situation": [
+          "driver_radio_check"
+        ]
+      },
+      "tags": [
+        "authored-development",
+        "typed-understanding"
+      ]
+    },
+    {
+      "id": "understand-partial-damage-speed-en",
+      "family": "understanding-partial-damage-speed-en-20261012",
+      "category": "partial-damage-speed",
+      "language": "en",
+      "questions": [
+        "Do I have any damage, and what is my speed?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": [],
+        "queries": [
+          {
+            "source": "player",
+            "signal": "speed_mps",
+            "operation": "latest",
+            "window_s": null
+          }
+        ],
+        "evidence_outcome": "partial",
+        "required_unknowns": [
+          "requested_analysis_unavailable"
+        ]
+      },
+      "tags": [
+        "authored-development",
+        "typed-understanding"
+      ]
+    },
+    {
+      "id": "understand-target-correction-en",
+      "family": "understanding-target-correction-en-20261012",
+      "category": "target-correction",
+      "language": "en",
+      "questions": [
+        "No, I meant the car behind."
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": [
+          "gap_behind"
+        ],
+        "queries": [],
+        "evidence_outcome": "available"
+      },
+      "recent_dialogue": [
+        "driver: What's the gap ahead?",
+        "engineer: The car ahead is one second away."
+      ],
+      "tags": [
+        "authored-development",
+        "typed-understanding"
+      ]
+    },
+    {
+      "id": "understand-topic-change-en",
+      "family": "understanding-topic-change-en-20261012",
+      "category": "topic-change",
+      "language": "en",
+      "questions": [
+        "What's my position now?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": [
+          "current_classification"
+        ],
+        "queries": [],
+        "evidence_outcome": "available"
+      },
+      "recent_dialogue": [
+        "driver: How many laps of fuel remain?",
+        "engineer: There is enough fuel for twelve laps."
+      ],
+      "tags": [
+        "authored-development",
+        "typed-understanding"
+      ]
+    },
+    {
+      "id": "understand-ambiguous-reference-en",
+      "family": "understanding-ambiguous-reference-en-20261012",
+      "category": "ambiguous-reference",
+      "language": "en",
+      "questions": [
+        "And the other one?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": [],
+        "queries": [],
+        "evidence_outcome": "unavailable",
+        "required_unknowns": [
+          "requested_reference_ambiguous"
+        ]
+      },
+      "tags": [
+        "authored-development",
+        "typed-understanding"
+      ]
+    },
+    {
+      "id": "understand-mixed-radio-position-tr",
+      "family": "understanding-mixed-radio-position-tr-20261012",
+      "category": "mixed-radio-position",
+      "language": "tr",
+      "questions": [
+        "Beni duyuyor musun? Kaçıncı sıradayım?"
+      ],
+      "expected": {
+        "purpose": "mixed",
+        "temporal_scope": "current",
+        "capability_ids": [
+          "current_classification"
+        ],
+        "queries": [],
+        "evidence_outcome": "available",
+        "required_situation": [
+          "driver_radio_check"
+        ]
+      },
+      "tags": [
+        "authored-development",
+        "typed-understanding"
+      ]
+    },
+    {
+      "id": "understand-partial-damage-speed-tr",
+      "family": "understanding-partial-damage-speed-tr-20261012",
+      "category": "partial-damage-speed",
+      "language": "tr",
+      "questions": [
+        "Hasar var mı ve hızımız kaç?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": [],
+        "queries": [
+          {
+            "source": "player",
+            "signal": "speed_mps",
+            "operation": "latest",
+            "window_s": null
+          }
+        ],
+        "evidence_outcome": "partial",
+        "required_unknowns": [
+          "requested_analysis_unavailable"
+        ]
+      },
+      "tags": [
+        "authored-development",
+        "typed-understanding"
+      ]
+    },
+    {
+      "id": "understand-target-correction-tr",
+      "family": "understanding-target-correction-tr-20261012",
+      "category": "target-correction",
+      "language": "tr",
+      "questions": [
+        "Hayır, arkadaki aracı kastettim."
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": [
+          "gap_behind"
+        ],
+        "queries": [],
+        "evidence_outcome": "available"
+      },
+      "recent_dialogue": [
+        "driver: Öndeki araçla fark ne?",
+        "engineer: Öndeki araç bir saniye uzakta."
+      ],
+      "tags": [
+        "authored-development",
+        "typed-understanding"
+      ]
+    },
+    {
+      "id": "understand-topic-change-tr",
+      "family": "understanding-topic-change-tr-20261012",
+      "category": "topic-change",
+      "language": "tr",
+      "questions": [
+        "Şimdi kaçıncı sıradayım?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": [
+          "current_classification"
+        ],
+        "queries": [],
+        "evidence_outcome": "available"
+      },
+      "recent_dialogue": [
+        "driver: Yakıt kaç tur yeter?",
+        "engineer: Yakıt on iki tur yeter."
+      ],
+      "tags": [
+        "authored-development",
+        "typed-understanding"
+      ]
+    },
+    {
+      "id": "understand-ambiguous-reference-tr",
+      "family": "understanding-ambiguous-reference-tr-20261012",
+      "category": "ambiguous-reference",
+      "language": "tr",
+      "questions": [
+        "Peki diğeri?"
+      ],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": [],
+        "queries": [],
+        "evidence_outcome": "unavailable",
+        "required_unknowns": [
+          "requested_reference_ambiguous"
+        ]
+      },
+      "tags": [
+        "authored-development",
+        "typed-understanding"
+      ]
+    }
+  ]
+}

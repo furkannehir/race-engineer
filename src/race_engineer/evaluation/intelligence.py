@@ -16,7 +16,7 @@ from race_engineer.core.intelligence import (
 )
 
 type EvaluationSplit = Literal["development", "calibration", "locked"]
-type ExpectedEvidenceOutcome = Literal["available", "unavailable", "no_evidence"]
+type ExpectedEvidenceOutcome = Literal["available", "unavailable", "partial", "no_evidence"]
 type RuntimeProfile = Literal["portable", "enhanced"]
 type CandidateKind = Literal["generative", "classifier", "temporal", "control"]
 
@@ -56,6 +56,16 @@ class ExpectedContextPlan(IntelligenceEvaluationModel):
     queries: tuple[ExpectedEvidenceQuery, ...] = Field(default=(), max_length=24)
     evidence_outcome: ExpectedEvidenceOutcome
     required_unknowns: tuple[str, ...] = Field(default=(), max_length=16)
+    required_situation: tuple[
+        Literal[
+            "driver_greeting",
+            "driver_radio_check",
+            "driver_vent",
+            "driver_acknowledgment",
+            "driver_other",
+        ],
+        ...,
+    ] = Field(default=(), max_length=5)
 
     @model_validator(mode="after")
     def validate_plan(self) -> "ExpectedContextPlan":
@@ -68,12 +78,18 @@ class ExpectedContextPlan(IntelligenceEvaluationModel):
         if self.temporal_scope == "social":
             if self.capability_ids or self.queries or self.evidence_outcome != "no_evidence":
                 raise ValueError("social expectations cannot request telemetry evidence")
-        elif not self.capability_ids and not self.queries:
+        elif (
+            not self.capability_ids
+            and not self.queries
+            and not (self.evidence_outcome == "unavailable" and self.required_unknowns)
+        ):
             raise ValueError("non-social expectations require evidence work")
-        if self.evidence_outcome == "unavailable" and not self.required_unknowns:
+        if self.evidence_outcome in {"unavailable", "partial"} and not self.required_unknowns:
             raise ValueError("unavailable expectations require a stable unknown reason")
-        if self.evidence_outcome != "unavailable" and self.required_unknowns:
+        if self.evidence_outcome not in {"unavailable", "partial"} and self.required_unknowns:
             raise ValueError("only unavailable expectations carry unknown reasons")
+        if self.evidence_outcome == "partial" and not (self.capability_ids or self.queries):
+            raise ValueError("partially available expectations require evidence work")
         return self
 
 

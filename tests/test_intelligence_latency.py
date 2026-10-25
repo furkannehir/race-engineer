@@ -45,7 +45,7 @@ def setup():
 
 def planner_reply(extra=False):
     return {
-        "social_comment": False,
+        "social_kind": "none",
         "requested_facts": ["remaining fuel laps", "current speed"],
         "temporal_scope": "current",
         "capability_ids": ["fuel_range", "current_classification"] if extra else ["fuel_range"],

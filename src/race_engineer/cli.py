@@ -120,6 +120,11 @@ def _parser() -> argparse.ArgumentParser:
     intelligence.add_argument("--question", required=True)
     intelligence.add_argument("--language", choices=("en", "tr"), help="reply language")
     intelligence.add_argument("--json", action="store_true", help="show evidence and decisions")
+    intelligence.add_argument(
+        "--candidate",
+        choices=("qwen-context-v5", "qwen-context-v6", "qwen-context-v7"),
+        help="override the configured context planner for this typed replay only",
+    )
 
     intelligence_evaluation = subparsers.add_parser(
         "evaluate-intelligence",
@@ -142,7 +147,7 @@ def _parser() -> argparse.ArgumentParser:
         "--candidate",
         default=PLANNER_ID,
         help=(
-            "candidate ID: qwen-context-v5, qwen-context-v6, minilm-nli-v1, or "
+            "candidate ID: qwen-context-v5, qwen-context-v6, qwen-context-v7, minilm-nli-v1, or "
             "laya-multilingual-v1"
         ),
     )
@@ -783,6 +788,7 @@ def main() -> None:
                         question=args.question,
                         reply_language=args.language,
                         json_output=args.json,
+                        candidate_id=args.candidate,
                     )
                 )
             except KeyboardInterrupt:

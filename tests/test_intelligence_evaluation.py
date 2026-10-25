@@ -33,6 +33,7 @@ from race_engineer.evaluation.intelligence_runner import (
 from race_engineer.intelligence.context_planner import (
     PLANNER_V5_ID,
     PLANNER_V6_ID,
+    PLANNER_V7_ID,
     QwenContextQueryPlanner,
 )
 from race_engineer.intelligence.local_model import LocalIntelligenceError
@@ -368,7 +369,9 @@ class FixedModel:
 
 def _evaluate_classification(raw):
     dataset = _runner_dataset().model_copy(update={"groups": _runner_dataset().groups[:1]})
-    planner = QwenContextQueryPlanner(ConversationConfig(), model=FixedModel(raw))
+    planner = QwenContextQueryPlanner(
+        ConversationConfig(), model=FixedModel(raw), planner_id=PLANNER_V6_ID
+    )
     return asyncio.run(
         evaluate_intelligence_datasets(
             ROOT, PolicyContextConfig(), planner, _candidate(), (dataset,)
@@ -528,11 +531,11 @@ def test_intelligence_evaluation_cli_accepts_repeated_datasets() -> None:
 
     assert args.command == "evaluate-intelligence"
     assert len(args.dataset) == 2
-    assert args.candidate == "qwen-context-v6"
+    assert args.candidate == "qwen-context-v7"
     assert args.profile == "portable"
 
 
-@pytest.mark.parametrize("candidate_id", [PLANNER_V5_ID, PLANNER_V6_ID])
+@pytest.mark.parametrize("candidate_id", [PLANNER_V5_ID, PLANNER_V6_ID, PLANNER_V7_ID])
 def test_intelligence_evaluation_cli_accepts_the_separately_versioned_planner(candidate_id):
     args = _parser().parse_args(
         [
@@ -546,7 +549,7 @@ def test_intelligence_evaluation_cli_accepts_the_separately_versioned_planner(ca
     assert args.candidate == candidate_id
 
 
-@pytest.mark.parametrize("candidate_id", [None, PLANNER_V5_ID, PLANNER_V6_ID])
+@pytest.mark.parametrize("candidate_id", [None, PLANNER_V5_ID, PLANNER_V6_ID, PLANNER_V7_ID])
 def test_evaluation_application_builds_reproducible_content_free_report(
     monkeypatch: pytest.MonkeyPatch,
     candidate_id,
@@ -584,7 +587,7 @@ def test_evaluation_application_builds_reproducible_content_free_report(
     )
 
     assert report["schema_version"] == "intelligence-eval-report.v2"
-    assert report["candidate"]["candidate_id"] == (candidate_id or PLANNER_V6_ID)
+    assert report["candidate"]["candidate_id"] == (candidate_id or PLANNER_V7_ID)
     assert report["datasets"][0]["turns"] == 12
     assert report["reproducibility"]["input_fingerprint_sha256"] == "fingerprint"
     assert report["privacy"] == {
@@ -674,6 +677,7 @@ def test_correct_evidence_with_wrong_purpose_does_not_pass_mixed_control():
         model=FixedModel(
             {"purpose": "race_information", "capability_ids": ["current_classification"]}
         ),
+        planner_id=PLANNER_V6_ID,
     )
     results, summary = asyncio.run(
         evaluate_intelligence_datasets(

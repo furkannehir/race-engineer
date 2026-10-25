@@ -25,6 +25,7 @@ from race_engineer.intelligence.context_planner import (
     PLANNER_ID,
     PLANNER_V5_ID,
     PLANNER_V6_ID,
+    PLANNER_V7_ID,
     QwenContextQueryPlanner,
 )
 from race_engineer.intelligence.local_model import LocalJsonModel, ModelRequestMetrics
@@ -39,6 +40,7 @@ _LAYA_CANDIDATE = "laya-multilingual-v1"
 _CANDIDATES = {
     PLANNER_V5_ID,
     PLANNER_V6_ID,
+    PLANNER_V7_ID,
     _MINILM_CANDIDATE,
     _LAYA_CANDIDATE,
 }
@@ -91,7 +93,7 @@ async def run_intelligence_evaluation(
     semantic_planner: CatalogSemanticPlanner | None = None
     request_metrics: list[ModelRequestMetrics] = []
     planner: ContextQueryPlanner
-    if candidate_id in {PLANNER_V5_ID, PLANNER_V6_ID}:
+    if candidate_id in {PLANNER_V5_ID, PLANNER_V6_ID, PLANNER_V7_ID}:
         model = LocalJsonModel(config.conversation, on_metrics=request_metrics.append)
         planner = QwenContextQueryPlanner(
             config.conversation, model=model, planner_id=candidate_id

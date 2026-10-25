@@ -20,7 +20,7 @@ def live_intelligence(
     model = LocalJsonModel(config)
     context = QueryDrivenContextEngineer(
         memory,
-        QwenContextQueryPlanner(config, model=model),
+        QwenContextQueryPlanner(config, model=model, planner_id=config.context_planner),
         DeterministicRaceCapabilities(memory),
     )
     engineer = PortableQwenEngineer(config, model=model)

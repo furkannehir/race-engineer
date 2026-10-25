@@ -19,6 +19,41 @@ ROOT = Path(__file__).parents[1]
 FIXTURE = ROOT / "fixtures/synthetic/intelligence"
 
 
+def test_replay_candidate_override_does_not_edit_live_config(monkeypatch, capsys):
+    selected = []
+
+    def factory(config, memory):
+        selected.append(config.context_planner)
+        return FixtureEngineer(memory)
+
+    monkeypatch.setattr("race_engineer.application.intelligence_cli.live_intelligence", factory)
+    for candidate in ("qwen-context-v6", None):
+        assert (
+            asyncio.run(
+                intelligence_replay(
+                    ROOT / "config/default.toml",
+                    FIXTURE,
+                    question="Position?",
+                    candidate_id=candidate,
+                )
+            )
+            == 0
+        )
+    assert selected == ["qwen-context-v6", "qwen-context-v7"]
+
+
+def test_replay_rejects_unknown_candidate_before_model_use():
+    with pytest.raises(ValueError):
+        asyncio.run(
+            intelligence_replay(
+                ROOT / "config/default.toml",
+                FIXTURE,
+                question="Position?",
+                candidate_id="unknown",
+            )
+        )
+
+
 class FixtureEngineer:
     def __init__(self, memory) -> None:
         self.memory = memory
