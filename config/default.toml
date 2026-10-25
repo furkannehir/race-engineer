@@ -53,11 +53,19 @@ adapter = "deterministic"
 
 [tts]
 enabled = true
-adapter = "windows-sapi"
-rate = 0
-volume = 100
-playback_timeout_s = 10.0
+adapter = "chatterbox"
+python_path = "data/tts-chatterbox/runtime/Scripts/python.exe"
+model_path = "data/components/tts/chatterbox/5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18"
+# Prefer CUDA when usable; CPU fallback is announced and may be too slow for racing.
+device = "auto"
+fallback_to_cpu = true
+volume = 0.8
+threads = 4
+startup_timeout_s = 180.0
+playback_timeout_s = 120.0
+shutdown_timeout_s = 5.0
 queue_capacity = 8
+# output_device = 4  # Applies to ALL speech and PTT cues; omitted uses system default.
 
 [conversation]
 adapter = "llama-cpp"
@@ -71,7 +79,7 @@ max_snapshot_age_s = 3.0
 default_language = "en"
 
 # Main edition: Qwen context planning and replies run on NVIDIA/CUDA.
-# STT and TTS remain CPU-only. CPU mode is an explicit compatibility override;
+# STT remains CPU-only; Chatterbox selects its device independently. CPU Qwen is explicit;
 # do not silently reuse an external CPU server or fall back during a GPU session.
 [conversation.runtime]
 mode = "gpu"
@@ -108,17 +116,3 @@ max_capture_s = 15.0
 min_capture_s = 0.2
 silence_threshold_dbfs = -42.0
 # input_device = 1  # choose an index from list-input-devices; otherwise system default
-
-# Conversational replies only; [tts] still controls automatic iRacing calls.
-[radio_tts]
-enabled = true
-adapter = "piper"
-python_path = "data/tts-prototype/runtime/Scripts/python.exe"
-english_model_path = "data/tts-prototype/voices/en_US-ljspeech-high.onnx"
-turkish_model_path = "data/tts-prototype/voices/tr_TR-dfki-medium.onnx"
-volume = 0.8
-length_scale = 1.0
-threads = 4
-startup_timeout_s = 60
-playback_timeout_s = 90
-# output_device = 4  # See list-output-devices; omitted uses system default.

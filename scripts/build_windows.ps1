@@ -2,7 +2,7 @@
 param(
     [string]$MainPython = ".\.venv\Scripts\python.exe",
     [string]$SttPython = ".\data\stt-prototype\runtime\Scripts\python.exe",
-    [string]$TtsPython = ".\data\tts-prototype\runtime\Scripts\python.exe",
+    [string]$TtsPython = ".\data\tts-chatterbox\runtime\Scripts\python.exe",
     [string]$Tag = "",
     [switch]$SkipWorkers
 )

@@ -6,6 +6,14 @@ that every original milestone exit criterion has been formally validated.
 
 ## Current checkpoint
 
+October 25 speech migration: replies and automatic calls now share one persistent
+local Chatterbox Multilingual 0.1.7/V2 default-voice backend, selected through `[tts]`.
+Piper/SAPI code and split settings are removed; PTT WAV cues are unchanged. CUDA is
+preferred with visible CPU fallback. The existing radio priorities, cleanup and
+freshness boundaries remain. Windows setup/worker packaging and pinned assets were
+updated; listening, combined race-load performance and rebuilt executable acceptance
+remain separate checks. See [the speech guide](text-to-speech.md).
+
 Priority decision, October 12: stabilize Qwen request understanding before adding
 race-start features or doing further speed tuning. Reproduce the observed failures
 with typed questions (without STT), expand bilingual short/social/unsupported and

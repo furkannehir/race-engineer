@@ -7,10 +7,12 @@ import struct
 from pathlib import Path
 
 from race_engineer.config import load_config
+from race_engineer.core.contracts import Utterance
 from race_engineer.core.conversation import ConversationReply
+from race_engineer.core.enums import PlaybackStatus
 from race_engineer.core.speech_input import AudioClip
 from race_engineer.stt.qwen import QwenSpeechRecognizer
-from race_engineer.tts.piper import PiperConversationSpeaker
+from race_engineer.tts.chatterbox import ChatterboxAnnouncementEngine, ChatterboxSpeechBackend
 
 
 async def smoke(package: Path, config_path: Path, *, stt: bool, tts: bool) -> None:
@@ -35,8 +37,8 @@ async def smoke(package: Path, config_path: Path, *, stt: bool, tts: bool) -> No
         finally:
             await recognizer.aclose()
     if tts:
-        speaker = PiperConversationSpeaker(
-            config.radio_tts.model_copy(
+        speaker = ChatterboxSpeechBackend(
+            config.tts.model_copy(
                 update={
                     "worker_path": package / "workers/PitwardTTSWorker/PitwardTTSWorker.exe",
                     "startup_timeout_s": 120.0,
@@ -44,29 +46,41 @@ async def smoke(package: Path, config_path: Path, *, stt: bool, tts: bool) -> No
             )
         )
         try:
-            result = await speaker.speak(
-                ConversationReply(
-                    language="en",
-                    text="Radio check.",
-                    status="answered",
-                    session_id="package-smoke",
-                    source_sequence=0,
-                    mode="replay",
-                ),
-                play_audio=False,
-            )
-            if result.played or result.audio_duration_s <= 0:
-                raise RuntimeError("packaged TTS worker returned an invalid smoke result")
-            print("Packaged TTS worker synthesized audio without playback.")
+            await speaker.start()
+            pid = speaker.worker_pid
+            automatic = ChatterboxAnnouncementEngine(speaker)
+            for language, text in (("en", "Radio check."), ("tr", "Telsiz kontrolü.")):
+                result = await speaker.speak(
+                    ConversationReply(
+                        language=language,
+                        text=text,
+                        status="answered",
+                        session_id="package-smoke",
+                        source_sequence=0,
+                        mode="replay",
+                    ),
+                    play_audio=False,
+                )
+                if result.played or result.audio_duration_s <= 0:
+                    raise RuntimeError("packaged TTS worker returned an invalid smoke result")
+                call = await automatic.speak(
+                    Utterance(
+                        intent_id=f"package-smoke-{language}",
+                        text=text,
+                        generator_metadata={"language": language},
+                    ),
+                    play_audio=False,
+                )
+                if call.status is not PlaybackStatus.COMPLETED or speaker.worker_pid != pid:
+                    raise RuntimeError("packaged shared speech smoke failed")
+            print("Packaged EN/TR replies and announcements used one worker without playback.")
         finally:
             await speaker.aclose()
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--package", type=Path, default=Path("build/package/dist/Pitward")
-    )
+    parser.add_argument("--package", type=Path, default=Path("build/package/dist/Pitward"))
     parser.add_argument("--config", type=Path, default=Path("config/default.toml"))
     parser.add_argument("--skip-stt", action="store_true")
     parser.add_argument("--skip-tts", action="store_true")

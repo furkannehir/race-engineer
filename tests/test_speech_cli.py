@@ -168,7 +168,7 @@ def test_interactive_audio_handoff_and_text_fallback(monkeypatch, capsys, langua
     monkeypatch.setattr("race_engineer.application.speech_cli.QwenSpeechRecognizer", FakeRecognizer)
     monkeypatch.setattr("race_engineer.application.speech_cli.conversation_planner", Planner)
     monkeypatch.setattr("race_engineer.application.speech_cli.PushToTalkMicrophone", Microphone)
-    monkeypatch.setattr("race_engineer.application.speech_cli.PiperConversationSpeaker", Speaker)
+    monkeypatch.setattr("race_engineer.application.speech_cli.ChatterboxSpeechBackend", Speaker)
     code = asyncio.run(
         voice_replay(
             root / "config/default.toml", root / "fixtures/synthetic/conversation", output_device=7

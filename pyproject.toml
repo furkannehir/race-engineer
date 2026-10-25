@@ -21,7 +21,8 @@ desktop = [
   "pygame-ce==2.5.8",
 ]
 audio = ["sounddevice>=0.5.3,<0.6"]
-radio = ["piper-tts==1.8.0", "sounddevice>=0.5.3,<0.6"]
+# Heavy speech dependencies live only in the separately provisioned worker runtime.
+radio = ["sounddevice>=0.5.3,<0.6"]
 asr = [
   "transformers==5.17.0",
   "numpy>=2,<3",

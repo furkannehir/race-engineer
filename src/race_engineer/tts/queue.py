@@ -190,7 +190,17 @@ class SpeechPlaybackQueue:
             self._current = request
             try:
                 try:
-                    result = await self._engine.speak(request.utterance)
+                    result = await self._engine.speak(
+                        request.utterance.model_copy(
+                            update={
+                                "generator_metadata": {
+                                    **request.utterance.generator_metadata,
+                                    "language": request.intent.language.split("-")[0].lower(),
+                                    "speech_deadline": request.intent.deadline.isoformat(),
+                                }
+                            }
+                        )
+                    )
                     if result.intent_id != request.intent.intent_id:
                         raise ValueError("TTS returned a result for a different intent")
                 except Exception as error:

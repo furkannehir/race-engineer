@@ -984,9 +984,9 @@ class RadioDesk(QWidget):
         answer = QMessageBox.question(
             self,
             "Set up local AI components?",
-            "Pitward will download about 4.1 GB of pinned local models and a CPU runtime.\n\n"
-            "The Qwen models use Apache 2.0 terms. Piper uses GPL-3.0; the bundled "
-            "Turkish voice dataset is CC BY-NC-SA 4.0. Full notices are included with "
+            "Pitward will download about 7.3 GB of pinned local models and a CPU Qwen runtime.\n\n"
+            "The Qwen models use Apache 2.0 terms. Chatterbox and its built-in "
+            "multilingual voice use MIT terms. Full notices are included with "
             "Pitward.\n\nContinue with the download?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,

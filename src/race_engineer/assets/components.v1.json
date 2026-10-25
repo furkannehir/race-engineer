@@ -1,6 +1,6 @@
 {
   "schema_version": "pitward-components.v1",
-  "component_set": "1",
+  "component_set": "2",
   "artifacts": [
     {
       "id": "llama-cpp-cpu-b10964",
@@ -85,58 +85,49 @@
       "license": "Apache-2.0"
     },
     {
-      "id": "piper-english-model",
+      "id": "chatterbox-ve-pt",
       "kind": "file",
-      "url": "https://huggingface.co/rhasspy/piper-voices/resolve/c10ece1aade47bb51c153c893d14e5bf8e5b7117/en/en_US/ljspeech/high/en_US-ljspeech-high.onnx",
-      "sha256": "5d4f08ba6a2a48c44592eed3ce56bf85e9de3dd4e20df90541ae68a8310c029a",
-      "size": 114199011,
-      "destination": "tts/voices/en_US-ljspeech-high.onnx",
-      "license": "Public-domain dataset; Piper engine GPL-3.0"
+      "url": "https://huggingface.co/ResembleAI/chatterbox/resolve/5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18/ve.pt",
+      "sha256": "4b16d836bc598509860f6fa068165a8bb5e9ac84f05582dfcf278a5a372879f1",
+      "size": 5698626,
+      "destination": "tts/chatterbox/5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18/ve.pt",
+      "license": "MIT"
     },
     {
-      "id": "piper-english-config",
+      "id": "chatterbox-t3_mtl23ls_v2-safetensors",
       "kind": "file",
-      "url": "https://huggingface.co/rhasspy/piper-voices/resolve/c10ece1aade47bb51c153c893d14e5bf8e5b7117/en/en_US/ljspeech/high/en_US-ljspeech-high.onnx.json",
-      "sha256": "7e1f4634af596d83cca997fb7a931ba80b70f8a316a2655ee69c55365e0ace14",
-      "size": 4970,
-      "destination": "tts/voices/en_US-ljspeech-high.onnx.json",
-      "license": "Public-domain dataset; Piper engine GPL-3.0"
+      "url": "https://huggingface.co/ResembleAI/chatterbox/resolve/5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18/t3_mtl23ls_v2.safetensors",
+      "sha256": "b1237586127ce98e7800a68e49938eb5092846862aabcb6e17b2fda7889a6c75",
+      "size": 2143989752,
+      "destination": "tts/chatterbox/5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18/t3_mtl23ls_v2.safetensors",
+      "license": "MIT"
     },
     {
-      "id": "piper-english-model-card",
+      "id": "chatterbox-s3gen-pt",
       "kind": "file",
-      "url": "https://huggingface.co/rhasspy/piper-voices/resolve/c10ece1aade47bb51c153c893d14e5bf8e5b7117/en/en_US/ljspeech/high/MODEL_CARD",
-      "sha256": "289f7421072d689a3d91f6c632f486af46f9b8b04417536104a4ea667b8a394b",
-      "size": 513,
-      "destination": "tts/voices/en_US-ljspeech-high.MODEL_CARD",
-      "license": "Public-domain dataset"
+      "url": "https://huggingface.co/ResembleAI/chatterbox/resolve/5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18/s3gen.pt",
+      "sha256": "9b9ff07e60b20c136e2b1b3d7563a24604e8d2c4c267888d1ee929dd0151d2a3",
+      "size": 1057165844,
+      "destination": "tts/chatterbox/5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18/s3gen.pt",
+      "license": "MIT"
     },
     {
-      "id": "piper-turkish-model",
+      "id": "chatterbox-grapheme_mtl_merged_expanded_v1-json",
       "kind": "file",
-      "url": "https://huggingface.co/rhasspy/piper-voices/resolve/c10ece1aade47bb51c153c893d14e5bf8e5b7117/tr/tr_TR/dfki/medium/tr_TR-dfki-medium.onnx",
-      "sha256": "2844717f524ab965d3fe86e60562cbb601d3e456836efcc2196cc3a14112a8fb",
-      "size": 63201294,
-      "destination": "tts/voices/tr_TR-dfki-medium.onnx",
-      "license": "CC BY-NC-SA 4.0 dataset; Piper engine GPL-3.0"
+      "url": "https://huggingface.co/ResembleAI/chatterbox/resolve/5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18/grapheme_mtl_merged_expanded_v1.json",
+      "sha256": "69632f47220a788a52ce2661d096453c5655e9bf25289d89a8d832c46ee07dbf",
+      "size": 69989,
+      "destination": "tts/chatterbox/5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18/grapheme_mtl_merged_expanded_v1.json",
+      "license": "MIT"
     },
     {
-      "id": "piper-turkish-config",
+      "id": "chatterbox-conds-pt",
       "kind": "file",
-      "url": "https://huggingface.co/rhasspy/piper-voices/resolve/c10ece1aade47bb51c153c893d14e5bf8e5b7117/tr/tr_TR/dfki/medium/tr_TR-dfki-medium.onnx.json",
-      "sha256": "13ebd7810f1b61b5027583cf3131a0a233b6ea81c38f2200ebc4ff41c3cca039",
-      "size": 4960,
-      "destination": "tts/voices/tr_TR-dfki-medium.onnx.json",
-      "license": "CC BY-NC-SA 4.0 dataset; Piper engine GPL-3.0"
-    },
-    {
-      "id": "piper-turkish-model-card",
-      "kind": "file",
-      "url": "https://huggingface.co/rhasspy/piper-voices/resolve/c10ece1aade47bb51c153c893d14e5bf8e5b7117/tr/tr_TR/dfki/medium/MODEL_CARD",
-      "sha256": "a3e08c57b9c6d428f8e4fb146512c8b1fb96a68c99d43820ed1dfea6d39cb35f",
-      "size": 319,
-      "destination": "tts/voices/tr_TR-dfki-medium.MODEL_CARD",
-      "license": "CC BY-NC-SA 4.0 dataset"
+      "url": "https://huggingface.co/ResembleAI/chatterbox/resolve/5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18/conds.pt",
+      "sha256": "6552d70568833628ba019c6b03459e77fe71ca197d5c560cef9411bee9d87f4e",
+      "size": 107374,
+      "destination": "tts/chatterbox/5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18/conds.pt",
+      "license": "MIT"
     }
   ]
 }

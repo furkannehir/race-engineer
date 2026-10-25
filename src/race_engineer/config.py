@@ -12,6 +12,7 @@ from race_engineer.core.conversation import (
     DIALOGUE_HISTORY_ENTRIES_PER_TURN,
     MAX_CONVERSATION_HISTORY_TURNS,
 )
+from race_engineer.tts_metadata import MODEL_RELATIVE
 
 
 class ConfigModel(BaseModel):
@@ -86,12 +87,21 @@ class LanguageConfig(ConfigModel):
 
 
 class TtsConfig(ConfigModel):
+    """One local speech backend for replies and automatic announcements."""
+
     enabled: bool = True
-    adapter: Literal["windows-sapi"] = "windows-sapi"
-    voice: str | None = Field(default=None, min_length=1, max_length=200)
-    rate: int = Field(default=0, ge=-10, le=10)
-    volume: int = Field(default=100, ge=0, le=100)
-    playback_timeout_s: float = Field(default=10.0, gt=0, le=120, allow_inf_nan=False)
+    adapter: Literal["chatterbox"] = "chatterbox"
+    python_path: Path = Path("data/tts-chatterbox/runtime/Scripts/python.exe")
+    worker_path: Path | None = None
+    model_path: Path = Path("data/components") / MODEL_RELATIVE
+    device: Literal["auto", "cpu", "cuda"] = "auto"
+    fallback_to_cpu: bool = True
+    output_device: int | None = Field(default=None, ge=0)
+    volume: float = Field(default=0.8, ge=0, le=1, allow_inf_nan=False)
+    threads: int = Field(default=4, ge=1, le=16)
+    startup_timeout_s: float = Field(default=180, gt=0, le=600, allow_inf_nan=False)
+    playback_timeout_s: float = Field(default=120, gt=0, le=600, allow_inf_nan=False)
+    shutdown_timeout_s: float = Field(default=5, gt=0, le=30, allow_inf_nan=False)
     queue_capacity: int = Field(default=8, ge=1, le=100)
 
 
@@ -225,23 +235,6 @@ class SttConfig(ConfigModel):
     silence_threshold_dbfs: float = Field(default=-42, ge=-80, le=-10, allow_inf_nan=False)
 
 
-class RadioTtsConfig(ConfigModel):
-    """Conversational speech only; automatic race calls retain their SAPI settings."""
-
-    enabled: bool = True
-    adapter: Literal["piper"] = "piper"
-    python_path: Path = Path("data/tts-prototype/runtime/Scripts/python.exe")
-    worker_path: Path | None = None
-    english_model_path: Path = Path("data/tts-prototype/voices/en_US-ljspeech-high.onnx")
-    turkish_model_path: Path = Path("data/tts-prototype/voices/tr_TR-dfki-medium.onnx")
-    output_device: int | None = Field(default=None, ge=0)
-    volume: float = Field(default=0.8, ge=0, le=1, allow_inf_nan=False)
-    length_scale: float = Field(default=1.0, ge=0.5, le=2, allow_inf_nan=False)
-    threads: int = Field(default=4, ge=1, le=16)
-    startup_timeout_s: float = Field(default=60, gt=0, le=180, allow_inf_nan=False)
-    playback_timeout_s: float = Field(default=90, gt=0, le=180, allow_inf_nan=False)
-
-
 class AppConfig(ConfigModel):
     config_version: Literal["app-config.v1"] = "app-config.v1"
     paths: PathsConfig = PathsConfig()
@@ -255,7 +248,6 @@ class AppConfig(ConfigModel):
     tts: TtsConfig = TtsConfig()
     conversation: ConversationConfig = ConversationConfig()
     stt: SttConfig = SttConfig()
-    radio_tts: RadioTtsConfig = RadioTtsConfig()
 
 
 def _parse_bool(value: str) -> bool:

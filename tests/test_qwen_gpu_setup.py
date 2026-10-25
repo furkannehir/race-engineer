@@ -25,7 +25,7 @@ def test_trial_profiles_change_only_qwen_compute_and_isolate_the_port(tmp_path):
     ]
     for profile in profiles:
         assert profile.stt == original.stt and profile.stt.device == "cpu"
-        assert profile.tts == original.tts and profile.radio_tts == original.radio_tts
+        assert profile.tts == original.tts
         assert profile.conversation.model == original.conversation.model
         assert profile.conversation.timeout_s == original.conversation.timeout_s
         assert profile.conversation.port == 8088

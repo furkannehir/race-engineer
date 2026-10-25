@@ -28,7 +28,7 @@ analysis = Analysis(
     ],
     hookspath=[],
     runtime_hooks=[],
-    excludes=["PySide6", "qtawesome", "pygame", "piper", "onnxruntime"],
+    excludes=["PySide6", "qtawesome", "pygame", "chatterbox", "onnxruntime"],
     noarchive=False,
 )
 pyz = PYZ(analysis.pure)

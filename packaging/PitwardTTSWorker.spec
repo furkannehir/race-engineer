@@ -2,22 +2,28 @@
 
 from pathlib import Path
 
-from PyInstaller.utils.hooks import collect_all
+from PyInstaller.utils.hooks import collect_all, collect_data_files, copy_metadata
 
 ROOT = Path.cwd().resolve()
 SRC = ROOT / "src"
 
-piper_data, piper_binaries, piper_hidden = collect_all("piper")
+speech_data, speech_binaries, speech_hidden = collect_all("chatterbox")
+speech_data += collect_data_files("transformers") + copy_metadata("chatterbox-tts")
+speech_data += copy_metadata("transformers") + copy_metadata("torch")
+perth_data, perth_binaries, perth_hidden = collect_all("perth")
 
 analysis = Analysis(
     [str(ROOT / "packaging/tts_worker_entry.py")],
     pathex=[str(SRC)],
-    binaries=piper_binaries,
-    datas=piper_data,
-    hiddenimports=piper_hidden + ["onnxruntime", "sounddevice", "piper.config"],
+    binaries=speech_binaries + perth_binaries,
+    datas=speech_data + perth_data,
+    hiddenimports=speech_hidden + perth_hidden + [
+        "torch", "torchaudio", "sounddevice", "librosa", "scipy.signal", "safetensors.torch",
+        "transformers", "chatterbox.mtl_tts", "s3tokenizer", "pykakasi", "spacy_pkuseg",
+    ],
     hookspath=[],
     runtime_hooks=[],
-    excludes=["PySide6", "qtawesome", "pygame", "torch", "transformers"],
+    excludes=["PySide6", "qtawesome", "pygame"],
     noarchive=False,
 )
 pyz = PYZ(analysis.pure)

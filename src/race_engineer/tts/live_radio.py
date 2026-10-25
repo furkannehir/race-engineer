@@ -201,6 +201,7 @@ class LiveRadio:
         if intent.intent_id != utterance.intent_id:
             raise ValueError("speech intent and utterance IDs do not match")
         if self._engine is None:
+
             async def unavailable() -> None:
                 return None
 
@@ -221,7 +222,19 @@ class LiveRadio:
 
         async def play() -> None:
             assert self._engine is not None
-            result = await self._engine.speak(utterance)
+            result = await self._engine.speak(
+                utterance.model_copy(
+                    update={
+                        "generator_metadata": {
+                            **utterance.generator_metadata,
+                            "language": intent.language.split("-")[0].lower(),
+                            "speech_deadline": intent.deadline.isoformat(),
+                        }
+                    }
+                )
+            )
+            if result.status is PlaybackStatus.EXPIRED:
+                raise SpeechOutputError("tts_reply_expired")
             if (
                 result.intent_id != intent.intent_id
                 or result.status is not PlaybackStatus.COMPLETED

@@ -11,7 +11,7 @@ PyInstaller creates four executables:
 - `Pitward.exe`, the windowed control panel;
 - `PitwardComponents.exe`, the console component downloader and verifier;
 - `PitwardSTTWorker.exe`, the isolated Qwen3-ASR process; and
-- `PitwardTTSWorker.exe`, the isolated Piper process.
+- `PitwardTTSWorker.exe`, the isolated Chatterbox multilingual process.
 
 The speech workers are folder-mode bundles inside `Pitward/workers`. Models are not in the
 application archive. `PitwardComponents.exe` downloads the pinned component set into
@@ -21,6 +21,13 @@ Application settings, logs and SQLite profiles also live below `%LOCALAPPDATA%\P
 packaged builds. Source launches keep using the repository's ignored `data` and `logs`
 directories.
 
+Component set 2 replaces Piper voices with five pinned multilingual V2 assets,
+including `conds.pt` for the built-in voice. Total downloads are about 7.3 GB.
+The release workflow builds a CPU TTS worker; racing latency on CPU is not
+established. CUDA builds can use `setup_radio_tts.py --backend cuda` instead.
+Clean-Windows frozen-worker EN/TR synthesis and audio checks remain mandatory
+before publishing; a source-worker smoke test does not validate the frozen bundle.
+
 ## Local build
 
 Install PyInstaller into the main, STT and TTS environments:
@@ -28,7 +35,8 @@ Install PyInstaller into the main, STT and TTS environments:
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -e ".[desktop,build]"
 .\data\stt-prototype\runtime\Scripts\python.exe -m pip install -e ".[asr,build]"
-.\data\tts-prototype\runtime\Scripts\python.exe -m pip install -e ".[radio,build]"
+.\.venv\Scripts\python.exe scripts\setup_radio_tts.py --backend cpu
+.\data\tts-chatterbox\runtime\Scripts\python.exe -m pip install -e ".[build]"
 ```
 
 Build the portable archive:

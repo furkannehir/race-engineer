@@ -31,10 +31,10 @@ jobs:
         shell: pwsh
         run: |
           python -m venv build-env/stt
-          python -m venv build-env/tts
           ./build-env/stt/Scripts/python.exe -m pip install torch==2.14.0 --index-url https://download.pytorch.org/whl/cpu
           ./build-env/stt/Scripts/python.exe -m pip install -e ".[asr,build]"
-          ./build-env/tts/Scripts/python.exe -m pip install -e ".[radio,build]"
+          python scripts/setup_radio_tts.py --backend cpu --runtime-dir build-env/tts --runtime-only
+          ./build-env/tts/Scripts/python.exe -m pip install -e ".[build]"
       - name: Build portable Windows package
         shell: pwsh
         run: |

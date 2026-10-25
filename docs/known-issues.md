@@ -2,7 +2,7 @@
 
 ## STT-001: Short and single-word questions are sometimes misrecognized
 
-**Status:** Deferred improvement - accepted prototype limitation
+**Status:** Chatterbox migration implemented; driver listening/game-load validation pending
 
 **Reported:** 2026-09-21, driver feedback after the combined live test
 
@@ -30,8 +30,14 @@ the test examples are not a restricted command vocabulary.
 
 **Reported:** 2026-09-21; follows earlier feedback about the Turkish voice
 
-The voice feels unnatural/off to the driver, particularly in Turkish. Current Piper voices
-are sufficient for the prototype; no voice or engine change is requested in this increment.
+The earlier voice felt unnatural/off, particularly in Turkish. On 2026-10-25 the
+user selected local Chatterbox Multilingual 0.1.7's built-in voice for all speech.
+Both old engines and per-language voice settings were removed. See
+[speech setup and limitations](text-to-speech.md). The implementation is not proof
+that naturalness, Turkish pronunciation or racing latency is accepted.
+
+The September Freya notes below are historical research, not current routing or
+fallback instructions. No Piper fallback remains after the Chatterbox migration.
 
 Future work: compare local English/Turkish voices or engines using racing vocabulary,
 numbers, gaps, pronunciation, prosody, and short conversational acknowledgments. Include

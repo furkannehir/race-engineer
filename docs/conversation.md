@@ -96,7 +96,7 @@ The strict policy, live iRacing command, existing deterministic announcements, a
 queue are unchanged. The `chat-replay` command remains text-only; the new
 [speech-input slice](speech-to-text.md) adds Qwen3-ASR push-to-talk through `voice-replay`.
 `voice-replay` also speaks replies using the local bilingual
-[Piper output adapter](conversational-speech.md); `--text-only` disables playback. Neither
+[shared Chatterbox output adapter](text-to-speech.md); `--text-only` disables playback. Neither
 replay command connects to live iRacing. The separate
 [`voice-iracing` command](live-conversation.md) now connects the same conversation layer
 to live context and coordinates radio playback. faster-whisper remains a future

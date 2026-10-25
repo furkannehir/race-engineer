@@ -29,8 +29,8 @@ class PanelSettings(ConfigModel):
         return cls(
             ptt_binding=effective_binding(config.stt),
             input_device=config.stt.input_device,
-            output_device=config.radio_tts.output_device,
-            volume=round(config.radio_tts.volume * 100),
+            output_device=config.tts.output_device,
+            volume=round(config.tts.volume * 100),
         )
 
     def apply(
@@ -40,8 +40,7 @@ class PanelSettings(ConfigModel):
         raw["stt"].update(
             ptt_binding=self.ptt_binding.model_dump(), input_device=self.input_device
         )
-        raw["radio_tts"].update(output_device=self.output_device, volume=self.volume / 100)
-        raw["tts"]["volume"] = self.volume
+        raw["tts"].update(output_device=self.output_device, volume=self.volume / 100)
         raw["policy"]["strict"].update(
             announce_position_changes=preferences.announce_position_changes,
             announce_pit_transitions=preferences.announce_pit_transitions,

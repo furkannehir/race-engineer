@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from race_engineer.config import AppConfig
+from race_engineer.tts_metadata import MODEL_FILES, MODEL_RELATIVE
 
 _PRODUCT_DIRECTORY = "Pitward"
 
@@ -79,7 +80,6 @@ class Installation:
         components = self.components_root
         conversation = components / "conversation"
         stt = components / "stt"
-        voices = components / "tts" / "voices"
         workers = self.install_root / "workers"
         runtime = config.conversation.runtime.model_copy(
             update={
@@ -112,13 +112,12 @@ class Installation:
                         "model_path": stt / "Qwen3-ASR-0.6B-hf",
                     }
                 ),
-                "radio_tts": config.radio_tts.model_copy(
+                "tts": config.tts.model_copy(
                     update={
                         "worker_path": workers
                         / "PitwardTTSWorker"
                         / "PitwardTTSWorker.exe",
-                        "english_model_path": voices / "en_US-ljspeech-high.onnx",
-                        "turkish_model_path": voices / "tr_TR-dfki-medium.onnx",
+                        "model_path": components / MODEL_RELATIVE,
                     }
                 ),
             }
@@ -135,11 +134,8 @@ class Installation:
             or self.install_root / "workers/PitwardSTTWorker/PitwardSTTWorker.exe",
             config.stt.model_path / "config.json",
             config.stt.model_path / "model.safetensors",
-            config.radio_tts.worker_path
+            config.tts.worker_path
             or self.install_root / "workers/PitwardTTSWorker/PitwardTTSWorker.exe",
-            config.radio_tts.english_model_path,
-            config.radio_tts.english_model_path.with_suffix(".onnx.json"),
-            config.radio_tts.turkish_model_path,
-            config.radio_tts.turkish_model_path.with_suffix(".onnx.json"),
+            *(config.tts.model_path / name for name in MODEL_FILES),
         )
         return tuple(path for path in candidates if not path.is_file())

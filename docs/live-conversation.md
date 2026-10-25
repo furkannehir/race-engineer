@@ -1,7 +1,7 @@
 # Live iRacing conversational shakedown
 
 `voice-iracing` runs telemetry, strict-policy automatic announcements, push-to-talk,
-Qwen3-ASR, the local Qwen conversational model, and Piper replies in one application.
+Qwen3-ASR, the local Qwen conversational model, and shared Chatterbox speech in one application.
 Conversation now reads the latest accepted iRacing context rather than a replay fixture.
 It is read-only: there are no pit commands, setup changes, or simulator controls.
 
@@ -12,7 +12,8 @@ the local model server and this same live pipeline. The terminal workflow below 
 available; do not run it at the same time as a panel session.
 
 Use the existing [conversation](conversation.md), [STT](speech-to-text.md), and
-[Piper](conversational-speech.md) installations. No new model download is required.
+[Chatterbox](text-to-speech.md) installations. The TTS migration needs its own
+initial setup/download; old Piper files are no longer used.
 Start with a practice/test session, not a competitive race.
 
 ## Test without iRacing
@@ -78,10 +79,9 @@ and recorder. The separate conversation server remains under your control.
 Optional settings:
 
 - `--device N`: microphone index from `list-input-devices`.
-- `--output-device N`: **Piper only**, from `list-output-devices`. SAPI automatic calls
-  still use the Windows default output. Set that default to the same headset if desired.
+- `--output-device N`: all speech and PTT cues, from `list-output-devices`.
 - `--language en` or `--language tr`: force conversational answer language and voice.
-  Automatic calls retain their existing English strict-policy wording/SAPI voice.
+  Automatic calls retain existing English strict-policy wording, using the same default voice.
 - `--text-only`: mute **both** automatic and conversational speech for this live command.
 - `--limit 1200`: stop after 1,200 accepted telemetry frames; zero means run until exit.
 - `--output recordings/live-radio-01`: record frames, events, policy decisions, intents,
@@ -131,7 +131,7 @@ even if the general telemetry configuration allows them.
 
 The latest accepted context also feeds a bounded two-minute telemetry window. The Context
 Engineer executes its selected evidence plan after inference and re-executes every cited
-query when the answer's audio slot opens. Piper then
+query when the answer's audio slot opens. Chatterbox then
 prepares audio in memory and waits for an explicit freshness acknowledgement before
 opening playback. An expired prepared answer is discarded, not played as current data.
 

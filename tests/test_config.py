@@ -25,8 +25,9 @@ def test_default_configuration_is_valid() -> None:
     assert config.policy.strict.announce_pit_transitions is False
     assert config.language.adapter == "deterministic"
     assert config.tts.enabled is True
-    assert config.tts.adapter == "windows-sapi"
-    assert config.tts.voice is None
+    assert config.tts.adapter == "chatterbox"
+    assert config.tts.device == "auto"
+    assert config.tts.fallback_to_cpu is True
     assert config.tts.queue_capacity == 8
     assert config.conversation.model == "Qwen3-4B-Instruct-2507"
     assert config.conversation.runtime.mode == "gpu"

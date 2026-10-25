@@ -21,7 +21,7 @@ analysis = Analysis(
     hiddenimports=[],
     hookspath=[],
     runtime_hooks=[],
-    excludes=["PySide6", "qtawesome", "torch", "transformers", "piper", "onnxruntime"],
+    excludes=["PySide6", "qtawesome", "torch", "transformers", "chatterbox", "onnxruntime"],
     noarchive=False,
 )
 pyz = PYZ(analysis.pure)

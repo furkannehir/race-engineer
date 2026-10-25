@@ -19,11 +19,11 @@ the deterministic M2 policy slice, and the local M3 speech path:
   traceable policy decisions;
 - fact-bound English wording with deterministic replay and an explicit fallback boundary;
   and
-- offline Windows speech with bounded priority queueing, expiry, interruption, and
+- local Chatterbox speech with bounded priority queueing, expiry, interruption, and
   failure isolation; and
 - local English/Turkish conversations over paused replay data, using Qwen to
   interpret questions and follow-ups with fact-bound bilingual replies; and
-- local Qwen3-ASR push-to-talk and Piper spoken replies with text fallback; and
+- local Qwen3-ASR push-to-talk and Chatterbox spoken replies with text fallback; and
 - a native Windows control panel for the live radio, audio checks, press-to-bind
   keyboard/mouse/wheel PTT, mute and SQLite-backed driver preferences; and
 - versioned local SQLite driver profiles with validated, auditable explicit preferences;
@@ -34,17 +34,18 @@ Model-backed language generation, higher-quality speech adapters, adaptive polic
 advanced desktop controls remain later work.
 
 The conversational prototype supports text chat and local Qwen3-ASR push-to-talk, with
-bilingual Piper spoken replies over replay data and live iRacing context. The combined
+bilingual Chatterbox spoken replies over replay data and live iRacing context. The combined
 `voice-iracing` command coordinates automatic calls and questions. The driver accepted
 the initial live prototype as sufficient to continue; quality upgrades and quantitative
 validation remain open. See the [live run guide](docs/live-conversation.md) and
 [current roadmap / next task](docs/roadmap.md).
 
 The standard edition on `main` uses **Qwen3-4B on NVIDIA/CUDA** for context planning
-and replies; Qwen3-ASR and Piper/SAPI stay on CPU. The normal `start-panel.cmd` now
+and replies; Qwen3-ASR stays on CPU. Chatterbox independently prefers CUDA, with a
+visible CPU fallback that may not meet racing deadlines. The normal `start-panel.cmd` now
 uses the GPU configuration directly, with no silent CPU fallback or external-server
 reuse. See [GPU setup and measurements](docs/qwen-gpu-trial.md). The existing packaged
-`.exe` component installer remains CPU-only; packaged GPU distribution, compute UI
+`.exe` Qwen component installer remains CPU-only; packaged Qwen GPU distribution, compute UI
 controls and AMD/Vulkan validation are not implemented yet.
 
 Interpreter experiments, draft datasets and training tools are preserved on
@@ -63,7 +64,8 @@ faster-whisper is reserved as a future performance alternative. See the
 
 - Python 3.12 or newer
 - Git
-- Windows with an installed SAPI voice for live iRacing speech
+- Windows for the desktop/iRacing app; no installed system voice is required
+- Python 3.12 for the isolated Chatterbox runtime
 
 ## Development setup
 
@@ -77,6 +79,20 @@ mypy
 ```
 
 ## Desktop control panel
+
+Set up the shared English/Turkish default voice first (about 3.2 GB of model files
+plus a separate PyTorch runtime; weights stay out of Git):
+
+```powershell
+.\.venv\Scripts\python.exe scripts\setup_radio_tts.py
+.\.venv\Scripts\python.exe -m race_engineer test-radio --config config\default.toml --language en
+.\.venv\Scripts\python.exe -m race_engineer test-radio --config config\default.toml --language tr
+```
+
+All replies and announcements now share one local Chatterbox backend/output device.
+PTT WAV cues are unchanged. See [speech setup](docs/text-to-speech.md) for CUDA
+requirements and CPU limitations. Old custom configs must remove `[radio_tts]`
+and replace legacy `[tts]` settings with the current shared block.
 
 With the existing local speech/model installations available, double-click
 `start-panel.cmd` or run `python -m race_engineer.ui` from the repository root.

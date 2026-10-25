@@ -22,7 +22,7 @@ Then double-click `start-panel.cmd`, or run:
 .\.venv\Scripts\python.exe -m race_engineer.ui
 ```
 
-The existing local Qwen conversation model, Qwen3-ASR runtime, and Piper voices must
+The existing local Qwen conversation model, Qwen3-ASR runtime, and Chatterbox model must
 already be installed. Their existing [setup guides](live-conversation.md#run) still apply.
 Opening the window enumerates audio devices but does not start telemetry, inference,
 capture, playback, or controller input. Controller detection starts only when you open
@@ -31,10 +31,9 @@ the push-to-talk binding dialog. There is no download or cloud fallback.
 ## First shakedown
 
 1. Select the microphone and output. System default is the safest first choice. Output
-   selection affects **Piper replies and PTT cues**; automatic SAPI calls use Windows' default
-   playback device. Set that default to the same headset yourself if needed.
+   selection affects **all Chatterbox replies, automatic announcements and PTT cues**.
 2. Click **Test mic** and speak for three seconds. It reports a level, without saving
-   audio. **Test voice** plays a short Piper radio check; Auto uses English for this test.
+   audio. **Test voice** plays a short Chatterbox radio check; Auto uses English for this test.
    Both tests can be cancelled, and cannot overlap a live session.
 3. Click **Change** beside PTT, then press the control you want. The panel accepts arbitrary
    keyboard keys, the five standard mouse buttons, and digital buttons or hats/D-pads on

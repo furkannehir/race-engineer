@@ -201,11 +201,7 @@ def trial_profile(source: str, mode: str) -> str:
         },
     )
     parsed = AppConfig.model_validate(tomllib.loads(profile))
-    if (parsed.stt, parsed.radio_tts, parsed.tts) != (
-        original.stt,
-        original.radio_tts,
-        original.tts,
-    ):
+    if (parsed.stt, parsed.tts) != (original.stt, original.tts):
         raise ValueError("Trial must not change speech or voice settings")
     return (
         "# Generated Qwen-only trial; default.toml is unchanged. No silent CPU/external fallback.\n"

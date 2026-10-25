@@ -20,6 +20,7 @@ from race_engineer.core.contracts import (
     Utterance,
     canonical_json,
 )
+from race_engineer.core.conversation import RadioLanguage
 from race_engineer.core.enums import PlaybackStatus, PolicyDecisionOutcome
 from race_engineer.core.interfaces import LiveTelemetryBridge
 from race_engineer.fixtures import load_fixture
@@ -30,7 +31,7 @@ from race_engineer.observability import configure_logging
 from race_engineer.policy import DefaultRaceContextBuilder, StrictRulePolicy
 from race_engineer.telemetry.iracing import IracingEventDeriver, IracingTelemetryAdapter
 from race_engineer.telemetry.recorder import TelemetrySessionRecorder
-from race_engineer.tts import SpeechPlaybackQueue, WindowsSapiTextToSpeechEngine, tts_factory
+from race_engineer.tts import SpeechPlaybackQueue, tts_factory
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +42,7 @@ def _parser() -> argparse.ArgumentParser:
 
     subparsers.add_parser("list-input-devices", help="list microphone devices without recording")
     subparsers.add_parser("list-output-devices", help="list speaker/headphone output devices")
-    radio = subparsers.add_parser("test-radio", help="test local English/Turkish Piper speech")
+    radio = subparsers.add_parser("test-radio", help="test local English/Turkish Chatterbox speech")
     radio.add_argument("--config", type=Path, required=True)
     radio.add_argument("--language", choices=("en", "tr"), default="en")
     radio.add_argument("--text", help="custom radio-check text")
@@ -81,7 +82,7 @@ def _parser() -> argparse.ArgumentParser:
     live_voice.add_argument("--device", type=int, help="microphone index from list-input-devices")
     live_voice.add_argument("--ptt-key", help="hold key; default: config (F8)")
     live_voice.add_argument(
-        "--output-device", type=int, help="Piper output device; SAPI uses default"
+        "--output-device", type=int, help="output device for all speech and PTT cues"
     )
     live_voice.add_argument(
         "--language", choices=("en", "tr"), help="force conversational language"
@@ -189,6 +190,7 @@ def _parser() -> argparse.ArgumentParser:
         help="play a local race-engineer radio check",
     )
     test_tts.add_argument("--config", type=Path, required=True)
+    test_tts.add_argument("--language", choices=("en", "tr"), default="en")
     test_tts.add_argument(
         "--text",
         default="Radio check. Race engineer online.",
@@ -377,10 +379,12 @@ async def _read_iracing(
     policy = StrictRulePolicy(config.policy.strict, decision_sink=capture_decision)
     language = language_factory(config.language)
     playback: SpeechPlaybackQueue | None = None
+    speech_engine = None
     if config.tts.enabled and live is None:
         try:
+            speech_engine = tts_factory(config.tts)
             playback = SpeechPlaybackQueue(
-                tts_factory(config.tts),
+                speech_engine,
                 capacity=config.tts.queue_capacity,
                 result_sink=(history.record_playback_result if history is not None else None),
             )
@@ -565,6 +569,10 @@ async def _read_iracing(
                             extra={"event": "playback_shutdown_timeout"},
                         )
                         await playback.aclose(drain=False)
+                if speech_engine is not None:
+                    close = getattr(speech_engine, "aclose", None)
+                    if close is not None:
+                        await close()
             finally:
                 if recorder is not None:
                     recorder.__exit__(None, None, None)
@@ -644,21 +652,22 @@ async def _list_tts_voices(config_path: Path) -> tuple[str, ...]:
     configure_logging(config.logging)
     if not config.tts.enabled:
         raise ValueError("text-to-speech is disabled")
-    if config.tts.adapter == "windows-sapi":
-        return await WindowsSapiTextToSpeechEngine.installed_voices()
-    raise AssertionError(f"unsupported text-to-speech adapter: {config.tts.adapter}")
+    return ("Chatterbox multilingual built-in default (en, tr)",)
 
 
-async def _test_tts(config_path: Path, text: str) -> PlaybackResult:
+async def _test_tts(config_path: Path, text: str, language: RadioLanguage = "en") -> PlaybackResult:
     config = load_config(config_path)
     configure_logging(config.logging)
     engine = tts_factory(config.tts)
     utterance = Utterance(
         intent_id="tts-test",
         text=text,
-        generator_metadata={"adapter": "manual-test"},
+        generator_metadata={"adapter": "manual-test", "language": language},
     )
-    return await engine.speak(utterance)
+    try:
+        return await engine.speak(utterance)
+    finally:
+        await engine.aclose()
 
 
 def main() -> None:
@@ -849,7 +858,7 @@ def main() -> None:
             voices = asyncio.run(_list_tts_voices(args.config))
             print(json.dumps({"voices": voices}, indent=2, sort_keys=True))
         case "test-tts":
-            playback_result = asyncio.run(_test_tts(args.config, args.text))
+            playback_result = asyncio.run(_test_tts(args.config, args.text, args.language))
             print(playback_result.model_dump_json(indent=2))
         case "read-iracing":
             config = load_config(args.config)

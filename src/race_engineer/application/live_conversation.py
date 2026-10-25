@@ -6,11 +6,12 @@ import time
 import uuid
 from collections import deque
 from collections.abc import Awaitable, Callable
+from contextlib import suppress
 from datetime import UTC, datetime
 from pathlib import Path
 
 from race_engineer.application.control import LiveControl
-from race_engineer.config import AppConfig, RadioTtsConfig, SttConfig, load_config
+from race_engineer.config import AppConfig, SttConfig, TtsConfig, load_config
 from race_engineer.conversation.factory import conversation_planner
 from race_engineer.conversation.live import LiveRaceState, LiveTelemetryUnavailable
 from race_engineer.conversation.session import ConversationSession
@@ -20,6 +21,7 @@ from race_engineer.core.enums import PlaybackStatus
 from race_engineer.core.intelligence import DriverTurn
 from race_engineer.core.interfaces import ConversationSpeaker, SpeechRecognizer
 from race_engineer.core.speech_input import AudioClip, SpeechInputError
+from race_engineer.core.speech_output import SpeechOutputError
 from race_engineer.intelligence.context_engine import ContextEngineerError
 from race_engineer.intelligence.factory import live_intelligence
 from race_engineer.intelligence.grounding import GroundingError
@@ -46,9 +48,8 @@ from race_engineer.stt.buttons import binding_label, legacy_binding
 from race_engineer.stt.capture import PushToTalkMicrophone
 from race_engineer.stt.qwen import QwenSpeechRecognizer
 from race_engineer.stt.radio_cues import RadioCuePlayer
-from race_engineer.tts import tts_factory
+from race_engineer.tts.chatterbox import ChatterboxAnnouncementEngine, ChatterboxSpeechBackend
 from race_engineer.tts.live_radio import LiveRadio
-from race_engineer.tts.piper import PiperConversationSpeaker
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -207,8 +208,6 @@ async def live_dialogue(
     intelligence: EngineerOrchestrator | None = None,
     cues: RadioCuePlayer | None = None,
 ) -> None:
-    from race_engineer.core.speech_output import SpeechOutputError
-
     session = (
         ConversationSession(
             conversation_planner(config.conversation),
@@ -228,7 +227,8 @@ async def live_dialogue(
     _LOGGER.info(
         "live radio diagnostics started",
         extra={
-            "event": "radio_session_started", "run_id": run_id,
+            "event": "radio_session_started",
+            "run_id": run_id,
             "record_radio_text": config.privacy.record_radio_text,
             "record_raw_telemetry": config.privacy.record_raw_telemetry,
             "model": config.conversation.model,
@@ -243,25 +243,35 @@ async def live_dialogue(
     try:
         print("Loading local speech models. Telemetry continues independently.", flush=True)
         model_started = time.perf_counter()
-        _LOGGER.info("loading ASR runtime",
-                     extra={"event": "radio_asr_loading", "run_id": run_id})
+        _LOGGER.info("loading ASR runtime", extra={"event": "radio_asr_loading", "run_id": run_id})
         await recognizer.start()
-        _LOGGER.info("ASR runtime ready",
-                     extra={"event": "radio_asr_ready", "run_id": run_id,
-                            "duration_ms": round((time.perf_counter() - model_started)*1000, 3)})
+        _LOGGER.info(
+            "ASR runtime ready",
+            extra={
+                "event": "radio_asr_ready",
+                "run_id": run_id,
+                "duration_ms": round((time.perf_counter() - model_started) * 1000, 3),
+            },
+        )
         if speaker is not None:
             try:
                 await speaker.start()
             except SpeechOutputError as error:
                 _LOGGER.warning(
                     "reply voice unavailable",
-                    extra={"event": "radio_reply_voice_unavailable", "run_id": run_id,
-                           "reason": error_code(error)},
+                    extra={
+                        "event": "radio_reply_voice_unavailable",
+                        "run_id": run_id,
+                        "reason": error_code(error),
+                    },
                 )
-                print(f"Conversational speech unavailable: {error}; text replies remain enabled.")
+                print(f"All speech unavailable: {error}; telemetry/text replies remain enabled.")
                 speaker = None
                 if control:
-                    control.emit("notice", "Reply voice unavailable; check the voice installation.")
+                    control.emit(
+                        "notice",
+                        "Speech unavailable; run the Chatterbox setup. No old voice fallback.",
+                    )
         microphone = (
             PushToTalkMicrophone(stt, exit_on_escape=False)
             if control
@@ -270,15 +280,15 @@ async def live_dialogue(
         if control:
             control.emit("models", "ready" if speaker is not None else "no_reply_voice")
         print(
-            f"Radio ready. Hold {binding_label(stt)} when telemetry is ready; "
-            "ESC or Ctrl+C exits."
+            f"Radio ready. Hold {binding_label(stt)} when telemetry is ready; ESC or Ctrl+C exits."
         )
         print("Critical calls interrupt speech/capture. Release the key and ask again afterwards.")
         while True:
             if control:
                 control.emit("phase", "ready")
             trace = RadioTrace(
-                run_id, uuid.uuid4().hex,
+                run_id,
+                uuid.uuid4().hex,
                 record_text=config.privacy.record_radio_text,
                 record_values=config.privacy.record_raw_telemetry,
                 scope={"generation": state.epoch},
@@ -306,14 +316,17 @@ async def live_dialogue(
                     return
                 started = time.perf_counter()
                 trace.event(
-                    "radio_capture_completed", audio_duration_s=audio.duration_s,
-                    sample_rate_hz=audio.sample_rate_hz, history_entries=len(recent_dialogue),
+                    "radio_capture_completed",
+                    audio_duration_s=audio.duration_s,
+                    sample_rate_hz=audio.sample_rate_hz,
+                    history_entries=len(recent_dialogue),
                 )
                 if epoch != state.epoch or not state.available:
                     raise LiveTelemetryUnavailable()
                 captured_frame = state.snapshot().context.frame
                 trace.scope.update(
-                    session_id=captured_frame.session_id, source_sequence=captured_frame.sequence,
+                    session_id=captured_frame.session_id,
+                    source_sequence=captured_frame.sequence,
                 )
                 print("Transcribing...", flush=True)
                 if control:
@@ -322,9 +335,12 @@ async def live_dialogue(
                     transcript = await recognizer.transcribe(audio)
                 del audio
                 trace.text(
-                    "radio_transcription", transcript.text,
-                    status=transcript.status, language=transcript.language,
-                    reason=transcript.reason, asr_elapsed_ms=transcript.elapsed_ms,
+                    "radio_transcription",
+                    transcript.text,
+                    status=transcript.status,
+                    language=transcript.language,
+                    reason=transcript.reason,
+                    asr_elapsed_ms=transcript.elapsed_ms,
                 )
                 if transcript.status != "transcribed":
                     trace.finish("no_question", reason=transcript.reason or transcript.status)
@@ -366,8 +382,10 @@ async def live_dialogue(
                         recent_dialogue=tuple(recent_dialogue),
                     )
                     trace.scope.update(
-                        turn_id=turn.turn_id, session_id=frame.session_id,
-                        generation=state.epoch, source_sequence=frame.sequence,
+                        turn_id=turn.turn_id,
+                        session_id=frame.session_id,
+                        generation=state.epoch,
+                        source_sequence=frame.sequence,
                     )
                     trace.event("radio_question_started", history_entries=len(recent_dialogue))
                     prepared = await intelligence.prepare(turn)
@@ -390,8 +408,10 @@ async def live_dialogue(
                         assert intelligence is not None
                         grounded = await intelligence.ground(queued_response)
                         trace.text(
-                            "radio_grounded_reply", grounded.text,
-                            action=grounded.action, language=grounded.language,
+                            "radio_grounded_reply",
+                            grounded.text,
+                            action=grounded.action,
+                            language=grounded.language,
                             evidence_ids=grounded.evidence_ids,
                             source_sequence=grounded.source_sequence,
                         )
@@ -418,9 +438,13 @@ async def live_dialogue(
                     else:
                         assert queued_answer is not None
                         refreshed = state.refresh(queued_answer, answer_epoch)
-                        trace.text("radio_grounded_reply", refreshed.text,
-                                   action="speak", language=refreshed.language,
-                                   source_sequence=refreshed.source_sequence)
+                        trace.text(
+                            "radio_grounded_reply",
+                            refreshed.text,
+                            action="speak",
+                            language=refreshed.language,
+                            source_sequence=refreshed.source_sequence,
+                        )
                     observed_at = state.snapshot().context.frame.observed_at
                     print(f"Engineer ({refreshed.language}): {refreshed.text}", flush=True)
                     if speaker is not None:
@@ -436,8 +460,10 @@ async def live_dialogue(
                         with radio_stage("tts"):
                             result = await speaker.speak(refreshed, before_playback=still_current)
                             trace.event(
-                                "radio_tts_result", played=result.played,
-                                synthesis_ms=result.synthesis_ms, playback_ms=result.playback_ms,
+                                "radio_tts_result",
+                                played=result.played,
+                                synthesis_ms=result.synthesis_ms,
+                                playback_ms=result.playback_ms,
                                 audio_duration_s=result.audio_duration_s,
                             )
                         delivery["outcome"] = "spoken" if result.played else "not_played"
@@ -452,8 +478,10 @@ async def live_dialogue(
                     queued_at: float = queued_at,
                 ) -> None:
                     with trace.bind():
-                        trace.event("radio_delivery_started",
-                                    queue_wait_ms=round((time.perf_counter() - queued_at)*1000, 3))
+                        trace.event(
+                            "radio_delivery_started",
+                            queue_wait_ms=round((time.perf_counter() - queued_at) * 1000, 3),
+                        )
                         await action()
 
                 trace.event("radio_answer_queued")
@@ -498,7 +526,8 @@ async def live_dialogue(
             except BaseException as error:
                 trace.finish(
                     "cancelled"
-                    if isinstance(error, asyncio.CancelledError) else "unexpected_error",
+                    if isinstance(error, asyncio.CancelledError)
+                    else "unexpected_error",
                     reason=error_code(error),
                 )
                 raise
@@ -511,9 +540,15 @@ async def live_dialogue(
     finally:
         if microphone is not None:
             await microphone.aclose()
-        _LOGGER.info("live radio diagnostics ended",
-                     extra={"event": "radio_session_finished", "run_id": run_id,
-                            "outcome": session_outcome, "reason": session_reason})
+        _LOGGER.info(
+            "live radio diagnostics ended",
+            extra={
+                "event": "radio_session_finished",
+                "run_id": run_id,
+                "outcome": session_outcome,
+                "reason": session_reason,
+            },
+        )
 
 
 async def voice_iracing(
@@ -546,10 +581,10 @@ async def voice_iracing(
         input_settings["ptt_key"] = ptt_key.upper()
         input_settings["ptt_binding"] = legacy_binding(ptt_key.upper()).model_dump()
     stt = SttConfig.model_validate(input_settings)
-    output_settings = config.radio_tts.model_dump()
+    output_settings = config.tts.model_dump()
     if output_device is not None:
         output_settings["output_device"] = output_device
-    radio_tts = RadioTtsConfig.model_validate(output_settings)
+    radio_tts = TtsConfig.model_validate(output_settings)
     cues = RadioCuePlayer(
         output_device=radio_tts.output_device,
         volume=radio_tts.volume,
@@ -565,27 +600,22 @@ async def voice_iracing(
             history_database_path or config.paths.database_path,
             retention_days=config.history.retention_days,
         )
-    automatic = None
-    if config.tts.enabled and not text_only:
-        try:
-            automatic = tts_factory(config.tts)
-        except Exception as error:
-            _LOGGER.warning(
-                "automatic speech unavailable",
-                extra={
-                    "event": "live_automatic_speech_unavailable",
-                    "reason": type(error).__name__,
-                },
-            )
+    speaker = (
+        ChatterboxSpeechBackend(
+            radio_tts,
+            notice=(lambda message: control.emit("notice", message)) if control else None,
+        )
+        if radio_tts.enabled and not text_only
+        else None
+    )
+    automatic = ChatterboxAnnouncementEngine(speaker) if speaker is not None else None
     radio = LiveRadio(
         automatic,
         capacity=config.tts.queue_capacity,
         activity=lambda value: control.emit("speech", value) if control else None,
         result_sink=(history.record_playback_result if history is not None else None),
         engine_unavailable_reason=(
-            "audio_disabled"
-            if text_only or not config.tts.enabled
-            else "engine_unavailable"
+            "audio_disabled" if text_only or not config.tts.enabled else "engine_unavailable"
         ),
     )
     radio.set_muted(control.muted.is_set() if control else False)
@@ -597,8 +627,15 @@ async def voice_iracing(
         telemetry_memory=telemetry_memory,
     )
     recognizer = QwenSpeechRecognizer(stt)
-    speaker = PiperConversationSpeaker(radio_tts) if radio_tts.enabled and not text_only else None
     tasks: list[asyncio.Task[object]] = []
+
+    async def warm_speech() -> None:
+        assert speaker is not None
+        # The backend reports a visible, latched failure. Never end telemetry
+        # just because an optional speech runtime is missing/broken.
+        with suppress(SpeechOutputError):
+            await speaker.start()
+        await asyncio.Event().wait()
 
     async def watch_controls() -> None:
         assert control is not None
@@ -612,6 +649,10 @@ async def voice_iracing(
 
     try:
         print("LIVE mode. Waiting for iRacing. Do not also run read-iracing or voice-replay.")
+        if speaker is not None:
+            # Own startup independently of interruptible radio jobs. A critical
+            # arrival during loading must not cancel the one shared model load.
+            tasks.append(asyncio.create_task(warm_speech()))
         telemetry = asyncio.create_task(
             _read_iracing(
                 config_path,

@@ -34,13 +34,13 @@ def test_frozen_installation_keeps_program_and_user_data_separate(tmp_path: Path
         local / "Pitward/components/conversation/Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
     )
     assert config.stt.worker_path == install / "workers/PitwardSTTWorker/PitwardSTTWorker.exe"
-    assert config.radio_tts.worker_path == (
+    assert config.tts.worker_path == (
         install / "workers/PitwardTTSWorker/PitwardTTSWorker.exe"
     )
     missing = layout.missing_required_components(config)
     assert config.conversation.runtime.model_path in missing
     assert config.stt.model_path / "model.safetensors" in missing
-    assert config.radio_tts.turkish_model_path in missing
+    assert config.tts.model_path / "conds.pt" in missing
 
 
 def test_source_installation_preserves_repository_layout(tmp_path: Path) -> None:
@@ -67,7 +67,8 @@ def test_build_identity_requires_matching_version_and_valid_commit(tmp_path: Pat
 def test_component_manifest_is_unique_pinned_and_confined() -> None:
     component_set, artifacts = load_manifest()
     ids = [artifact.artifact_id for artifact in artifacts]
-    assert component_set == "1" and len(ids) == len(set(ids))
+    assert component_set == "2" and len(ids) == len(set(ids))
+    assert not any(name.startswith("piper-") for name in ids)
     assert sum(artifact.size for artifact in artifacts) > 4_000_000_000
     for artifact in artifacts:
         assert artifact.url.startswith("https://")

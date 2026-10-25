@@ -14,7 +14,7 @@ from race_engineer.conversation.runtime import ConversationServer as LocalConver
 from race_engineer.core.conversation import ConversationReply, RadioLanguage
 from race_engineer.memory import CommunicationPreferences
 from race_engineer.stt.capture import _sounddevice
-from race_engineer.tts.piper import PiperConversationSpeaker
+from race_engineer.tts.chatterbox import ChatterboxSpeechBackend
 from race_engineer.ui.settings import PanelSettings
 
 
@@ -64,7 +64,10 @@ async def test_voice(
     control: LiveControl,
 ) -> None:
     language: RadioLanguage = "tr" if preferences.reply_language == "tr" else "en"
-    speaker = PiperConversationSpeaker(settings.apply(config, preferences).radio_tts)
+    speaker = ChatterboxSpeechBackend(
+        settings.apply(config, preferences).tts,
+        notice=lambda message: control.emit("notice", message),
+    )
     try:
         control.emit("phase", "testing_voice")
         await speaker.start()
@@ -80,7 +83,10 @@ async def test_voice(
                 mode="live",
             )
         )
-        control.emit("notice", "Voice test finished. Automatic calls use Windows default output.")
+        warning = " CPU may miss racing deadlines." if speaker.effective_device == "cpu" else ""
+        control.emit(
+            "notice", "Voice test finished. All speech uses this Chatterbox voice/output." + warning
+        )
     finally:
         await speaker.aclose()
 

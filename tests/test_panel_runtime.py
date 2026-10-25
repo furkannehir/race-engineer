@@ -44,8 +44,7 @@ def test_settings_round_trip_and_explicit_config_application(tmp_path):
     base = AppConfig()
     applied = settings.apply(base, preferences)
     assert effective_binding(applied.stt).label == "RCTRL" and applied.stt.input_device == 1
-    assert applied.radio_tts.output_device == 2 and applied.radio_tts.volume == 0.37
-    assert applied.tts.volume == 37
+    assert applied.tts.output_device == 2 and applied.tts.volume == 0.37
     assert not applied.policy.strict.announce_position_changes
     assert applied.policy.strict.announce_pit_transitions
     assert applied.policy.strict.critical_cooldown_s == base.policy.strict.critical_cooldown_s

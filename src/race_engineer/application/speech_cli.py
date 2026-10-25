@@ -4,7 +4,7 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 
-from race_engineer.config import RadioTtsConfig, SttConfig, load_config
+from race_engineer.config import SttConfig, TtsConfig, load_config
 from race_engineer.conversation.factory import conversation_planner
 from race_engineer.conversation.replay import ReplayRaceState
 from race_engineer.conversation.session import ConversationSession
@@ -17,7 +17,7 @@ from race_engineer.stt.audio import load_wav
 from race_engineer.stt.buttons import binding_label, legacy_binding
 from race_engineer.stt.capture import PushToTalkMicrophone
 from race_engineer.stt.qwen import QwenSpeechRecognizer
-from race_engineer.tts.piper import PiperConversationSpeaker
+from race_engineer.tts.chatterbox import ChatterboxSpeechBackend
 
 
 async def spoken_turn(
@@ -74,10 +74,10 @@ async def voice_replay(
         settings["ptt_key"] = ptt_key.upper()
         settings["ptt_binding"] = legacy_binding(ptt_key.upper()).model_dump()
     stt = SttConfig.model_validate(settings)
-    speech_settings = config.radio_tts.model_dump()
+    speech_settings = config.tts.model_dump()
     if output_device is not None:
         speech_settings["output_device"] = output_device
-    radio_tts = RadioTtsConfig.model_validate(speech_settings)
+    radio_tts = TtsConfig.model_validate(speech_settings)
     state = ReplayRaceState(load_fixture(directory), config.policy.context)
     state.seek(frame_index)
     session = ConversationSession(
@@ -85,7 +85,7 @@ async def voice_replay(
     )
     recognizer = QwenSpeechRecognizer(stt)
     speaker: ConversationSpeaker | None = (
-        PiperConversationSpeaker(radio_tts) if radio_tts.enabled and not text_only else None
+        ChatterboxSpeechBackend(radio_tts) if radio_tts.enabled and not text_only else None
     )
     microphone: PushToTalkMicrophone | None = None
     print(_state_line(state))
@@ -94,7 +94,7 @@ async def voice_replay(
             print("Loading local Qwen3-ASR; microphone capture has not started.", flush=True)
             await recognizer.start()
             if speaker is not None:
-                print("Loading local English/Turkish Piper voices...", flush=True)
+                print("Loading local Chatterbox multilingual default voice...", flush=True)
                 try:
                     await speaker.start()
                 except SpeechOutputError as error:
@@ -103,10 +103,7 @@ async def voice_replay(
                     await speaker.aclose()
                     speaker = None
             microphone = PushToTalkMicrophone(stt)
-            print(
-                f"Ready. Hold {binding_label(stt)} to talk; "
-                "ESC exits while waiting/listening."
-            )
+            print(f"Ready. Hold {binding_label(stt)} to talk; ESC exits while waiting/listening.")
             print("Spoken + text replies." if speaker is not None else "Text replies only.")
             print("Replay stays on the selected frame. Ctrl+C stops processing/playback and exits.")
         while True:
@@ -188,12 +185,12 @@ async def radio_check(
     play_audio: bool = True,
 ) -> int:
     """Exercise synthesis/playback without ASR, microphone capture, or a language model."""
-    settings = load_config(config_path).radio_tts.model_dump()
+    settings = load_config(config_path).tts.model_dump()
     if output_device is not None:
         settings["output_device"] = output_device
-    config = RadioTtsConfig.model_validate(settings)
+    config = TtsConfig.model_validate(settings)
     if not config.enabled:
-        print("Conversational speech is disabled in [radio_tts].")
+        print("Speech is disabled in [tts].")
         return 1
     defaults = {
         "en": "Radio check. Race engineer online.",
@@ -207,7 +204,7 @@ async def radio_check(
         source_sequence=0,
         mode="replay",
     )
-    speaker = PiperConversationSpeaker(config)
+    speaker = ChatterboxSpeechBackend(config)
     try:
         result = await speaker.speak(reply, play_audio=play_audio)
         print(result.model_dump_json(indent=2))

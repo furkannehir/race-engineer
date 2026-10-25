@@ -33,7 +33,7 @@ analysis = Analysis(
     hiddenimports=["irsdk", "pygame", "sounddevice"],
     hookspath=[],
     runtime_hooks=[],
-    excludes=["torch", "transformers", "piper", "onnxruntime", "librosa", "scipy"],
+    excludes=["torch", "transformers", "chatterbox", "onnxruntime", "librosa", "scipy"],
     noarchive=False,
 )
 pyz = PYZ(analysis.pure)

@@ -9,6 +9,7 @@ __pycache__/
 .coverage
 htmlcov/
 build/
+build-env/
 dist/
 .idea/
 .vscode/

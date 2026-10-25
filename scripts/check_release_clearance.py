@@ -8,7 +8,7 @@ def main() -> int:
     root = Path(__file__).resolve().parents[1]
     path = root / "distribution/release-clearance.json"
     raw = json.loads(path.read_text(encoding="utf-8"))
-    required = ("radio_cue_source_cleared", "turkish_voice_distribution_reviewed")
+    required = ("radio_cue_source_cleared", "speech_model_distribution_reviewed")
     missing = [name for name in required if raw.get(name) is not True]
     if missing:
         print("Public release blocked: " + ", ".join(missing))
