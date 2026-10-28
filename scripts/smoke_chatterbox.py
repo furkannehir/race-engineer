@@ -24,7 +24,11 @@ async def smoke(config_path: Path, *, play_audio: bool, output_device: int | Non
     try:
         await backend.start()
         pid = backend.worker_pid
-        print(f"Chatterbox ready: device={backend.effective_device}, worker={pid}", flush=True)
+        print(
+            f"Chatterbox ready: device={backend.effective_device}, "
+            f"T3={backend.effective_precision}, decoder=fp32, worker={pid}",
+            flush=True,
+        )
         for language, text in (
             ("en", "Radio check. Your race engineer is ready."),
             ("tr", "Telsiz kontrolü. Yarış mühendisin hazır."),

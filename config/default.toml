@@ -58,6 +58,8 @@ python_path = "data/tts-chatterbox/runtime/Scripts/python.exe"
 model_path = "data/components/tts/chatterbox/5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18"
 # Prefer CUDA when usable; CPU fallback is announced and may be too slow for racing.
 device = "auto"
+# BF16 T3 on supported CUDA; FP32 decoder and CPU. Set "fp32" for rollback.
+precision = "auto"
 fallback_to_cpu = true
 volume = 0.8
 threads = 4

@@ -95,6 +95,7 @@ class TtsConfig(ConfigModel):
     worker_path: Path | None = None
     model_path: Path = Path("data/components") / MODEL_RELATIVE
     device: Literal["auto", "cpu", "cuda"] = "auto"
+    precision: Literal["auto", "fp32", "bf16"] = "auto"
     fallback_to_cpu: bool = True
     output_device: int | None = Field(default=None, ge=0)
     volume: float = Field(default=0.8, ge=0, le=1, allow_inf_nan=False)

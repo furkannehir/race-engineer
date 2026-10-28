@@ -63,8 +63,45 @@ def select_device(torch: Any, requested: str, fallback: bool) -> tuple[str, str 
     return "cpu", "CUDA unavailable; using CPU speech. Real-time performance is not guaranteed."
 
 
+def select_precision(torch: Any, device: str, requested: str) -> tuple[str, str | None]:
+    if requested not in {"auto", "fp32", "bf16"}:
+        raise ValueError("tts_precision_invalid")
+    if device == "cpu" or requested == "fp32":
+        return "fp32", None
+    if torch.cuda.is_bf16_supported(including_emulation=False):
+        return "bf16", None
+    if requested == "bf16":
+        raise RuntimeError("tts_bf16_unavailable")
+    return "fp32", "Native BF16 unavailable; Chatterbox is using FP32 CUDA speech."
+
+
+def place_bf16_cuda(model: Any, torch: Any) -> None:
+    """Convert T3 on CPU before CUDA placement; leave decoder/IDs in their original dtype."""
+    model.t3.to(dtype=torch.bfloat16)
+    model.conds.t3.to(dtype=torch.bfloat16)
+    model.t3.to(device="cuda")
+    model.s3gen.to(device="cuda", dtype=torch.float32)
+    model.ve.to(device="cuda", dtype=torch.float32)
+    model.conds.to("cuda")
+    model.device = "cuda"
+
+
+def model_precision(model: Any) -> str:
+    dtype = str(next(model.t3.parameters()).dtype)
+    if dtype not in {"torch.float32", "torch.bfloat16"}:
+        raise RuntimeError("tts_precision_invalid")
+    return "bf16" if dtype == "torch.bfloat16" else "fp32"
+
+
+def validate_model(model: Any) -> None:
+    if model.conds is None:
+        raise RuntimeError("tts_default_voice_missing")
+    if not {"en", "tr"}.issubset(model.get_supported_languages()):
+        raise RuntimeError("tts_languages_missing")
+
+
 def load_model(
-    model_path: Path, device: str, fallback: bool, threads: int
+    model_path: Path, device: str, fallback: bool, threads: int, *, precision: str = "auto"
 ) -> tuple[Any, str, str | None]:
     if importlib.metadata.version("chatterbox-tts") != CHATTERBOX_VERSION:
         raise RuntimeError("tts_version_mismatch")
@@ -74,20 +111,33 @@ def load_model(
     torch.set_num_threads(threads)
     api = importlib.import_module("chatterbox.mtl_tts")
     selected, warning = select_device(torch, device, fallback)
+    effective_precision, precision_warning = select_precision(torch, selected, precision)
+    warning = warning or precision_warning
+    retry_cpu = False
+    model = None
     try:
-        model = api.ChatterboxMultilingualTTS.from_local(model_path, device=selected)
-    except torch.cuda.OutOfMemoryError:
-        if selected != "cuda" or not fallback:
+        # BF16 must not first allocate full FP32 weights on the GPU. Explicit FP32
+        # and CPU retain the existing upstream loading path.
+        load_device = "cpu" if effective_precision == "bf16" else selected
+        model = api.ChatterboxMultilingualTTS.from_local(model_path, device=load_device)
+        validate_model(model)
+        if effective_precision == "bf16":
+            place_bf16_cuda(model, torch)
+    except Exception as error:
+        if selected != "cuda" or not fallback or not isinstance(error, torch.cuda.OutOfMemoryError):
             raise
+        retry_cpu = True
+    if retry_cpu:
+        # Leave the exception block before releasing partially placed weights: a
+        # traceback can otherwise retain CUDA tensors. Reload original CPU weights,
+        # not BF16 weights upcast to FP32, only on this exceptional startup path.
+        model = None
         gc.collect()
         torch.cuda.empty_cache()
         selected = "cpu"
-        warning = "Insufficient CUDA memory; CPU speech may miss racing deadlines."
+        warning = "Insufficient CUDA memory; using original FP32 CPU speech (not real-time)."
         model = api.ChatterboxMultilingualTTS.from_local(model_path, device=selected)
-    if model.conds is None:
-        raise RuntimeError("tts_default_voice_missing")
-    if not {"en", "tr"}.issubset(model.get_supported_languages()):
-        raise RuntimeError("tts_languages_missing")
+        validate_model(model)
     return model, selected, warning
 
 
@@ -259,6 +309,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", type=Path, required=True)
     parser.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
+    parser.add_argument("--precision", choices=("auto", "fp32", "bf16"), default="auto")
     parser.add_argument("--no-cpu-fallback", action="store_true")
     parser.add_argument("--threads", type=int, default=4)
     parser.add_argument("--volume", type=float, default=0.8)
@@ -269,7 +320,11 @@ def main() -> None:
     try:
         with redirect_stdout(sys.stderr):
             model, device, warning = load_model(
-                args.model, args.device, not args.no_cpu_fallback, args.threads
+                args.model,
+                args.device,
+                not args.no_cpu_fallback,
+                args.threads,
+                precision=args.precision,
             )
             # Pay lazy CUDA/vocoder initialization before any deadline-bound race
             # speech. This fixed authored check is neither played nor persisted.
@@ -283,6 +338,8 @@ def main() -> None:
             {
                 "ready": True,
                 "device": device,
+                "precision": model_precision(model),
+                "decoder_precision": "fp32",
                 "warning": warning,
                 "version": CHATTERBOX_VERSION,
                 "initialization_ms": round((time.perf_counter() - started) * 1000, 3),
@@ -296,6 +353,8 @@ def main() -> None:
             "tts_default_voice_missing",
             "tts_languages_missing",
             "tts_cuda_unavailable",
+            "tts_bf16_unavailable",
+            "tts_precision_invalid",
         }
         send({"error": code if code in allowed else "tts_model_load_failed"})
         return

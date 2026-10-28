@@ -41,8 +41,9 @@ validation remain open. See the [live run guide](docs/live-conversation.md) and
 [current roadmap / next task](docs/roadmap.md).
 
 The standard edition on `main` uses **Qwen3-4B on NVIDIA/CUDA** for context planning
-and replies; Qwen3-ASR stays on CPU. Chatterbox independently prefers CUDA, with a
-visible CPU fallback that may not meet racing deadlines. The normal `start-panel.cmd` now
+and replies; Qwen3-ASR stays on CPU. Chatterbox independently prefers CUDA, using
+BF16 T3 on supported GPUs and an FP32 audio decoder. Its visible FP32 CPU fallback
+may not meet racing deadlines. The normal `start-panel.cmd` now
 uses the GPU configuration directly, with no silent CPU fallback or external-server
 reuse. See [GPU setup and measurements](docs/qwen-gpu-trial.md). The existing packaged
 `.exe` Qwen component installer remains CPU-only; packaged Qwen GPU distribution, compute UI

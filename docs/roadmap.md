@@ -1,6 +1,6 @@
 # Working roadmap
 
-Updated 2026-10-25. This is the current progress/backlog companion to the original
+Updated 2026-10-28. This is the current progress/backlog companion to the original
 [implementation plan](personalized-ai-race-engineer-implementation-plan.docx), not a claim
 that every original milestone exit criterion has been formally validated.
 
@@ -13,6 +13,14 @@ preferred with visible CPU fallback. The existing radio priorities, cleanup and
 freshness boundaries remain. Windows setup/worker packaging and pinned assets were
 updated; listening, combined race-load performance and rebuilt executable acceptance
 remain separate checks. See [the speech guide](text-to-speech.md).
+
+October 28 memory tuning: the driver accepted the BF16 speech candidate after the
+isolated EN/TR comparison. Shared Chatterbox speech now defaults to native BF16
+T3 on supported CUDA, with the decoder and CPU path remaining FP32. The benchmark
+saved about 1 GiB of tensor memory but did not improve synthesis latency; explicit
+FP32 rollback remains available. Real bilingual routing, interruption and shutdown
+checks passed. Combined iRacing/Qwen contention and longer race acceptance remain
+open; no other model or radio-cue changes are included.
 
 Priority decision, October 12: stabilize Qwen request understanding before adding
 race-start features or doing further speed tuning. Reproduce the observed failures

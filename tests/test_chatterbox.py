@@ -23,8 +23,11 @@ from race_engineer.tts.chatterbox_worker import (
     SpeechCancelled,
     check_cancelled,
     load_model,
+    model_precision,
+    place_bf16_cuda,
     play_pcm,
     select_device,
+    select_precision,
     synthesize_pcm,
 )
 from race_engineer.tts.live_radio import LiveRadio
@@ -52,8 +55,14 @@ def settings(tmp_path, **kwargs):
     return TtsConfig(python_path=python, model_path=model, **kwargs)
 
 
-def ready(device="cuda"):
-    return {"ready": True, "device": device, "version": CHATTERBOX_VERSION}
+def ready(device="cuda", precision=None):
+    return {
+        "ready": True,
+        "device": device,
+        "version": CHATTERBOX_VERSION,
+        "precision": precision or ("bf16" if device == "cuda" else "fp32"),
+        "decoder_precision": "fp32",
+    }
 
 
 def done(identifier, language="en", played=True):
@@ -103,6 +112,7 @@ def test_one_worker_default_voice_for_replies_and_announcements(tmp_path, monkey
     asyncio.run(run())
     assert len(calls) == 1 and process.killed
     args, kwargs = calls[0]
+    assert args[args.index("--precision") + 1] == "auto"
     assert private not in repr((args, kwargs)) and "shell" not in kwargs
     assert args[-2:] == ("--output-device", "7")
     assert kwargs["env"]["HF_HUB_OFFLINE"] == "1"
@@ -636,7 +646,11 @@ def test_cuda_load_oom_falls_back_to_same_default_model_on_cpu(tmp_path, monkeyp
 
     torch = SimpleNamespace(
         set_num_threads=lambda _: None,
-        cuda=SimpleNamespace(OutOfMemoryError=MemoryError, empty_cache=lambda: None),
+        cuda=SimpleNamespace(
+            OutOfMemoryError=MemoryError,
+            empty_cache=lambda: None,
+            is_bf16_supported=lambda **_: False,
+        ),
     )
     api = SimpleNamespace(ChatterboxMultilingualTTS=SimpleNamespace(from_local=from_local))
     monkeypatch.setattr(
@@ -653,3 +667,148 @@ def test_cuda_load_oom_falls_back_to_same_default_model_on_cpu(tmp_path, monkeyp
     actual, device, warning = load_model(config.model_path, "auto", True, 4)
     assert actual is model and device == "cpu" and warning
     assert calls == ["cuda", "cpu"]
+
+
+@pytest.mark.parametrize(
+    "device,requested,native,expected",
+    [
+        ("cuda", "auto", True, "bf16"),
+        ("cuda", "auto", False, "fp32"),
+        ("cuda", "bf16", True, "bf16"),
+        ("cuda", "fp32", True, "fp32"),
+        ("cpu", "auto", False, "fp32"),
+        ("cpu", "bf16", False, "fp32"),
+    ],
+)
+def test_precision_selection_is_hardware_aware_and_cpu_stays_fp32(
+    device, requested, native, expected
+):
+    torch = SimpleNamespace(cuda=SimpleNamespace(is_bf16_supported=lambda **_: native))
+    actual, warning = select_precision(torch, device, requested)
+    assert actual == expected
+    assert bool(warning) == (device == "cuda" and requested == "auto" and not native)
+    if not native:
+        with pytest.raises(RuntimeError, match="tts_bf16_unavailable"):
+            select_precision(torch, "cuda", "bf16")
+
+
+def test_bf16_placement_matches_benchmarked_boundary_and_casts_before_cuda():
+    calls = []
+
+    def module(name):
+        return SimpleNamespace(to=lambda **kwargs: calls.append((name, kwargs)))
+
+    model = SimpleNamespace(
+        t3=module("t3"),
+        s3gen=module("decoder"),
+        ve=module("ve"),
+        conds=SimpleNamespace(
+            t3=module("t3_cond"), to=lambda device: calls.append(("conds", device))
+        ),
+    )
+    place_bf16_cuda(model, SimpleNamespace(bfloat16="bf16", float32="fp32"))
+    assert calls == [
+        ("t3", {"dtype": "bf16"}),
+        ("t3_cond", {"dtype": "bf16"}),
+        ("t3", {"device": "cuda"}),
+        ("decoder", {"device": "cuda", "dtype": "fp32"}),
+        ("ve", {"device": "cuda", "dtype": "fp32"}),
+        ("conds", "cuda"),
+    ]
+    assert model.device == "cuda"
+
+
+@pytest.mark.parametrize("oom", [False, True])
+def test_bf16_loader_stages_on_cpu_and_oom_recovers_original_cpu_weights(
+    tmp_path, monkeypatch, oom
+):
+    config = settings(tmp_path)
+    models, placements = [], []
+
+    def from_local(path, device):
+        assert device == "cpu"  # No full-precision CUDA staging for BF16.
+        model = SimpleNamespace(
+            conds=object(), get_supported_languages=lambda: {"en": "", "tr": ""}
+        )
+        models.append(model)
+        return model
+
+    def place(model, torch):
+        placements.append(model)
+        if oom:
+            raise MemoryError()
+
+    torch = SimpleNamespace(
+        set_num_threads=lambda _: None,
+        cuda=SimpleNamespace(
+            OutOfMemoryError=MemoryError,
+            empty_cache=lambda: None,
+            is_bf16_supported=lambda **_: True,
+        ),
+    )
+    api = SimpleNamespace(ChatterboxMultilingualTTS=SimpleNamespace(from_local=from_local))
+    monkeypatch.setattr(
+        "race_engineer.tts.chatterbox_worker.importlib.metadata.version",
+        lambda _: CHATTERBOX_VERSION,
+    )
+    monkeypatch.setattr(
+        "race_engineer.tts.chatterbox_worker.importlib.import_module",
+        lambda name: torch if name == "torch" else api,
+    )
+    monkeypatch.setattr(
+        "race_engineer.tts.chatterbox_worker.select_device", lambda *_: ("cuda", None)
+    )
+    monkeypatch.setattr("race_engineer.tts.chatterbox_worker.place_bf16_cuda", place)
+    actual, device, warning = load_model(config.model_path, "auto", True, 4)
+    assert actual is models[-1] and placements == models[:1]
+    assert len(models) == (2 if oom else 1)
+    assert device == ("cpu" if oom else "cuda")
+    assert bool(warning) == oom
+    if oom:
+        with pytest.raises(MemoryError):
+            load_model(config.model_path, "auto", False, 4)
+
+
+@pytest.mark.parametrize("requested,actual", [("fp32", "bf16"), ("bf16", "fp32"), ("auto", "fp16")])
+def test_backend_rejects_unexpected_precision_instead_of_claiming_bf16(
+    tmp_path, monkeypatch, requested, actual
+):
+    process = FakeProcess([ready(precision=actual)])
+    install_process(monkeypatch, process)
+    backend = ChatterboxSpeechBackend(settings(tmp_path, precision=requested))
+    with pytest.raises(SpeechOutputError, match="tts_precision_invalid"):
+        asyncio.run(backend.start())
+    assert process.killed
+
+
+def test_effective_precision_is_logged_and_explicit_fp32_rollback_is_forwarded(
+    tmp_path, monkeypatch, caplog
+):
+    process = FakeProcess(
+        [ready(precision="fp32") | {"warning": "Native BF16 unavailable; using FP32."}]
+    )
+    calls = install_process(monkeypatch, process)
+    notices = []
+    backend = ChatterboxSpeechBackend(settings(tmp_path, precision="fp32"), notice=notices.append)
+
+    async def run():
+        await backend.start()
+        assert backend.effective_precision == "fp32"
+        await backend.aclose()
+
+    with caplog.at_level("INFO"):
+        asyncio.run(run())
+    assert notices and "FP32" in notices[0]
+    assert calls[0][0][calls[0][0].index("--precision") + 1] == "fp32"
+    entry = next(record for record in caplog.records if getattr(record, "event", "") == "tts_ready")
+    assert entry.precision == entry.decoder_precision == "fp32"
+    fake_model = SimpleNamespace(
+        t3=SimpleNamespace(parameters=lambda: iter([SimpleNamespace(dtype="torch.bfloat16")]))
+    )
+    assert model_precision(fake_model) == "bf16"
+
+
+def test_precision_config_defaults_and_validation():
+    assert TtsConfig().precision == "auto"
+    with pytest.raises(ValidationError):
+        TtsConfig(precision="fp16")

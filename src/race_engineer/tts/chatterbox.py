@@ -33,6 +33,7 @@ class ChatterboxSpeechBackend:
         self._closed = False
         self._sequence = 0
         self.effective_device: str | None = None
+        self.effective_precision: str | None = None
 
     def _report(self, message: str) -> None:
         _LOGGER.warning(message, extra={"event": "tts_notice"})
@@ -105,6 +106,8 @@ class ChatterboxSpeechBackend:
             str(self._config.model_path.resolve()),
             "--device",
             self._config.device,
+            "--precision",
+            self._config.precision,
             "--threads",
             str(self._config.threads),
             "--volume",
@@ -135,22 +138,37 @@ class ChatterboxSpeechBackend:
                 "tts_default_voice_missing",
                 "tts_cuda_unavailable",
                 "tts_languages_missing",
+                "tts_bf16_unavailable",
+                "tts_precision_invalid",
             }
             reason = ready.get("error")
             raise SpeechOutputError(str(reason) if reason in allowed else "tts_model_load_failed")
         if ready.get("device") not in {"cpu", "cuda"}:
             raise SpeechOutputError("tts_protocol_error")
         self.effective_device = str(ready["device"])
+        self.effective_precision = str(ready.get("precision"))
+        if (
+            self.effective_precision not in {"fp32", "bf16"}
+            or ready.get("decoder_precision") != "fp32"
+        ):
+            raise SpeechOutputError("tts_precision_invalid")
+        expected_precision = "fp32" if self.effective_device == "cpu" else self._config.precision
+        if expected_precision != "auto" and self.effective_precision != expected_precision:
+            raise SpeechOutputError("tts_precision_invalid")
         if self.effective_device == "cpu":
             self._report(
-                "Chatterbox is using CPU (selected or CUDA unavailable/insufficient memory); "
+                "Chatterbox is using FP32 CPU (selected or CUDA unavailable/insufficient memory); "
                 "real-time speech performance is not guaranteed."
             )
+        elif ready.get("warning"):
+            self._report(str(ready["warning"]))
         _LOGGER.info(
             "Chatterbox default voice ready",
             extra={
                 "event": "tts_ready",
                 "device": self.effective_device,
+                "precision": self.effective_precision,
+                "decoder_precision": "fp32",
                 "version": CHATTERBOX_VERSION,
                 "initialization_ms": ready.get("initialization_ms"),
             },
