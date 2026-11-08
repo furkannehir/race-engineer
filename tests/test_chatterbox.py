@@ -24,7 +24,6 @@ from race_engineer.tts.chatterbox_worker import (
     check_cancelled,
     load_model,
     model_precision,
-    place_bf16_cuda,
     play_pcm,
     select_device,
     select_precision,
@@ -80,6 +79,7 @@ def done(identifier, language="en", played=True):
 
 def install_process(monkeypatch, process):
     calls = []
+    process.pid = 12345
 
     async def spawn(*args, **kwargs):
         calls.append((args, kwargs))
@@ -148,6 +148,79 @@ def test_expired_audio_is_discarded_without_reloading_the_model(tmp_path, monkey
     assert len(calls) == 1
     assert process.stdin.lines[1] == {"command": "cancel", "id": 1}
     assert not any(line.get("command") == "play" for line in process.stdin.lines)
+
+
+def test_backend_reports_playback_only_after_freshness_accepts_prepared_audio(
+    tmp_path, monkeypatch
+):
+    process = FakeProcess(
+        [
+            ready(),
+            {"id": 1, "prepared": True},
+            done(1),
+            {"id": 2, "prepared": True},
+            {"id": 2, "cancel_ack": True},
+        ]
+    )
+    install_process(monkeypatch, process)
+    activity = []
+    backend = ChatterboxSpeechBackend(settings(tmp_path), activity=activity.append)
+
+    def guard(accepted):
+        assert activity[-1] == "preparing"
+        return accepted
+
+    async def run():
+        await backend.speak(reply(), before_playback=lambda: guard(True), preparation_timeout_s=1)
+        assert activity == ["preparing", "speaking", "idle"]
+        with pytest.raises(SpeechOutputError, match="tts_reply_expired"):
+            await backend.speak(
+                reply(), before_playback=lambda: guard(False), preparation_timeout_s=1
+            )
+        assert activity == ["preparing", "speaking", "idle", "preparing", "idle"]
+        await backend.aclose()
+
+    asyncio.run(run())
+
+
+def test_preparation_timeout_cancels_worker_and_reuses_it_for_next_request(tmp_path, monkeypatch):
+    class SlowProcess(FakeProcess):
+        def __init__(self):
+            super().__init__([])
+            self.messages = asyncio.Queue()
+            self.messages.put_nowait(ready())
+            self.stdout = self
+            self.stdin.write = self.write
+
+        def write(self, raw):
+            message = json.loads(raw)
+            self.stdin.lines.append(message)
+            if message.get("command") == "cancel":
+                self.messages.put_nowait({"id": message["id"], "cancel_ack": True})
+            elif message.get("id") == 2 and "text" in message:
+                self.messages.put_nowait({"id": 2, "prepared": True})
+            elif message.get("command") == "play":
+                self.messages.put_nowait(done(message["id"]))
+
+        async def readline(self):
+            return json.dumps(await self.messages.get()).encode() + b"\n"
+
+    process = SlowProcess()
+    calls = install_process(monkeypatch, process)
+    backend = ChatterboxSpeechBackend(settings(tmp_path))
+
+    async def run():
+        with pytest.raises(SpeechOutputError, match="tts_reply_expired"):
+            await backend.speak(reply(), preparation_timeout_s=0.01)
+        assert not process.killed
+        assert (await backend.speak(reply(), preparation_timeout_s=1)).played
+        await backend.aclose()
+
+    asyncio.run(run())
+    assert len(calls) == 1
+    assert not any(
+        line.get("command") == "play" and line["id"] == 1 for line in process.stdin.lines
+    )
 
 
 class InteractiveProcess(FakeProcess):
@@ -640,9 +713,11 @@ def test_cuda_load_oom_falls_back_to_same_default_model_on_cpu(tmp_path, monkeyp
 
     def from_local(path, device):
         calls.append(device)
-        if device == "cuda":
-            raise MemoryError()
+        assert device == "cpu"
         return model
+
+    def place(*args, **kwargs):
+        raise MemoryError()
 
     torch = SimpleNamespace(
         set_num_threads=lambda _: None,
@@ -664,9 +739,10 @@ def test_cuda_load_oom_falls_back_to_same_default_model_on_cpu(tmp_path, monkeyp
     monkeypatch.setattr(
         "race_engineer.tts.chatterbox_worker.select_device", lambda *_: ("cuda", None)
     )
+    monkeypatch.setattr("race_engineer.tts.chatterbox_worker.place_default_voice_cuda", place)
     actual, device, warning = load_model(config.model_path, "auto", True, 4)
     assert actual is model and device == "cpu" and warning
-    assert calls == ["cuda", "cpu"]
+    assert calls == ["cpu", "cpu"]
 
 
 @pytest.mark.parametrize(
@@ -692,48 +768,24 @@ def test_precision_selection_is_hardware_aware_and_cpu_stays_fp32(
             select_precision(torch, "cuda", "bf16")
 
 
-def test_bf16_placement_matches_benchmarked_boundary_and_casts_before_cuda():
-    calls = []
-
-    def module(name):
-        return SimpleNamespace(to=lambda **kwargs: calls.append((name, kwargs)))
-
-    model = SimpleNamespace(
-        t3=module("t3"),
-        s3gen=module("decoder"),
-        ve=module("ve"),
-        conds=SimpleNamespace(
-            t3=module("t3_cond"), to=lambda device: calls.append(("conds", device))
-        ),
-    )
-    place_bf16_cuda(model, SimpleNamespace(bfloat16="bf16", float32="fp32"))
-    assert calls == [
-        ("t3", {"dtype": "bf16"}),
-        ("t3_cond", {"dtype": "bf16"}),
-        ("t3", {"device": "cuda"}),
-        ("decoder", {"device": "cuda", "dtype": "fp32"}),
-        ("ve", {"device": "cuda", "dtype": "fp32"}),
-        ("conds", "cuda"),
-    ]
-    assert model.device == "cuda"
-
-
 @pytest.mark.parametrize("oom", [False, True])
-def test_bf16_loader_stages_on_cpu_and_oom_recovers_original_cpu_weights(
-    tmp_path, monkeypatch, oom
+@pytest.mark.parametrize("precision", ["bf16", "fp32"])
+def test_cuda_loader_stages_on_cpu_and_oom_recovers_original_cpu_weights(
+    tmp_path, monkeypatch, oom, precision
 ):
     config = settings(tmp_path)
     models, placements = [], []
 
     def from_local(path, device):
-        assert device == "cpu"  # No full-precision CUDA staging for BF16.
+        assert device == "cpu"  # Reference-only weights never stage on CUDA.
         model = SimpleNamespace(
             conds=object(), get_supported_languages=lambda: {"en": "", "tr": ""}
         )
         models.append(model)
         return model
 
-    def place(model, torch):
+    def place(model, torch, **kwargs):
+        assert kwargs == {"precision": precision}
         placements.append(model)
         if oom:
             raise MemoryError()
@@ -758,15 +810,15 @@ def test_bf16_loader_stages_on_cpu_and_oom_recovers_original_cpu_weights(
     monkeypatch.setattr(
         "race_engineer.tts.chatterbox_worker.select_device", lambda *_: ("cuda", None)
     )
-    monkeypatch.setattr("race_engineer.tts.chatterbox_worker.place_bf16_cuda", place)
-    actual, device, warning = load_model(config.model_path, "auto", True, 4)
+    monkeypatch.setattr("race_engineer.tts.chatterbox_worker.place_default_voice_cuda", place)
+    actual, device, warning = load_model(config.model_path, "auto", True, 4, precision=precision)
     assert actual is models[-1] and placements == models[:1]
     assert len(models) == (2 if oom else 1)
     assert device == ("cpu" if oom else "cuda")
     assert bool(warning) == oom
     if oom:
         with pytest.raises(MemoryError):
-            load_model(config.model_path, "auto", False, 4)
+            load_model(config.model_path, "auto", False, 4, precision=precision)
 
 
 @pytest.mark.parametrize("requested,actual", [("fp32", "bf16"), ("bf16", "fp32"), ("auto", "fp16")])

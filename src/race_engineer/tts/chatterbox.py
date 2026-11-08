@@ -16,7 +16,8 @@ from race_engineer.core.conversation import ConversationReply, RadioLanguage
 from race_engineer.core.enums import PlaybackStatus
 from race_engineer.core.speech_output import SpeechOutputError, SpeechOutputResult
 from race_engineer.processes import start_owned_process
-from race_engineer.tts_metadata import CHATTERBOX_VERSION, MODEL_FILES
+from race_engineer.radio_diagnostics import radio_event
+from race_engineer.tts_metadata import CHATTERBOX_VERSION, model_files
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,9 +25,16 @@ _LOGGER = logging.getLogger(__name__)
 class ChatterboxSpeechBackend:
     """A session owns this instance. No torch imports, synthesis or playback in the host."""
 
-    def __init__(self, config: TtsConfig, *, notice: Callable[[str], None] | None = None) -> None:
+    def __init__(
+        self,
+        config: TtsConfig,
+        *,
+        notice: Callable[[str], None] | None = None,
+        activity: Callable[[str], None] | None = None,
+    ) -> None:
         self._config = config
         self._notice = notice
+        self._activity_sink = activity
         self._process: asyncio.subprocess.Process | None = None
         self._lock = asyncio.Lock()
         self._failed: str | None = None
@@ -49,6 +57,13 @@ class ChatterboxSpeechBackend:
     @property
     def worker_pid(self) -> int | None:
         return self._process.pid if self._process is not None else None
+
+    def _activity(self, value: str) -> None:
+        if self._activity_sink is not None:
+            try:
+                self._activity_sink(value)
+            except Exception:
+                _LOGGER.warning("Speech status unavailable", extra={"event": "tts_activity_failed"})
 
     async def _stop(self) -> None:
         process, self._process = self._process, None
@@ -93,7 +108,10 @@ class ChatterboxSpeechBackend:
         runtime = worker or self._config.python_path
         if not runtime.is_file():
             raise SpeechOutputError("tts_runtime_missing")
-        if any(not (self._config.model_path / name).is_file() for name in MODEL_FILES):
+        if any(
+            not (self._config.model_path / name).is_file()
+            for name in model_files(self._config.model_variant)
+        ):
             raise SpeechOutputError("tts_model_missing")
         command = (
             [str(worker.resolve())]
@@ -113,6 +131,8 @@ class ChatterboxSpeechBackend:
             "--volume",
             str(self._config.volume),
         ]
+        if self._config.model_variant == "v3":
+            arguments.extend(("--model-variant", "v3"))
         if not self._config.fallback_to_cpu:
             arguments.append("--no-cpu-fallback")
         if self._config.output_device is not None:
@@ -140,9 +160,13 @@ class ChatterboxSpeechBackend:
                 "tts_languages_missing",
                 "tts_bf16_unavailable",
                 "tts_precision_invalid",
+                "tts_model_variant_unsupported",
+                "tts_default_voice_layout_unsupported",
             }
             reason = ready.get("error")
             raise SpeechOutputError(str(reason) if reason in allowed else "tts_model_load_failed")
+        if ready.get("model_variant", "v2") != self._config.model_variant:
+            raise SpeechOutputError("tts_model_variant_mismatch")
         if ready.get("device") not in {"cpu", "cuda"}:
             raise SpeechOutputError("tts_protocol_error")
         self.effective_device = str(ready["device"])
@@ -166,9 +190,14 @@ class ChatterboxSpeechBackend:
             "Chatterbox default voice ready",
             extra={
                 "event": "tts_ready",
+                "model_variant": self._config.model_variant,
+                "worker_pid": self.worker_pid,
+                "cuda_allocated_mib": ready.get("cuda_allocated_mib"),
+                "cuda_reserved_mib": ready.get("cuda_reserved_mib"),
                 "device": self.effective_device,
                 "precision": self.effective_precision,
                 "decoder_precision": "fp32",
+                "reference_modules_device": ready.get("reference_modules_device"),
                 "version": CHATTERBOX_VERSION,
                 "initialization_ms": ready.get("initialization_ms"),
             },
@@ -235,6 +264,7 @@ class ChatterboxSpeechBackend:
         *,
         play_audio: bool = True,
         before_playback: Callable[[], bool] | None = None,
+        preparation_timeout_s: float | None = None,
     ) -> SpeechOutputResult:
         async with self._lock:
             await self._ensure_started()
@@ -254,16 +284,32 @@ class ChatterboxSpeechBackend:
                     }
                 )
                 sent = True
-                response = await self._read()
+                self._activity("preparing")
+                if preparation_timeout_s is None:
+                    response = await self._read()
+                else:
+                    try:
+                        response = await asyncio.wait_for(self._read(), preparation_timeout_s)
+                    except TimeoutError as error:
+                        radio_event("radio_tts_discarded", reason="preparation_timeout")
+                        await self._cleanup_cancelled(identifier)
+                        raise SpeechOutputError("tts_reply_expired") from error
                 if response.get("id") != identifier:
                     raise SpeechOutputError("tts_protocol_error")
                 if play_audio:
                     if response.get("prepared") is not True:
                         raise SpeechOutputError("tts_generation_or_playback_failed")
+                    radio_event(
+                        "radio_tts_prepared",
+                        synthesis_ms=response.get("synthesis_ms"),
+                        audio_duration_s=response.get("audio_duration_s"),
+                    )
                     if before_playback is not None and not before_playback():
                         await self._cancel_request(identifier)
                         raise SpeechOutputError("tts_reply_expired")
                     await self._send({"command": "play", "id": identifier})
+                    self._activity("speaking")
+                    radio_event("radio_playback_started")
                     response = await self._read()
                 if response.get("id") != identifier or "error" in response:
                     raise SpeechOutputError("tts_generation_or_playback_failed")
@@ -295,6 +341,8 @@ class ChatterboxSpeechBackend:
                         f"Speech failed ({reason}); telemetry continues. No voice fallback."
                     )
                 raise SpeechOutputError(reason) from error
+            finally:
+                self._activity("idle")
 
     async def aclose(self) -> None:
         self._closed = True

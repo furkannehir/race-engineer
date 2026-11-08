@@ -219,6 +219,7 @@ async def live_dialogue(
         else None
     )
     recent_dialogue: deque[str] = deque(maxlen=config.conversation.history_entry_limit)
+    history_epoch = state.epoch
     turn_sequence = 0
     microphone: PushToTalkMicrophone | None = None
     run_id = uuid.uuid4().hex
@@ -233,11 +234,14 @@ async def live_dialogue(
             "record_raw_telemetry": config.privacy.record_raw_telemetry,
             "model": config.conversation.model,
             "model_timeout_s": config.conversation.timeout_s,
+            "context_planner": config.conversation.context_planner,
+            "reply_delivery_timeout_s": config.conversation.reply_delivery_timeout_s,
             "stt_timeout_s": stt.timeout_s,
             "stt_threads": stt.threads,
             "min_capture_s": stt.min_capture_s,
             "silence_threshold_dbfs": stt.silence_threshold_dbfs,
             "reply_voice_enabled": speaker is not None,
+            "tts_model_variant": config.tts.model_variant,
         },
     )
     try:
@@ -284,6 +288,9 @@ async def live_dialogue(
         )
         print("Critical calls interrupt speech/capture. Release the key and ask again afterwards.")
         while True:
+            if history_epoch != state.epoch:
+                recent_dialogue.clear()
+                history_epoch = state.epoch
             if control:
                 control.emit("phase", "ready")
             trace = RadioTrace(
@@ -392,6 +399,7 @@ async def live_dialogue(
                 if epoch != state.epoch or not state.available:
                     raise LiveTelemetryUnavailable()
                 print(f"ASR + reply processing: {time.perf_counter() - started:.2f}s")
+                prepared_at = time.perf_counter()
                 delivery = {"outcome": "not_started"}
 
                 async def deliver(
@@ -401,6 +409,7 @@ async def live_dialogue(
                     question: str = transcript.text,
                     trace: RadioTrace = trace,
                     delivery: dict[str, str] = delivery,
+                    prepared_at: float = prepared_at,
                 ) -> None:
                     if queued_response is not None:
                         if state.epoch != answer_epoch or not state.available:
@@ -419,7 +428,6 @@ async def live_dialogue(
                             raise LiveTelemetryUnavailable("live_session_changed")
                         if grounded.action == "silence":
                             delivery["outcome"] = "silence"
-                            recent_dialogue.extend((f"driver: {question}", "engineer: [silence]"))
                             return
                         assert grounded.text is not None
                         refreshed = ConversationReply(
@@ -432,9 +440,6 @@ async def live_dialogue(
                             source_sequence=grounded.source_sequence,
                             mode="live",
                         )
-                        recent_dialogue.extend(
-                            (f"driver: {question}", f"engineer: {grounded.text}")
-                        )
                     else:
                         assert queued_answer is not None
                         refreshed = state.refresh(queued_answer, answer_epoch)
@@ -445,20 +450,35 @@ async def live_dialogue(
                             language=refreshed.language,
                             source_sequence=refreshed.source_sequence,
                         )
-                    observed_at = state.snapshot().context.frame.observed_at
                     print(f"Engineer ({refreshed.language}): {refreshed.text}", flush=True)
                     if speaker is not None:
 
                         def still_current() -> bool:
-                            age = (datetime.now(UTC) - observed_at).total_seconds()
-                            return (
-                                state.available
-                                and state.epoch == answer_epoch
-                                and 0 <= age <= config.conversation.max_snapshot_age_s
+                            reason = (
+                                "session_changed"
+                                if state.epoch != answer_epoch
+                                else "telemetry_unavailable"
+                                if not state.available
+                                else "delivery_timeout"
+                                if time.perf_counter() - prepared_at
+                                >= config.conversation.reply_delivery_timeout_s
+                                else None
                             )
+                            if reason is not None:
+                                trace.event("radio_reply_discarded", reason=reason)
+                            return reason is None
 
                         with radio_stage("tts"):
-                            result = await speaker.speak(refreshed, before_playback=still_current)
+                            remaining = config.conversation.reply_delivery_timeout_s - (
+                                time.perf_counter() - prepared_at
+                            )
+                            if remaining <= 0:
+                                raise SpeechOutputError("tts_reply_expired")
+                            result = await speaker.speak(
+                                refreshed,
+                                before_playback=still_current,
+                                preparation_timeout_s=remaining,
+                            )
                             trace.event(
                                 "radio_tts_result",
                                 played=result.played,
@@ -469,6 +489,13 @@ async def live_dialogue(
                         delivery["outcome"] = "spoken" if result.played else "not_played"
                     else:
                         delivery["outcome"] = "text_only"
+                    if (
+                        delivery["outcome"] == "spoken" or (speaker is None and control is None)
+                    ) and state.epoch == answer_epoch:
+                        recent_dialogue.extend(
+                            (f"driver: {question}", f"engineer: {refreshed.text}")
+                        )
+                        trace.event("radio_dialogue_committed", delivery=delivery["outcome"])
 
                 queued_at = time.perf_counter()
 
@@ -487,14 +514,28 @@ async def live_dialogue(
                 trace.event("radio_answer_queued")
                 with radio_stage("radio_delivery"):
                     outcome = await radio.answer(
-                        traced_deliver, epoch, config.conversation.max_snapshot_age_s
+                        traced_deliver, epoch, config.conversation.reply_delivery_timeout_s
                     )
                 trace.finish(
                     delivery["outcome"] if outcome == "completed" else outcome,
                     radio_outcome=outcome,
                 )
-                if outcome != "completed":
-                    print(f"Radio answer {outcome}; no audio retry. Release the key and ask again.")
+                if outcome != "completed" or delivery["outcome"] == "not_played":
+                    failure_outcome = outcome if outcome != "completed" else "not_played"
+                    print(
+                        f"Radio answer {failure_outcome}; no audio retry. "
+                        "Release the key and ask again."
+                    )
+                    if control:
+                        control.emit(
+                            "notice",
+                            f"Reply wasn't played ({failure_outcome}). Release PTT and ask again.",
+                        )
+                if session is not None and not (
+                    delivery["outcome"] == "spoken"
+                    or (delivery["outcome"] == "text_only" and control is None)
+                ):
+                    session.reset()
                 print(
                     f"Ready for another question. Hold {binding_label(stt)} to talk.",
                     flush=True,
@@ -518,6 +559,10 @@ async def live_dialogue(
                 )
                 trace.finish("intelligence_failed", reason=error_code(error))
                 print("The local engineer couldn't process that safely. Please ask again.")
+                if control:
+                    control.emit(
+                        "notice", "The engineer couldn't process that safely. Please ask again."
+                    )
             except SpeechInputError as error:
                 trace.finish("speech_input_failed", reason=error_code(error))
                 print(f"Speech input: {error}. Release the key before trying again.")
@@ -604,6 +649,7 @@ async def voice_iracing(
         ChatterboxSpeechBackend(
             radio_tts,
             notice=(lambda message: control.emit("notice", message)) if control else None,
+            activity=(lambda value: control.emit("speech", value)) if control else None,
         )
         if radio_tts.enabled and not text_only
         else None

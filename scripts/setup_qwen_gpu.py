@@ -229,7 +229,7 @@ def write_profiles(source_path: Path, destination: Path | None = None) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", type=Path, default=ROOT / "config/default.toml")
+    parser.add_argument("--config", type=Path, default=ROOT / "config/qwen-legacy.toml")
     parser.add_argument(
         "--runtime-only", action="store_true",
         help="Install/verify CUDA without creating or touching comparison profiles",

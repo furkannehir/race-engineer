@@ -1,11 +1,13 @@
 # Local speech: Chatterbox Multilingual
 
-All engineer speech now uses **Chatterbox TTS 0.1.7**, its **500M multilingual V2**
-model and built-in default voice. Both English (`en`) and Turkish (`tr`) use
+The default setup uses **Chatterbox TTS 0.1.7**, its **500M multilingual V2**
+model and built-in default voice. An opt-in **Multilingual V3 race trial** is
+available below. Both English (`en`) and Turkish (`tr`) use
 the same model and conditioning. There is no reference clip, uploaded voice, hosted
 TTS API, SAPI process or Piper fallback. PTT open/close WAV cues are unchanged.
 The default precision policy uses BF16 for T3 on natively supported CUDA GPUs;
-the audio decoder stays FP32. CPU speech stays FP32.
+the audio decoder stays FP32. CPU speech stays FP32. Reference-only encoders stay
+in system RAM when using the cached default voice, including on CUDA sessions.
 
 The pinned package's `ChatterboxMultilingualTTS.from_local(path, device=...)`
 loads `ve.pt`, `t3_mtl23ls_v2.safetensors`, `s3gen.pt` and the tokenizer.
@@ -15,6 +17,124 @@ both languages are supported before accepting speech. Generation calls
 The package's default style controls and watermarking are retained; no emotion or
 custom-voice controls are exposed. This deliberately uses the V2 files expected by
 0.1.7, not a newer upstream README's V3 recipe or English-only Turbo.
+
+## V3 source race trial (2026-11-07)
+
+The V3 trial uses the same shared backend for conversation and automatic calls,
+with explicit `[tts] model_variant = "v3"`. The worker calls
+`from_local(..., t3_model="v3")` and reports the loaded variant at readiness. A V3
+request rejects a legacy V2 worker instead of accepting a different checkpoint.
+The English/Turkish built-in voice requires no reference recording.
+
+Setup uses upstream source commit `ab55923c27757c90cfcc407baa57dc25a7d25217`
+and the checksum-verified `t3_mtl23ls_v3.safetensors` checkpoint from model revision
+`5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18`. Upstream still labels its source
+package 0.1.7, so that package version alone does not identify V3 support.
+The source archive SHA256 observed during installation is
+`19379659a7464e37237a63fbc788ad8c1d3c387f82b69765fe82099bb4e7f752`.
+
+Provision the separate runtime and cached checkpoint:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\setup_radio_tts.py --backend cuda --model-variant v3
+```
+
+This installs `data/tts-chatterbox-v3/runtime` and reuses verified common model
+assets. The V2 runtime and default component manifest remain available. CUDA uses
+the existing Windows RTX 50xx PyTorch 2.7.1/cu128 compatibility override and the
+same explicitly constrained dependency file. V3 is currently a source-app trial;
+the existing packaged release/component set still uses V2.
+
+In this workspace, `data/trials/chatterbox-v3-live.toml` is prepared from the last
+v8/FP16 live profile. It preserves Qwen, STT, the delivery budget, SQLite profile
+and the panel's saved input/output/PTT settings, selecting these TTS settings:
+
+```toml
+[tts]
+model_variant = "v3"
+python_path = "data/tts-chatterbox-v3/runtime/Scripts/python.exe"
+device = "cuda"
+precision = "bf16"
+fallback_to_cpu = false
+```
+
+The profile requires CUDA for an interpretable GPU race test. Normal CPU fallback
+configuration remains available in the default setup. On another checkout, copy
+the desired live TOML into `data/trials` and change only these TTS keys, retaining
+its existing `model_path` and other settings.
+
+Close any open panel completely before launching the new profile:
+
+```powershell
+.\start-panel.cmd --config data\trials\chatterbox-v3-live.toml
+```
+
+Rollback to the previous live test with
+`.\start-panel.cmd --config data\trials\qwen-v8-live.toml`, or use the ordinary
+launcher for the V7/V2 defaults. Both paths use the same saved panel settings.
+
+Startup logs now record the selected variant, worker PID, initialization time,
+CUDA tensor allocation and reservation after warm-up. These memory figures belong
+to the speech worker's PyTorch allocator; they are not total VRAM or measured peaks.
+Existing per-turn diagnostics retain synthesis, playback and delivery outcomes.
+
+Actual smoke validation completed five conversational outputs (EN/TR radio checks,
+the two English failure sentences and the Turkish historical-data limitation) and
+two automatic calls with one CUDA/BF16 V3 worker. Preparation took 1.29–1.52 seconds
+for those replies, after a 33.66-second initialization. Allocated tensors were
+2100 MiB and reservation 2190 MiB after warm-up. These are isolated observations,
+not a controlled V2/V3 comparison or race-load acceptance. No claim that unwanted
+tails are eliminated is made from playback completion alone.
+
+Readiness report: `data/diagnostics/v3-race-readiness-20261107.json`.
+Setup log: `data/diagnostics/v3-setup-20261107.log`.
+576 tests passed, with two NumPy-dependent skips in the main application environment;
+Ruff lint and strict mypy passed. Focused coverage checks V3 asset selection, explicit
+model loading, runtime incompatibility, reported variant mismatch and worker reuse.
+An additional native V3 generation cancellation check also completed: cancellation
+acknowledgment took 1.78 ms in that sample, the next request used the same worker,
+and shutdown closed it. This is one sampled generation interruption, not a bound
+for every playback/cancellation phase. Artifact:
+`data/diagnostics/v3-cancellation-20261107.json`.
+
+## Default-voice memory placement (2026-11-08)
+
+The source worker now loads on CPU first for both BF16 and FP32 CUDA speech.
+Only T3, the decoder's flow/vocoder, decoder buffers and cached conditioning move
+to CUDA. The reference speech tokenizer, speaker encoder and voice encoder remain
+in system RAM throughout the session. Active synthesis weights remain resident
+on the GPU; there is no per-reply weight transfer or model reload.
+
+The pinned V2/V3 decoder normally derives its device from the reference tokenizer.
+A worker-local adapter instead follows active flow weights, checks the expected
+module layout, and rejects reference-audio encoding. Unsupported layouts fail
+visibly with `tts_default_voice_layout_unsupported`; they do not silently change
+voice or computation policy. Existing OOM CPU fallback still reloads the original
+FP32 model when allowed. CPU speech uses the original placement path.
+
+This applies automatically to both replies and announcements through their shared
+worker. Restart the engineer/panel completely to load the updated source worker;
+no new model download or configuration key is needed. Packaged applications need
+the usual rebuild to include the new adapter. Qwen, STT, playback priorities,
+selected output device and PTT WAV cues retain their existing behavior.
+
+The updated V3 CUDA/BF16 worker measured **1582 MiB allocated / 1654 MiB reserved**
+after warm-up, compared with the previous **2100 / 2190 MiB**: roughly **0.5 GiB**
+less VRAM for speech. Readiness logs include `reference_modules_device = "cpu"`.
+Allocator figures exclude CUDA contexts, drivers, other processes and Qwen.
+Speech still uses additional system RAM; this optimizes VRAM rather than total RAM.
+
+Native validation reports are kept in
+`data/diagnostics/default-voice-ram-20261108/verification.json`. Both pinned V2 and
+V3 generated five EN/TR replies and two automatic calls through one unchanged
+CUDA/BF16 worker per session, without playing audio. Native V3 cancellation,
+Turkish follow-up reuse and shutdown passed. The full host suite passed 582 tests
+with two NumPy-dependent skips; Ruff and strict mypy passed.
+The isolated comparison that led to this change is in
+`data/diagnostics/low-vram-investigation-20261108/`; its six paired
+English/Turkish outputs were byte-identical with no observed latency penalty.
+Combined iRacing/Qwen contention and listening quality remain live acceptance
+checks; the placement change does not establish that unwanted tails are fixed.
 
 ## Windows source setup
 
@@ -67,11 +187,21 @@ initialization does not consume the first race request's freshness window.
 The backend serializes requests too; inference and PortAudio run only inside the
 worker, never on UI, telemetry or microphone-handling threads.
 
-Before opening an output stream, prepared conversational audio passes the existing
-freshness gate. Automatic calls also recheck their intent deadline after synthesis.
-Slow synthesis is not permission to play stale information. The existing
-three-second conversational freshness default is unchanged; CPU or long GPU
-generation may miss it. Do not increase it merely to hide latency.
+Before playback, conversational audio requires a fresh live telemetry stream in the
+same session generation. `[conversation].max_snapshot_age_s` remains three seconds
+for telemetry; `[conversation].reply_delivery_timeout_s` separately allows up to
+15 seconds for queueing and speech preparation after model processing. Preparation
+timeout cancels the worker request; expired, muted and interrupted replies never
+enter delivered dialogue history. This prevents ordinary 3–6 second synthesis from
+being discarded solely because the originally retrieved frame aged while live
+telemetry kept updating. Values still describe the snapshot retrieved before
+synthesis, not a measurement taken at the instant of playback.
+
+Automatic calls retain their original intent deadlines, checked again after
+synthesis. The panel displays `Preparing speech…` during generation/output preparation
+and `Speaking…` only when playback is dispatched. A discarded or failed answer gives
+a visible notice instead of appearing to have been spoken. The backend logs prepared
+audio timing and playback dispatch separately, without recording audio or prompts.
 
 Cancellation reaches the protocol loop while inference runs on a separate thread.
 A worker-local PyTorch forward pre-hook checks the cancellation event between

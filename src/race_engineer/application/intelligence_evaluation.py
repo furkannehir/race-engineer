@@ -22,13 +22,17 @@ from race_engineer.evaluation.system import (
     machine_metadata,
 )
 from race_engineer.intelligence.context_planner import (
+    LFM_NATIVE_ID,
     PLANNER_ID,
     PLANNER_V5_ID,
     PLANNER_V6_ID,
     PLANNER_V7_ID,
+    PLANNER_V8_ID,
     QwenContextQueryPlanner,
 )
 from race_engineer.intelligence.local_model import LocalJsonModel, ModelRequestMetrics
+from race_engineer.intelligence.native_lfm import LfmNativePlanner
+from race_engineer.intelligence.native_model import LocalNativeModel
 from race_engineer.intelligence.semantic_planner import (
     CatalogSemanticPlanner,
     LocalSemanticWorker,
@@ -38,9 +42,11 @@ _QWEN_CANDIDATE = PLANNER_ID
 _MINILM_CANDIDATE = "minilm-nli-v1"
 _LAYA_CANDIDATE = "laya-multilingual-v1"
 _CANDIDATES = {
+    LFM_NATIVE_ID,
     PLANNER_V5_ID,
     PLANNER_V6_ID,
     PLANNER_V7_ID,
+    PLANNER_V8_ID,
     _MINILM_CANDIDATE,
     _LAYA_CANDIDATE,
 }
@@ -93,11 +99,22 @@ async def run_intelligence_evaluation(
     semantic_planner: CatalogSemanticPlanner | None = None
     request_metrics: list[ModelRequestMetrics] = []
     planner: ContextQueryPlanner
-    if candidate_id in {PLANNER_V5_ID, PLANNER_V6_ID, PLANNER_V7_ID}:
-        model = LocalJsonModel(config.conversation, on_metrics=request_metrics.append)
-        planner = QwenContextQueryPlanner(
-            config.conversation, model=model, planner_id=candidate_id
+    if candidate_id == LFM_NATIVE_ID:
+        planner = LfmNativePlanner(
+            config.conversation,
+            model=LocalNativeModel(config.conversation, on_metrics=request_metrics.append),
         )
+        candidate = IntelligenceCandidateMetadata(
+            candidate_id=candidate_id,
+            runtime_profile=runtime_profile,
+            candidate_kind="generative",
+            adapter="llama-cpp-native-tools",
+            model=config.conversation.model,
+            model_revision=config.conversation.runtime.model_revision,
+        )
+    elif candidate_id in {PLANNER_V5_ID, PLANNER_V6_ID, PLANNER_V7_ID, PLANNER_V8_ID}:
+        model = LocalJsonModel(config.conversation, on_metrics=request_metrics.append)
+        planner = QwenContextQueryPlanner(config.conversation, model=model, planner_id=candidate_id)
         candidate = IntelligenceCandidateMetadata(
             candidate_id=candidate_id,
             runtime_profile=runtime_profile,

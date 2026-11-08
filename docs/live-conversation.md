@@ -1,7 +1,7 @@
 # Live iRacing conversational shakedown
 
 `voice-iracing` runs telemetry, strict-policy automatic announcements, push-to-talk,
-Qwen3-ASR, the local Qwen conversational model, and shared Chatterbox speech in one application.
+Qwen3-ASR, the local LFM3 conversational model and shared Chatterbox speech in one application.
 Conversation now reads the latest accepted iRacing context rather than a replay fixture.
 It is read-only: there are no pit commands, setup changes, or simulator controls.
 
@@ -11,14 +11,14 @@ For the native Windows controls, use the [control panel](control-panel.md). It m
 the local model server and this same live pipeline. The terminal workflow below remains
 available; do not run it at the same time as a panel session.
 
-Use the existing [conversation](conversation.md), [STT](speech-to-text.md), and
+Use the existing [LFM](lfm3-trial.md), [STT](speech-to-text.md), and
 [Chatterbox](text-to-speech.md) installations. The TTS migration needs its own
 initial setup/download; old Piper files are no longer used.
 Start with a practice/test session, not a competitive race.
 
 ## Test without iRacing
 
-The bundled intelligence fixture exercises the same new Context/Core/Qwen/grounding path
+The bundled intelligence fixture exercises the same Context/Core/LFM/grounding path
 without iRacing, microphone capture or TTS. Start the local conversation server in one
 terminal:
 
@@ -39,8 +39,9 @@ The latest fixture frame is P6 of 6. Frame zero is P5 of 6 and can check the opp
 ```
 
 Add `--json` to inspect the ContextPacket evidence, Core brief, generated placeholder template
-and final grounded response. Use `--language tr` for a Turkish response. The command still runs
-the real local Qwen model twice; only telemetry, speech recognition and synthesis are replaced
+and final grounded response. The current default is English-only. Turkish experiments
+require the explicit `config/qwen-legacy.toml` profile for both server and client.
+The command runs the real local model for selection and wording; telemetry, recognition and synthesis are replaced
 by deterministic test inputs.
 
 Terminal 1, unless the local conversation server is already running:
@@ -56,9 +57,9 @@ Terminal 2, from the repository root:
 ```
 
 Start/join iRacing. Wait for both `telemetry ready` and `Radio ready`, then hold F8, speak,
-and release. Ask questions freely in English or Turkish. Telemetry keeps updating during
+and release. Ask questions freely in English for the current LFM MVP. Telemetry keeps updating during
 recognition, model inference, and playback. The Context Engineer selects generic telemetry
-operations, deterministic memory computes their values, and a second local Qwen inference
+operations or capabilities, deterministic memory computes their values, and a second local LFM inference
 decides what to communicate and writes the natural response. Numeric race values are inserted
 only by the grounding gate from refreshed evidence.
 
@@ -80,7 +81,8 @@ Optional settings:
 
 - `--device N`: microphone index from `list-input-devices`.
 - `--output-device N`: all speech and PTT cues, from `list-output-devices`.
-- `--language en` or `--language tr`: force conversational answer language and voice.
+- `--language en`: select English for the LFM MVP. `--language tr` remains available
+  with the explicit legacy Qwen profile; Turkish LFM is unvalidated.
   Automatic calls retain existing English strict-policy wording, using the same default voice.
 - `--text-only`: mute **both** automatic and conversational speech for this live command.
 - `--limit 1200`: stop after 1,200 accepted telemetry frames; zero means run until exit.
@@ -124,6 +126,10 @@ and `voice-replay` behavior remain available and independently testable.
 with zero to twelve supported. Each exchange contributes two dialogue entries. Configuration,
 live/replay buffers and intelligence/evaluation contracts share this bound. Once the buffer
 fills, the oldest exchanges drop out; a longer conversation does not exceed the contract limit.
+The live intelligence history records an engineer reply only after successful audio
+completion (or visible text-only CLI delivery). Expired, interrupted, muted, silent and
+failed replies are not stored as if the driver heard them. Session generations clear
+the buffer; the legacy conversation session resets after undelivered work.
 
 Live snapshots use current UTC, not a replay clock. There is no placeholder/fabricated
 frame before the first valid telemetry update. Replay frames are rejected in live mode
@@ -133,7 +139,17 @@ The latest accepted context also feeds a bounded two-minute telemetry window. Th
 Engineer executes its selected evidence plan after inference and re-executes every cited
 query when the answer's audio slot opens. Chatterbox then
 prepares audio in memory and waits for an explicit freshness acknowledgement before
-opening playback. An expired prepared answer is discarded, not played as current data.
+opening playback. `[conversation].reply_delivery_timeout_s` gives queued answers and
+audio preparation a separate 15-second default budget, starting after model processing.
+The worker is cancelled if preparation exceeds the remaining budget. At playback dispatch,
+the latest telemetry must still be available and fresh, in the same session generation.
+This does not extend automatic intent deadlines or the telemetry freshness threshold.
+
+Spoken numeric values reflect the snapshot retrieved when the audio slot opened,
+before synthesis. They are not re-recorded at playback: a value can change during the
+bounded preparation interval. The delivery budget is a latency/recency tradeoff, not
+a promise of values measured at the instant the sound starts. Time-sensitive automatic
+calls retain their stricter intent deadlines.
 
 Disconnects, session changes, and stale telemetry invalidate pending/playing speech.
 An independent watchdog checks freshness every 100 ms; the default accepted frame age is
@@ -142,8 +158,9 @@ Reconnections get a new internal generation even when iRacing reuses its session
 restarts tick numbering. A question spanning those generations is discarded and session
 memory is reset. The telemetry context/policy state is rebuilt on resumption.
 
-Already-spoken words cannot be recalled. Freshness here means validated snapshots at
-answer construction/playback start and cancellation on detected loss of live data—not
+Already-spoken words cannot be recalled. Freshness here means validated evidence at
+answer construction, a fresh live telemetry stream at playback dispatch, bounded reply
+preparation, and cancellation on detected loss of live data—not
 a guarantee that a moving gap or position cannot change while a sentence is spoken.
 
 ## First combined test

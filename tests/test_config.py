@@ -29,19 +29,21 @@ def test_default_configuration_is_valid() -> None:
     assert config.tts.device == "auto"
     assert config.tts.fallback_to_cpu is True
     assert config.tts.queue_capacity == 8
-    assert config.conversation.model == "Qwen3-4B-Instruct-2507"
     assert config.conversation.runtime.mode == "gpu"
-    assert config.conversation.port == 8088
     assert config.conversation.runtime.threads == 8
     assert config.conversation.runtime.accelerated_executable_path == Path(
-        "data/conversation-prototype/llama-b10964-cuda-13.3/llama-server.exe"
+        "data/lfm3-prototype/llama-b12088-cuda-13.4/llama-server.exe"
     )
     assert config.conversation.runtime.accelerated_backend == "cuda"
     assert config.conversation.runtime.device == "CUDA0"
     assert config.conversation.runtime.fallback_to_cpu is False
     assert config.conversation.runtime.reuse_external_server is False
     assert config.stt.device == "cpu"
-    assert config.conversation.runtime.runtime_revision == "b10964"
+    assert config.conversation.context_planner == "lfm3-native-v1"
+    assert config.conversation.model == "LiquidAI/LFM3-1.7B"
+    assert config.conversation.port == 8092
+    assert config.conversation.runtime.runtime_revision == "b12088"
+    assert config.conversation.runtime.enable_thinking is False
     assert config.conversation.runtime.quantization == "Q4_K_M"
 
 

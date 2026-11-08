@@ -1,0 +1,75 @@
+{
+  "schema_version": "intelligence-eval.v1",
+  "dataset_id": "intelligence-development-temporal-validation",
+  "revision": "2026-10-28.seed1",
+  "split": "development",
+  "fixture": "fixtures/synthetic/intelligence-capabilities",
+  "groups": [
+    {
+      "id": "temporal-original-lineup-en", "family": "temporal-original-lineup-en-20261028",
+      "category": "starting-grid", "language": "en",
+      "questions": ["Where were we lined up before the lights went out?"],
+      "expected": {"purpose": "race_information", "temporal_scope": "historical", "evidence_outcome": "unavailable", "required_unknowns": ["requested_analysis_unavailable"]}
+    },
+    {
+      "id": "temporal-original-lineup-tr", "family": "temporal-original-lineup-tr-20261028",
+      "category": "starting-grid", "language": "tr",
+      "questions": ["Işıklar sönmeden önce kaçıncı cepten kalkıyorduk?"],
+      "expected": {"purpose": "race_information", "temporal_scope": "historical", "evidence_outcome": "unavailable", "required_unknowns": ["requested_analysis_unavailable"]}
+    },
+    {
+      "id": "temporal-current-after-grid-en", "family": "temporal-current-after-grid-en-20261028",
+      "category": "time-correction", "language": "en",
+      "questions": ["Okay, and where are we running now?"],
+      "recent_dialogue": ["Driver: What was our grid slot?", "Engineer: The original grid slot is unavailable."],
+      "expected": {"purpose": "race_information", "temporal_scope": "current", "capability_ids": ["current_classification"], "evidence_outcome": "available"}
+    },
+    {
+      "id": "temporal-current-after-grid-tr", "family": "temporal-current-after-grid-tr-20261028",
+      "category": "time-correction", "language": "tr",
+      "questions": ["Peki şu anda kaçıncıyız?"],
+      "recent_dialogue": ["Driver: Yarışa hangi cepten kalkmıştık?", "Engineer: Başlangıç sırası verisi yok."],
+      "expected": {"purpose": "race_information", "temporal_scope": "current", "capability_ids": ["current_classification"], "evidence_outcome": "available"}
+    },
+    {
+      "id": "temporal-grid-after-current-en", "family": "temporal-grid-after-current-en-20261028",
+      "category": "time-correction", "language": "en",
+      "questions": ["No, I meant before the race got underway."],
+      "recent_dialogue": ["Driver: Where are we running?", "Engineer: Currently P5."],
+      "expected": {"purpose": "race_information", "temporal_scope": "historical", "evidence_outcome": "unavailable", "required_unknowns": ["requested_analysis_unavailable"]}
+    },
+    {
+      "id": "temporal-grid-after-current-tr", "family": "temporal-grid-after-current-tr-20261028",
+      "category": "time-correction", "language": "tr",
+      "questions": ["Yok, start verilmeden önceki sırayı soruyorum."],
+      "recent_dialogue": ["Driver: Şu an kaçıncıyız?", "Engineer: Şu an P5."],
+      "expected": {"purpose": "race_information", "temporal_scope": "historical", "evidence_outcome": "unavailable", "required_unknowns": ["requested_analysis_unavailable"]}
+    },
+    {
+      "id": "temporal-original-fuel-en", "family": "temporal-original-fuel-en-20261028",
+      "category": "past-event-fuel", "language": "en",
+      "questions": ["How much fuel did we have when the lights went out?"],
+      "expected": {"purpose": "race_information", "temporal_scope": "historical", "evidence_outcome": "unavailable", "required_unknowns": ["requested_analysis_unavailable"]}
+    },
+    {
+      "id": "temporal-original-fuel-tr", "family": "temporal-original-fuel-tr-20261028",
+      "category": "past-event-fuel", "language": "tr",
+      "questions": ["Yarış başındaki yakıtımız ne kadardı?"],
+      "expected": {"purpose": "race_information", "temporal_scope": "historical", "evidence_outcome": "unavailable", "required_unknowns": ["requested_analysis_unavailable"]}
+    },
+    {
+      "id": "temporal-current-fuel-after-past-en", "family": "temporal-current-fuel-after-past-en-20261028",
+      "category": "time-correction", "language": "en",
+      "questions": ["Then tell me what's in the tank right now."],
+      "recent_dialogue": ["Driver: How much fuel did we start with?", "Engineer: The starting fuel amount is unavailable."],
+      "expected": {"purpose": "race_information", "temporal_scope": "current", "queries": [{"source": "player", "signal": "fuel_l", "operation": "latest", "window_s": null}], "evidence_outcome": "available"}
+    },
+    {
+      "id": "temporal-current-fuel-after-past-tr", "family": "temporal-current-fuel-after-past-tr-20261028",
+      "category": "time-correction", "language": "tr",
+      "questions": ["O zaman şu anda depoda ne kadar kaldığını söyle."],
+      "recent_dialogue": ["Driver: Yarışa ne kadar yakıtla başladık?", "Engineer: Başlangıç yakıtı verisi yok."],
+      "expected": {"purpose": "race_information", "temporal_scope": "current", "queries": [{"source": "player", "signal": "fuel_l", "operation": "latest", "window_s": null}], "evidence_outcome": "available"}
+    }
+  ]
+}

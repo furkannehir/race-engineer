@@ -26,7 +26,7 @@ from race_engineer.evaluation.system import distribution
 from race_engineer.intelligence.capabilities import DeterministicRaceCapabilities
 from race_engineer.intelligence.context_engine import QueryDrivenContextEngineer
 from race_engineer.intelligence.context_planner import (
-    PLANNER_ID,
+    LFM_NATIVE_ID,
     QwenContextQueryPlanner,
 )
 from race_engineer.intelligence.grounding import StrictEvidenceGrounder
@@ -34,6 +34,11 @@ from race_engineer.intelligence.local_model import (
     JsonModelClient,
     LocalJsonModel,
     ModelRequestMetrics,
+)
+from race_engineer.intelligence.native_lfm import LfmNativePlanner
+from race_engineer.intelligence.native_model import (
+    LocalNativeModel,
+    NativeToolReply,
 )
 from race_engineer.intelligence.orchestrator import EngineerOrchestrator
 from race_engineer.intelligence.portable_engineer import PortableQwenEngineer
@@ -75,6 +80,43 @@ class MeasuredModel:
         try:
             return await self._client.request(
                 system_prompt=system_prompt, content=content, schema=schema, max_tokens=max_tokens
+            )
+        except Exception as error:
+            reason = _reason(error)
+            raise
+        finally:
+            self.requests.append(
+                {
+                    "role": self.role,
+                    "attempt": len(self.requests) + 1,
+                    "wall_ms": round((time.perf_counter() - started) * 1000, 3),
+                    "status": "error" if reason else "completed",
+                    "reason": reason,
+                    **self._metrics,
+                }
+            )
+
+
+class MeasuredNativeModel(MeasuredModel):
+    """Use the same numeric request accounting for the native tool interface."""
+
+    def __init__(self, config: ConversationConfig, role: str) -> None:
+        super().__init__(config, role)
+        self._native = LocalNativeModel(config, on_metrics=self._record_metrics)
+
+    async def request_tools(
+        self,
+        *,
+        messages: list[dict[str, object]],
+        tools: list[dict[str, object]],
+        max_tokens: int = 768,
+    ) -> NativeToolReply:
+        self._metrics = {}
+        started = time.perf_counter()
+        reason = None
+        try:
+            return await self._native.request_tools(
+                messages=messages, tools=tools, max_tokens=max_tokens
             )
         except Exception as error:
             reason = _reason(error)
@@ -239,9 +281,7 @@ def _selection_diagnostic(
         query_items = plan.get("queries", [])
         capabilities = capability_items if isinstance(capability_items, list) else []
         queries = query_items if isinstance(query_items, list) else []
-        values = Counter(
-            f"capability:{value}" for value in capabilities if isinstance(value, str)
-        )
+        values = Counter(f"capability:{value}" for value in capabilities if isinstance(value, str))
         values.update(
             f"query:{json.dumps(value, sort_keys=True)}"
             for value in queries
@@ -270,11 +310,13 @@ async def measure_intelligence_turn(
     repetition: int,
     planner_client: JsonModelClient | None = None,
     core_client: JsonModelClient | None = None,
-    planner_id: str = PLANNER_ID,
+    planner_id: str | None = None,
     inventory_observer: Callable[[tuple[str, ...]], None] | None = None,
 ) -> tuple[dict[str, object], str | None]:
     """Use production adapters/orchestration; return content-free data plus transient text."""
 
+    planner_id = planner_id or config.context_planner
+    config = config.model_copy(update={"context_planner": planner_id})
     selected = len(contexts) - 1 if group.frame_index == -1 else group.frame_index
     if not 0 <= selected < len(contexts):
         raise ValueError("benchmark frame index is out of range")
@@ -293,10 +335,16 @@ async def measure_intelligence_turn(
         recent_dialogue=group.recent_dialogue,
     )
     stages = _Stages()
-    planner_model = MeasuredModel(config, "context", client=planner_client)
+    planner_model = (
+        MeasuredNativeModel(config, "context")
+        if planner_id == LFM_NATIVE_ID
+        else MeasuredModel(config, "context", client=planner_client)
+    )
     core_model = MeasuredModel(config, "core", client=core_client)
     planner = TimedContextPlanner(
-        QwenContextQueryPlanner(
+        LfmNativePlanner(config, model=planner_model, on_request_inventory=inventory_observer)
+        if isinstance(planner_model, MeasuredNativeModel)
+        else QwenContextQueryPlanner(
             config,
             model=planner_model,
             planner_id=planner_id,
@@ -304,7 +352,12 @@ async def measure_intelligence_turn(
         )
     )
     context_engine = _MeasuredContext(
-        QueryDrivenContextEngineer(memory, planner, DeterministicRaceCapabilities(memory)), stages
+        QueryDrivenContextEngineer(
+            memory,
+            planner,
+            DeterministicRaceCapabilities(memory, include_rank_checks=planner_id == LFM_NATIVE_ID),
+        ),
+        stages,
     )
     core = _MeasuredCore(PortableQwenEngineer(config, model=core_model), stages)
     engineer = EngineerOrchestrator(context_engine, core, core, _MeasuredGrounder(stages))

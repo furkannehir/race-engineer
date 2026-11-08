@@ -52,6 +52,8 @@ def _validate_brief(turn: DriverTurn, context: ContextPacket, brief: EngineerBri
     available = {item.evidence_id for item in context.evidence}
     if not set(brief.evidence_ids).issubset(available):
         raise IntelligenceBoundaryError("brief_referenced_unknown_evidence")
+    if not set(brief.unknown_ids).issubset(context.unknowns):
+        raise IntelligenceBoundaryError("brief_referenced_unknown_limitation")
 
 
 def _validate_generated(
@@ -69,6 +71,11 @@ def _validate_generated(
     referenced = {reference.evidence_id for reference in response.references}
     if not referenced.issubset(set(brief.evidence_ids)):
         raise IntelligenceBoundaryError("generator_referenced_unapproved_evidence")
+    unknowns = {
+        item for reference in response.limitation_references for item in reference.unknown_ids
+    }
+    if unknowns != set(brief.unknown_ids):
+        raise IntelligenceBoundaryError("generator_referenced_unapproved_limitation")
 
 
 class EngineerOrchestrator:
@@ -95,7 +102,9 @@ class EngineerOrchestrator:
             brief = await self._core.decide(turn, context)
             _validate_brief(turn, context, brief)
             radio_event(
-                "radio_core_decision", goal=brief.goal, language=brief.language,
+                "radio_core_decision",
+                goal=brief.goal,
+                language=brief.language,
                 evidence_ids=brief.evidence_ids,
             )
         with radio_stage("response"):
@@ -105,14 +114,33 @@ class EngineerOrchestrator:
 
     async def ground(self, prepared: PreparedEngineerResponse) -> GroundedResponse:
         evidence_ids = tuple(reference.evidence_id for reference in prepared.response.references)
+        if prepared.response.limitation_references:
+            # Recheck unavailable queries/capabilities as well as spoken known facts.
+            # A previously missing input may have arrived while Core was generating.
+            evidence_ids = tuple(
+                dict.fromkeys(
+                    (
+                        *evidence_ids,
+                        *(
+                            item.evidence_id
+                            for item in prepared.context.evidence
+                            if item.kind == "unknown"
+                        ),
+                    )
+                )
+            )
         with radio_stage("grounding"):
             refreshed = await self._context.refresh(prepared.context, evidence_ids)
             _validate_context(prepared.turn, refreshed)
             if refreshed.source_sequence < prepared.context.source_sequence:
                 raise IntelligenceBoundaryError("refreshed_context_moved_backwards")
+            if refreshed.temporal_scope != prepared.context.temporal_scope:
+                raise IntelligenceBoundaryError("refreshed_context_temporal_scope_changed")
             radio_evidence("radio_evidence_refreshed", refreshed)
             return self._grounder.ground(
-                prepared.response, refreshed, prepared.brief,
+                prepared.response,
+                refreshed,
+                prepared.brief,
             )
 
     async def respond(self, turn: DriverTurn) -> GroundedResponse:

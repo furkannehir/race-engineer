@@ -21,8 +21,14 @@ Application settings, logs and SQLite profiles also live below `%LOCALAPPDATA%\P
 packaged builds. Source launches keep using the repository's ignored `data` and `logs`
 directories.
 
-Component set 2 replaces Piper voices with five pinned multilingual V2 assets,
-including `conds.pt` for the built-in voice. Total downloads are about 7.3 GB.
+Component set 3 selects LFM3-1.7B Q4_K_M and llama.cpp b12088 CPU. It retains
+Qwen3-ASR and the five pinned multilingual V2 speech assets, including `conds.pt`
+for the built-in voice. Total downloads are about 5.9 GB. Frozen paths follow
+the configured model/runtime names and match the installer manifest; old installed
+Qwen weights are retained but are no longer selected by the new configuration.
+Existing published or locally built executables do not change until rebuilt.
+LFM uses its own [LFM Open License v1.0](https://huggingface.co/LiquidAI/LFM3-1.7B/blob/main/LICENSE);
+distribution review is still required and the release-clearance gates stay closed.
 The release workflow builds a CPU TTS worker; racing latency on CPU is not
 established. CUDA builds can use `setup_radio_tts.py --backend cuda` instead.
 Clean-Windows frozen-worker EN/TR synthesis and audio checks remain mandatory
@@ -96,5 +102,6 @@ Before publishing, use a Windows 11 x64 machine without Python or this repositor
 2. component download, interruption/resume and `verify`;
 3. first launch, Pitward taskbar/tray icon and About build identity;
 4. microphone/output selection and keyboard, mouse and wheel PTT;
-5. English and Turkish STT/replies against live iRacing telemetry; and
+5. English LFM replies against live iRacing, plus isolated English/Turkish speech
+   worker checks; Turkish LFM conversation remains unvalidated; and
 6. preservation of settings, profile/history database and models across an upgrade.

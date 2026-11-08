@@ -103,7 +103,7 @@ def test_live_attempts_report_no_speech_timeouts_silence_and_tts_failures(
         async def start(self):
             pass
 
-        async def speak(self, reply, *, before_playback):
+        async def speak(self, reply, *, before_playback, preparation_timeout_s):
             self.calls += 1
             if self.calls == 1:
                 raise SpeechOutputError("tts_reply_expired")

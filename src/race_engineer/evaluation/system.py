@@ -1,5 +1,6 @@
 """Best-effort, content-free metadata for explicit local evaluation runs."""
 
+import csv
 import json
 import os
 import platform
@@ -13,6 +14,39 @@ from typing import Any
 
 def _creation_flags() -> int:
     return subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
+
+
+def gpu_memory_snapshot() -> dict[str, object]:
+    """Whole-device sample, not per-process attribution or a measured VRAM peak."""
+    executable = shutil.which("nvidia-smi")
+    if executable is None:
+        return {"available": False, "reason": "nvidia_smi_unavailable"}
+    try:
+        result = subprocess.run(
+            [
+                executable,
+                "--query-gpu=index,name,memory.used,memory.total",
+                "--format=csv,noheader,nounits",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            creationflags=_creation_flags(),
+        )
+        if result.returncode != 0:
+            return {"available": False, "reason": "gpu_query_failed"}
+        devices = [
+            {
+                "index": int(index),
+                "name": name.strip(),
+                "used_mib": int(used),
+                "total_mib": int(total),
+            }
+            for index, name, used, total in csv.reader(result.stdout.splitlines())
+        ]
+    except (OSError, ValueError, subprocess.TimeoutExpired):
+        return {"available": False, "reason": "gpu_query_failed"}
+    return {"available": True, "devices": devices}
 
 
 def distribution(values: list[float]) -> dict[str, float | int | None]:

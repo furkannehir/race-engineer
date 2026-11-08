@@ -31,12 +31,15 @@ def test_frozen_installation_keeps_program_and_user_data_separate(tmp_path: Path
     assert config.conversation.runtime.accelerated_backend is None
     assert config.conversation.runtime.device is None
     assert config.conversation.runtime.model_path == (
-        local / "Pitward/components/conversation/Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
+        local / "Pitward/components/conversation/LFM3-1.7B-Q4_K_M.gguf"
     )
     assert config.stt.worker_path == install / "workers/PitwardSTTWorker/PitwardSTTWorker.exe"
-    assert config.tts.worker_path == (
-        install / "workers/PitwardTTSWorker/PitwardTTSWorker.exe"
+    assert config.conversation.model == "LiquidAI/LFM3-1.7B"
+    assert config.conversation.context_planner == "lfm3-native-v1"
+    assert config.conversation.runtime.cpu_executable_path == (
+        local / "Pitward/components/conversation/llama-b12088-cpu/llama-server.exe"
     )
+    assert config.tts.worker_path == (install / "workers/PitwardTTSWorker/PitwardTTSWorker.exe")
     missing = layout.missing_required_components(config)
     assert config.conversation.runtime.model_path in missing
     assert config.stt.model_path / "model.safetensors" in missing
@@ -67,7 +70,7 @@ def test_build_identity_requires_matching_version_and_valid_commit(tmp_path: Pat
 def test_component_manifest_is_unique_pinned_and_confined() -> None:
     component_set, artifacts = load_manifest()
     ids = [artifact.artifact_id for artifact in artifacts]
-    assert component_set == "2" and len(ids) == len(set(ids))
+    assert component_set == "3" and len(ids) == len(set(ids))
     assert not any(name.startswith("piper-") for name in ids)
     assert sum(artifact.size for artifact in artifacts) > 4_000_000_000
     for artifact in artifacts:
@@ -75,3 +78,19 @@ def test_component_manifest_is_unique_pinned_and_confined() -> None:
         assert re.fullmatch(r"[0-9a-f]{64}", artifact.sha256)
         assert artifact.size > 0 and not artifact.destination.is_absolute()
         assert ".." not in artifact.destination.parts
+
+
+def test_default_packaged_model_and_runtime_match_the_verified_installer_manifest(tmp_path):
+    from scripts.setup_lfm3_trial import CPU, MODEL
+
+    _, artifacts = load_manifest()
+    layout = Installation.discover(environ={"PITWARD_DATA_DIR": str(tmp_path)}, frozen=True)
+    config = layout.apply_to(load_config(ROOT / "config/default.toml", environ={}))
+    runtime = config.conversation.runtime
+    model = next(a for a in artifacts if a.artifact_id == "lfm3-1.7b-q4-k-m")
+    cpu = next(a for a in artifacts if a.artifact_id == "llama-cpp-cpu-b12088")
+    assert runtime.model_path == layout.components_root / model.destination
+    assert runtime.cpu_executable_path == layout.components_root / cpu.destination / cpu.required
+    assert (model.sha256, model.size) == (MODEL.sha256, MODEL.size)
+    assert (cpu.sha256, cpu.size) == (CPU[0].sha256, CPU[0].size)
+    assert model.license == "LFM Open License v1.0"

@@ -500,6 +500,7 @@ class RadioDesk(QWidget):
         self._models_ready = False
         self._phase = "stopped"
         self._speaking = False
+        self._preparing_speech = False
         self._mode = "engineer"
         self._failed = False
         self.setWindowTitle(PRODUCT_NAME + (" — Design preview" if preview else ""))
@@ -984,8 +985,10 @@ class RadioDesk(QWidget):
         answer = QMessageBox.question(
             self,
             "Set up local AI components?",
-            "Pitward will download about 7.3 GB of pinned local models and a CPU Qwen runtime.\n\n"
-            "The Qwen models use Apache 2.0 terms. Chatterbox and its built-in "
+            "Pitward will download about 5.9 GB of pinned local models "
+            "and a CPU llama.cpp runtime.\n\n"
+            "LFM3 uses the LFM Open License v1.0. Qwen3-ASR uses Apache 2.0 terms. "
+            "Chatterbox and its built-in "
             "multilingual voice use MIT terms. Full notices are included with "
             "Pitward.\n\nContinue with the download?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
@@ -1048,6 +1051,7 @@ class RadioDesk(QWidget):
         self._mode, self._failed = mode, False
         self._phase = "starting"
         self._telemetry_ready = self._models_ready = self._speaking = False
+        self._preparing_speech = False
         self.notice.setText("Do not run another live engineer alongside this panel.")
         self.worker = EngineWorker(
             self.root,
@@ -1090,6 +1094,7 @@ class RadioDesk(QWidget):
             self._phase = value
         elif topic == "speech":
             self._speaking = value == "speaking"
+            self._preparing_speech = value == "preparing"
         elif topic == "notice":
             self.notice.setText(value)
         self._render()
@@ -1104,6 +1109,7 @@ class RadioDesk(QWidget):
             worker.deleteLater()
         self._phase = "error" if self._failed else "stopped"
         self._telemetry_ready = self._models_ready = self._speaking = False
+        self._preparing_speech = False
         self._render()
         if self._quitting:
             self.close()
@@ -1133,6 +1139,8 @@ class RadioDesk(QWidget):
             "ready": "Radio ready" if self._telemetry_ready else "Waiting for iRacing",
         }
         heading = titles.get(self._phase, "Starting…")
+        if self._preparing_speech and self._phase != "stopping":
+            heading = "Preparing speech…"
         if self._speaking and self._phase != "stopping":
             heading = "Speaking…"
         if muted and self._phase == "ready":

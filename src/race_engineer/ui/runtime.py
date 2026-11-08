@@ -67,6 +67,7 @@ async def test_voice(
     speaker = ChatterboxSpeechBackend(
         settings.apply(config, preferences).tts,
         notice=lambda message: control.emit("notice", message),
+        activity=lambda value: control.emit("speech", value),
     )
     try:
         control.emit("phase", "testing_voice")

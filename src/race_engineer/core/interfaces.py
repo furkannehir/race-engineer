@@ -146,6 +146,7 @@ class ConversationSpeaker(Protocol):
         *,
         play_audio: bool = True,
         before_playback: Callable[[], bool] | None = None,
+        preparation_timeout_s: float | None = None,
     ) -> SpeechOutputResult: ...
 
     async def aclose(self) -> None: ...

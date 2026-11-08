@@ -10,6 +10,7 @@ from race_engineer.core.intelligence import (
     GeneratedResponse,
     GroundedResponse,
 )
+from race_engineer.intelligence.limitations import limitation_statement
 
 
 class GroundingError(Exception):
@@ -72,6 +73,15 @@ class StrictEvidenceGrounder:
             raise GroundingError("evidence_cannot_be_referenced_twice")
         if set(reference_ids) != set(brief.evidence_ids):
             raise GroundingError("response_did_not_use_the_core_brief_evidence")
+        limit_unknowns = tuple(
+            item for reference in response.limitation_references for item in reference.unknown_ids
+        )
+        if len(set(limit_unknowns)) != len(limit_unknowns) or set(limit_unknowns) != set(
+            brief.unknown_ids
+        ):
+            raise GroundingError("response_did_not_acknowledge_brief_unknowns")
+        if not set(limit_unknowns).issubset(context.unknowns):
+            raise GroundingError("limitation_no_longer_supported")
 
         if response.action == "silence":
             return GroundedResponse(
@@ -93,11 +103,26 @@ class StrictEvidenceGrounder:
             evidence = evidence_by_id.get(reference.evidence_id)
             if evidence is None:
                 raise GroundingError("referenced_evidence_is_missing")
+            if context.temporal_scope is not None:
+                if evidence.temporal_scope is None:
+                    raise GroundingError("referenced_evidence_temporal_scope_missing")
+                if evidence.temporal_scope != context.temporal_scope:
+                    raise GroundingError("referenced_evidence_temporal_scope_mismatch")
             if evidence.valid_until is not None and context.assembled_at >= evidence.valid_until:
                 raise GroundingError("referenced_evidence_is_stale")
             text = text.replace(
                 "{{" + reference.placeholder + "}}",
                 _reference_value(reference, evidence),
+            )
+        for limitation in response.limitation_references:
+            text = text.replace(
+                "{{" + limitation.placeholder + "}}",
+                limitation_statement(
+                    response.language,
+                    context.temporal_scope,
+                    limitation.unknown_ids,
+                    wording=limitation.wording,
+                ),
             )
         if "{{" in text or "}}" in text:
             raise GroundingError("unresolved_evidence_placeholder")

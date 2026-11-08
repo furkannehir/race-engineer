@@ -22,8 +22,9 @@ Then double-click `start-panel.cmd`, or run:
 .\.venv\Scripts\python.exe -m race_engineer.ui
 ```
 
-The existing local Qwen conversation model, Qwen3-ASR runtime, and Chatterbox model must
-already be installed. Their existing [setup guides](live-conversation.md#run) still apply.
+The local LFM3 conversation model, Qwen3-ASR runtime and Chatterbox model must
+already be installed. See [LFM setup](lfm3-trial.md) and the
+[speech setup guides](live-conversation.md#run).
 Opening the window enumerates audio devices but does not start telemetry, inference,
 capture, playback, or controller input. Controller detection starts only when you open
 the push-to-talk binding dialog. There is no download or cloud fallback.
@@ -41,14 +42,14 @@ the push-to-talk binding dialog. There is no download or cloud fallback.
    other analog axes are deliberately ignored so driving cannot open the microphone. Save
    the detected binding; there is no device-name or button-number hunting.
 4. Click **Start engineer**. In the standard source edition, the panel starts and owns
-   the configured NVIDIA/CUDA Qwen server on literal `127.0.0.1:8088`; do not start a
+   the configured NVIDIA/CUDA LFM server on literal `127.0.0.1:8092`; do not start a
    separate server first. The normal `start-panel.cmd` uses this GPU default. Follow
-   [the GPU setup guide](qwen-gpu-trial.md) if needed. The existing packaged `.exe`
+   [the LFM setup guide](lfm3-trial.md) if needed. The next packaged `.exe`
    components still use CPU until GPU distribution is implemented.
    Wait for both iRacing and
    speech readiness. A green iRacing indicator requires accepted, fresh telemetry, not
    just an SDK connection. A stopped panel does not monitor iRacing.
-5. Start stationary in practice. Check English/Turkish questions and automatic calls
+5. Start stationary in practice. Use English for the current LFM MVP and check automatic calls
    before committing to a race. Then minimize to the tray and hold PTT. Wait for the short
    opening static cue to finish before speaking; release PTT to submit and hear the distinct
    closing cue. The microphone clip excludes both cues.
@@ -119,6 +120,12 @@ files), or `%LOCALAPPDATA%\Pitward\logs` for packaged builds. Each radio attempt
 model token/timing metrics, refreshed evidence, queue wait, TTS and its terminal outcome.
 Explicit outcomes distinguish `silence`, `no_question`, timeouts, expired/interrupted delivery,
 text-only replies and completed speech. The actual conversation runtime mode is also logged.
+`Preparing speech…` means synthesis/output preparation; `Speaking…` begins only at
+playback dispatch. Unplayed answers give a notice. Diagnostics now separate prepared
+audio timing, playback dispatch, reply rejection reasons and dialogue-history commits.
+Only fully delivered spoken replies enter live intelligence history. The 15-second
+reply preparation budget is separate from the unchanged three-second telemetry
+freshness limit; see [freshness details](live-conversation.md#freshness-and-session-isolation).
 
 `[privacy] record_radio_text = true` is enabled in the development config for the next
 diagnostic race: it saves the ASR transcript, requested-fact inventory and final grounded

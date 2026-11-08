@@ -40,19 +40,22 @@ class RaceCapabilityError(Exception):
 class DeterministicRaceCapabilities:
     """Calculate race facts from normalized telemetry without model-authored arithmetic."""
 
-    def __init__(self, memory: TelemetryMemory, *, freshness_s: float = 3.0) -> None:
+    def __init__(
+        self,
+        memory: TelemetryMemory,
+        *,
+        freshness_s: float = 3.0,
+        include_rank_checks: bool = False,
+    ) -> None:
         if freshness_s <= 0 or freshness_s > 30:
             raise ValueError("capability freshness must be between zero and thirty seconds")
         self._memory = memory
         self._freshness_s = freshness_s
+        self._include_rank_checks = include_rank_checks
 
     @staticmethod
     def _classification_reason(context: RaceContext) -> str | None:
-        return (
-            None
-            if context.frame.player.position is not None
-            else "missing_player_position"
-        )
+        return None if context.frame.player.position is not None else "missing_player_position"
 
     @staticmethod
     def _fuel_range_reason(context: RaceContext) -> str | None:
@@ -197,6 +200,11 @@ class DeterministicRaceCapabilities:
                     "Calculate the player's current classification, the last occupied "
                     "classification, the number of cars with reported positions, and whether "
                     "the player is currently last."
+                    + (
+                        " Also determine whether the player is leading."
+                        if self._include_rank_checks
+                        else ""
+                    )
                 ),
                 temporal_scope="current",
                 required_inputs=("player.position", "field.position"),
@@ -219,7 +227,18 @@ class DeterministicRaceCapabilities:
                     CapabilityOutputDescriptor(
                         output_id="is_last",
                         description="authoritative current last-place relationship",
-                        speakable=False,
+                        speakable=self._include_rank_checks,
+                    ),
+                    *(
+                        (
+                            CapabilityOutputDescriptor(
+                                output_id="is_first",
+                                description="authoritative current leadership check",
+                                speakable=True,
+                            ),
+                        )
+                        if self._include_rank_checks
+                        else ()
                     ),
                 ),
                 freshness_s=self._freshness_s,
@@ -293,9 +312,7 @@ class DeterministicRaceCapabilities:
                     ),
                 ),
                 freshness_s=self._freshness_s,
-                uncertainty=(
-                    "Only same-lap opponents with a reported timing gap are considered."
-                ),
+                uncertainty=("Only same-lap opponents with a reported timing gap are considered."),
                 available=gap_ahead_reason is None,
                 unavailable_reason=gap_ahead_reason,
             ),
@@ -312,9 +329,7 @@ class DeterministicRaceCapabilities:
                     ),
                 ),
                 freshness_s=self._freshness_s,
-                uncertainty=(
-                    "Only same-lap opponents with a reported timing gap are considered."
-                ),
+                uncertainty=("Only same-lap opponents with a reported timing gap are considered."),
                 available=gap_behind_reason is None,
                 unavailable_reason=gap_behind_reason,
             ),
@@ -495,11 +510,7 @@ class DeterministicRaceCapabilities:
 
     def _descriptor(self, capability_id: str) -> CapabilityDescriptor:
         descriptor = next(
-            (
-                item
-                for item in self.catalog()
-                if item.capability_id == capability_id
-            ),
+            (item for item in self.catalog() if item.capability_id == capability_id),
             None,
         )
         if descriptor is None:
@@ -508,9 +519,7 @@ class DeterministicRaceCapabilities:
 
     def evidence_ids(self, request: CapabilityRequest) -> tuple[str, ...]:
         descriptor = self._descriptor(request.capability_id)
-        return tuple(
-            f"{request.request_id}:{output.output_id}" for output in descriptor.outputs
-        )
+        return tuple(f"{request.request_id}:{output.output_id}" for output in descriptor.outputs)
 
     @staticmethod
     def _unknown_evidence(
@@ -592,6 +601,9 @@ class DeterministicRaceCapabilities:
                 subject=subject,
                 metric=metric,
                 value=value,
+                claim=("Yes" if value else "No")
+                if self._include_rank_checks and isinstance(value, bool)
+                else None,
                 unit=unit,
                 source_fields=source_fields,
                 valid_until=valid_until,
@@ -633,6 +645,20 @@ class DeterministicRaceCapabilities:
                     value=player_position == last_position,
                     unit=None,
                     source_fields=("player.position", "field.position"),
+                ),
+                *(
+                    (
+                        item(
+                            "is_first",
+                            subject="player",
+                            metric="is_first",
+                            value=player_position == 1,
+                            unit=None,
+                            source_fields=("player.position",),
+                        ),
+                    )
+                    if self._include_rank_checks
+                    else ()
                 ),
             ),
         )
@@ -768,9 +794,7 @@ class DeterministicRaceCapabilities:
                     metric="gap_s",
                     value=value,
                     unit="s",
-                    source_fields=(
-                        f"opponent:{opponent.driver_id}.gap_to_player_s",
-                    ),
+                    source_fields=(f"opponent:{opponent.driver_id}.gap_to_player_s",),
                 ),
             ),
         )
@@ -797,9 +821,7 @@ class DeterministicRaceCapabilities:
         subject = "player_vs_car_ahead" if direction == "ahead" else "car_behind"
         current_opponent = self._nearest_opponent(context, direction)
         assert current_opponent is not None
-        source_fields = (
-            f"opponent:{current_opponent.driver_id}.gap_to_player_s[10s]",
-        )
+        source_fields = (f"opponent:{current_opponent.driver_id}.gap_to_player_s[10s]",)
         return CapabilityResult(
             request_id=request.request_id,
             capability_id=request.capability_id,

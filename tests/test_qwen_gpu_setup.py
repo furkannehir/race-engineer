@@ -17,7 +17,7 @@ ROOT = Path(__file__).parents[1]
 def test_trial_profiles_change_only_qwen_compute_and_isolate_the_port(tmp_path):
     import tomllib
 
-    source = (ROOT / "config/default.toml").read_text(encoding="utf-8")
+    source = (ROOT / "config/qwen-legacy.toml").read_text(encoding="utf-8")
     original = AppConfig.model_validate(tomllib.loads(source))
     profiles = [
         AppConfig.model_validate(tomllib.loads(setup_qwen_gpu.trial_profile(source, mode)))
@@ -39,7 +39,7 @@ def test_trial_profiles_change_only_qwen_compute_and_isolate_the_port(tmp_path):
 
 
 def test_profile_generation_refuses_to_change_source_or_existing_trial_files(tmp_path, monkeypatch):
-    source = (ROOT / "config/default.toml").read_text(encoding="utf-8")
+    source = (ROOT / "config/qwen-legacy.toml").read_text(encoding="utf-8")
     source_path = tmp_path / "default.toml"
     source_path.write_text(source, encoding="utf-8")
     monkeypatch.setattr(setup_qwen_gpu, "ROOT", tmp_path)
@@ -56,7 +56,7 @@ def test_profile_generation_refuses_to_change_source_or_existing_trial_files(tmp
 def test_successful_profile_generation_is_idempotent_and_does_not_touch_default(
     tmp_path, monkeypatch
 ):
-    source = (ROOT / "config/default.toml").read_text(encoding="utf-8")
+    source = (ROOT / "config/qwen-legacy.toml").read_text(encoding="utf-8")
     source_path = tmp_path / "default.toml"
     source_path.write_text(source, encoding="utf-8")
     monkeypatch.setattr(setup_qwen_gpu, "ROOT", tmp_path)
@@ -71,7 +71,7 @@ def test_successful_profile_generation_is_idempotent_and_does_not_touch_default(
 
 
 def test_profile_refuses_mismatched_runtime_revision_or_non_cpu_asr():
-    source = (ROOT / "config/default.toml").read_text(encoding="utf-8")
+    source = (ROOT / "config/qwen-legacy.toml").read_text(encoding="utf-8")
     for changed in (
         source.replace('runtime_revision = "b10964"', 'runtime_revision = "other"'),
         source.replace('device = "cpu"', 'device = "cuda"'),
@@ -188,14 +188,14 @@ def test_controlled_benchmark_rejects_unknown_external_backend():
 def test_gpu_memory_report_is_whole_device_and_handles_wddm_without_claiming_zero(
     tmp_path, monkeypatch
 ):
-    monkeypatch.setattr(benchmark_intelligence.shutil, "which", lambda _: "nvidia-smi")
+    monkeypatch.setattr("race_engineer.evaluation.system.shutil.which", lambda _: "nvidia-smi")
 
     def run(*args, **kwargs):
         return subprocess.CompletedProcess(
             args[0], 0, stdout="0, NVIDIA GeForce RTX 5080, 7200, 16303\n"
         )
 
-    monkeypatch.setattr(benchmark_intelligence.subprocess, "run", run)
+    monkeypatch.setattr("race_engineer.evaluation.system.subprocess.run", run)
     report = benchmark_intelligence.gpu_memory_snapshot()
     assert report == {
         "available": True,
@@ -206,7 +206,7 @@ def test_gpu_memory_report_is_whole_device_and_handles_wddm_without_claiming_zer
 
 
 def test_gpu_memory_unknown_measurement_is_unavailable_not_zero(monkeypatch):
-    monkeypatch.setattr(benchmark_intelligence.shutil, "which", lambda _: None)
+    monkeypatch.setattr("race_engineer.evaluation.system.shutil.which", lambda _: None)
     assert benchmark_intelligence.gpu_memory_snapshot()["available"] is False
 
 
@@ -225,7 +225,8 @@ def test_runtime_only_setup_never_touches_existing_profiles(monkeypatch):
     monkeypatch.setattr(setup_qwen_gpu, "install_runtime", lambda: Path("cuda/llama-server.exe"))
     monkeypatch.setattr(setup_qwen_gpu, "probe_runtime", lambda *_: RuntimeProbe(("CUDA0",), None))
     monkeypatch.setattr(
-        setup_qwen_gpu, "write_profiles",
+        setup_qwen_gpu,
+        "write_profiles",
         lambda *_: pytest.fail("runtime-only setup must not create or overwrite profiles"),
     )
     assert setup_qwen_gpu.main() == 0
@@ -234,7 +235,7 @@ def test_runtime_only_setup_never_touches_existing_profiles(monkeypatch):
 def test_profile_generation_accepts_new_directory_without_touching_legacy_profiles(
     tmp_path, monkeypatch
 ):
-    source = (ROOT / "config/default.toml").read_text(encoding="utf-8")
+    source = (ROOT / "config/qwen-legacy.toml").read_text(encoding="utf-8")
     source_path = tmp_path / "default.toml"
     source_path.write_text(source, encoding="utf-8")
     monkeypatch.setattr(setup_qwen_gpu, "ROOT", tmp_path)

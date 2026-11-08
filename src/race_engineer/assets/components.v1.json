@@ -1,25 +1,25 @@
 {
   "schema_version": "pitward-components.v1",
-  "component_set": "2",
+  "component_set": "3",
   "artifacts": [
     {
-      "id": "llama-cpp-cpu-b10964",
+      "id": "llama-cpp-cpu-b12088",
       "kind": "zip",
-      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b10964/llama-b10964-bin-win-cpu-x64.zip",
-      "sha256": "917f39c076402c421224824607397af20f53625a60defc20e8dd22446bf4c5d7",
-      "size": 18427629,
-      "destination": "conversation/llama-b10964-cpu",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12088/llama-b12088-bin-win-cpu-x64.zip",
+      "sha256": "d67dabc287170961d6517ad96b4a8b7fe3e830c1663ad096cd7b5f932484fc9b",
+      "size": 24629485,
+      "destination": "conversation/llama-b12088-cpu",
       "required": "llama-server.exe",
       "license": "MIT"
     },
     {
-      "id": "qwen3-4b-instruct-2507-q4-k-m",
+      "id": "lfm3-1.7b-q4-k-m",
       "kind": "file",
-      "url": "https://huggingface.co/unsloth/Qwen3-4B-Instruct-2507-GGUF/resolve/a06e946bb6b655725eafa393f4a9745d460374c9/Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
-      "sha256": "3605803b982cb64aead44f6c1b2ae36e3acdb41d8e46c8a94c6533bc4c67e597",
-      "size": 2497281120,
-      "destination": "conversation/Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
-      "license": "Apache-2.0"
+      "url": "https://huggingface.co/LiquidAI/LFM3-1.7B-GGUF/resolve/cd0c74c575b5c416f3011b5b4c298077f26ca8c2/LFM3-1.7B-Q4_K_M.gguf",
+      "sha256": "3793e1e6e2266919d6e015287221b41100175a98eddaba92e111aed3b05c93c4",
+      "size": 1099627808,
+      "destination": "conversation/LFM3-1.7B-Q4_K_M.gguf",
+      "license": "LFM Open License v1.0"
     },
     {
       "id": "qwen3-asr-config",

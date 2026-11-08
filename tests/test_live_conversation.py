@@ -168,7 +168,7 @@ def test_live_dialogue_refreshes_facts_and_closes_microphone(monkeypatch, capsys
         async def start(self):
             pass
 
-        async def speak(self, reply, *, before_playback):
+        async def speak(self, reply, *, before_playback, preparation_timeout_s):
             assert before_playback()
             captured.append(reply)
             return SpeechOutputResult(
@@ -254,7 +254,7 @@ def test_live_dialogue_retains_configured_history_across_long_conversations(
         async def start(self):
             pass
 
-        async def speak(self, reply, *, before_playback):
+        async def speak(self, reply, *, before_playback, preparation_timeout_s):
             assert before_playback()
             captured.append(reply)
             return SpeechOutputResult(

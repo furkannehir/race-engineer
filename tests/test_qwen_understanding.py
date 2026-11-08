@@ -303,8 +303,8 @@ def test_live_factory_honors_explicit_candidate_without_changing_defaults(monkey
     assert selected == [PLANNER_V7_ID, PLANNER_V6_ID]
 
 
-def test_repository_config_and_direct_planner_default_to_v7():
-    config = load_config(ROOT / "config/default.toml", environ={})
+def test_explicit_qwen_rollback_and_direct_legacy_planner_default_to_v7():
+    config = load_config(ROOT / "config/qwen-legacy.toml", environ={})
     assert config.conversation.context_planner == PLANNER_V7_ID == PLANNER_ID
     model = Model(draft())
     planner = QwenContextQueryPlanner(config.conversation, model=model)

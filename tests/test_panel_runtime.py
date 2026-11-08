@@ -146,7 +146,8 @@ def test_master_mute_interrupts_active_drops_pending_and_does_not_replay():
         for _ in range(10):
             await asyncio.sleep(0)
         assert [utterance.text for utterance in engine.utterances] == ["new-call"]
-        assert activity == ["speaking", "idle", "speaking", "idle"]
+        # The scheduler owns preparation; only the audio backend can signal playback.
+        assert activity == ["preparing", "idle", "preparing", "idle"]
         await radio.aclose()
 
     asyncio.run(asyncio.wait_for(run(), 2))

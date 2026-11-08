@@ -123,7 +123,10 @@ def _parser() -> argparse.ArgumentParser:
     intelligence.add_argument("--json", action="store_true", help="show evidence and decisions")
     intelligence.add_argument(
         "--candidate",
-        choices=("qwen-context-v5", "qwen-context-v6", "qwen-context-v7"),
+        choices=(
+            "qwen-context-v5", "qwen-context-v6", "qwen-context-v7", "qwen-context-v8",
+            "lfm3-native-v1",
+        ),
         help="override the configured context planner for this typed replay only",
     )
 
@@ -148,7 +151,8 @@ def _parser() -> argparse.ArgumentParser:
         "--candidate",
         default=PLANNER_ID,
         help=(
-            "candidate ID: qwen-context-v5, qwen-context-v6, qwen-context-v7, minilm-nli-v1, or "
+            "candidate ID: qwen-context-v5, qwen-context-v6, qwen-context-v7, "
+            "qwen-context-v8, lfm3-native-v1, minilm-nli-v1, or "
             "laya-multilingual-v1"
         ),
     )
@@ -319,9 +323,7 @@ def _history_action(
     if action == "recent":
         result["sessions"] = [
             summary.model_dump(mode="json")
-            for summary in repository.recent_session_history(
-                profile.profile_id, limit=limit
-            )
+            for summary in repository.recent_session_history(profile.profile_id, limit=limit)
         ]
     elif action == "prune":
         result["deleted_decisions"] = repository.prune_history(
@@ -406,9 +408,7 @@ async def _read_iracing(
             if live is not None and (reset_requested or not live.available):
                 previous = None
                 context_builder = DefaultRaceContextBuilder(config.policy.context)
-                policy = StrictRulePolicy(
-                    config.policy.strict, decision_sink=capture_decision
-                )
+                policy = StrictRulePolicy(config.policy.strict, decision_sink=capture_decision)
                 pending_decisions.clear()
                 reset_requested = False
             events = tuple(event_deriver.derive(previous, frame))

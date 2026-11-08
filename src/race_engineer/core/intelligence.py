@@ -178,6 +178,7 @@ class EvidenceItem(ContractModel):
     source_sequence: int = Field(ge=0)
     observed_at: UtcDatetime
     kind: EvidenceKind
+    temporal_scope: CapabilityTemporalScope | None = None
     subject: str = Field(min_length=1, max_length=160)
     metric: str = Field(min_length=1, max_length=160)
     value: JsonValue = None
@@ -240,6 +241,7 @@ class ContextPacket(ContractModel):
     generation: int = Field(ge=0)
     source_sequence: int = Field(ge=0)
     assembled_at: UtcDatetime
+    temporal_scope: ContextTemporalScope | None = None
     situation: tuple[str, ...] = Field(default=(), max_length=16)
     evidence: tuple[EvidenceItem, ...] = Field(default=(), max_length=64)
     unknowns: tuple[str, ...] = Field(default=(), max_length=64)
@@ -267,6 +269,7 @@ class EngineerBrief(ContractModel):
     language: EngineerLanguage
     tone: str = Field(min_length=1, max_length=80)
     evidence_ids: tuple[str, ...] = Field(default=(), max_length=32)
+    unknown_ids: tuple[str, ...] = Field(default=(), max_length=64)
     guidance: tuple[str, ...] = Field(default=(), max_length=12)
     confidence: Confidence = 1.0
 
@@ -274,7 +277,9 @@ class EngineerBrief(ContractModel):
     def validate_brief(self) -> "EngineerBrief":
         if len(set(self.evidence_ids)) != len(self.evidence_ids):
             raise ValueError("brief evidence IDs must be unique")
-        if self.goal == "silence" and (self.evidence_ids or self.guidance):
+        if len(set(self.unknown_ids)) != len(self.unknown_ids):
+            raise ValueError("brief unknown IDs must be unique")
+        if self.goal == "silence" and (self.evidence_ids or self.unknown_ids or self.guidance):
             raise ValueError("a silent brief cannot request evidence or guidance")
         return self
 
@@ -285,6 +290,20 @@ class EvidenceReference(ContractModel):
     placeholder: str = Field(pattern=r"^[a-z][a-z0-9_]*$", max_length=80)
     evidence_id: str = Field(min_length=1, max_length=160)
     field: ReferenceField
+
+
+class LimitationReference(ContractModel):
+    """Bind one safe unavailable-data statement to application-provided unknowns."""
+
+    placeholder: str = Field(pattern=r"^[a-z][a-z0-9_]*$", max_length=80)
+    unknown_ids: tuple[str, ...] = Field(min_length=1, max_length=64)
+    wording: Literal["standard", "radio", "explain"] = "standard"
+
+    @model_validator(mode="after")
+    def validate_unknowns(self) -> "LimitationReference":
+        if len(set(self.unknown_ids)) != len(self.unknown_ids):
+            raise ValueError("limitation unknown IDs must be unique")
+        return self
 
 
 class GeneratedResponse(ContractModel):
@@ -299,17 +318,19 @@ class GeneratedResponse(ContractModel):
     action: ResponseAction
     speech_template: str | None = Field(default=None, min_length=1, max_length=1500)
     references: tuple[EvidenceReference, ...] = Field(default=(), max_length=32)
+    limitation_references: tuple[LimitationReference, ...] = Field(default=(), max_length=1)
 
     @model_validator(mode="after")
     def validate_response(self) -> "GeneratedResponse":
         if self.action == "silence":
-            if self.speech_template is not None or self.references:
+            if self.speech_template is not None or self.references or self.limitation_references:
                 raise ValueError("silent responses cannot carry speech or references")
             return self
         if self.speech_template is None:
             raise ValueError("spoken responses require a speech template")
         placeholders = _PLACEHOLDER.findall(self.speech_template)
         reference_names = [reference.placeholder for reference in self.references]
+        reference_names.extend(reference.placeholder for reference in self.limitation_references)
         if len(reference_names) != len(set(reference_names)):
             raise ValueError("response placeholders must be unique")
         if sorted(placeholders) != sorted(reference_names):

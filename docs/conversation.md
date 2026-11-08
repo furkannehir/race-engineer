@@ -1,5 +1,11 @@
 # Local conversational prototype: text over replay
 
+This page describes the legacy Qwen prototype. The current English MVP uses
+[native LFM selection and grounded replies](lfm3-trial.md). Legacy `chat-replay`
+and `voice-replay` commands require `--config config/qwen-legacy.toml`; use that
+same profile for their model server. The panel and `intelligence-replay` use LFM
+through the normal default configuration.
+
 This first slice accepts freely phrased English and Turkish questions about a paused
 telemetry fixture. Qwen3-4B-Instruct-2507 resolves the question and recent conversational
 context into validated, read-only queries. Application code retrieves current facts and
@@ -25,14 +31,14 @@ For another checkout, follow the setup section below first.
 From the repository root, start the local model in one terminal:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts/start_conversation_model.py
+.\.venv\Scripts\python.exe scripts/start_conversation_model.py --config config/qwen-legacy.toml
 ```
 
 Wait for the server to report that it is listening. In a second terminal:
 
 ```powershell
 .\.venv\Scripts\python.exe -m race_engineer chat-replay fixtures/synthetic/conversation `
-  --config config/default.toml
+  --config config/qwen-legacy.toml
 ```
 
 Example questions (not a required vocabulary):
@@ -64,7 +70,7 @@ For a single question and a traceable JSON result:
 
 ```powershell
 .\.venv\Scripts\python.exe -m race_engineer chat-replay fixtures/synthetic/conversation `
-  --config config/default.toml --frame-index 1 --question "Where are we?" --json
+  --config config/qwen-legacy.toml --frame-index 1 --question "Where are we?" --json
 ```
 
 Use `--language tr` or `--language en` to force reply language. Otherwise Qwen selects it

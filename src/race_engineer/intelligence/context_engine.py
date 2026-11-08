@@ -11,12 +11,14 @@ from race_engineer.core.intelligence import (
     ContextPlan,
     DriverTurn,
     EvidenceItem,
+    EvidenceQuery,
 )
 from race_engineer.core.interfaces import (
     ContextQueryPlanner,
     RaceCapabilityRegistry,
     TelemetryMemory,
 )
+from race_engineer.intelligence.context_planner import TEMPORAL_PLANNER_IDS
 from race_engineer.intelligence.planner_diagnostics import ContextPlanRejection
 from race_engineer.radio_diagnostics import radio_event, radio_stage
 
@@ -57,6 +59,8 @@ class QueryDrivenContextEngineer:
     def _execute_capabilities(
         self,
         requests: Sequence[CapabilityRequest],
+        *,
+        temporal_metadata: bool = False,
     ) -> tuple[tuple[EvidenceItem, ...], tuple[str, ...]]:
         if not requests:
             return (), ()
@@ -65,13 +69,43 @@ class QueryDrivenContextEngineer:
         results: tuple[CapabilityResult, ...] = tuple(
             self._capabilities.execute(request) for request in requests
         )
-        evidence = tuple(item for result in results for item in result.evidence)
+        scopes = (
+            {item.capability_id: item.temporal_scope for item in self._capabilities.catalog()}
+            if temporal_metadata
+            else {}
+        )
+        evidence = tuple(
+            item.model_copy(update={"temporal_scope": scopes.get(result.capability_id)})
+            if temporal_metadata
+            else item
+            for result in results
+            for item in result.evidence
+        )
         unknowns = tuple(
             f"{result.capability_id}:{result.unavailable_reason}"
             for result in results
             if result.status == "unavailable" and result.unavailable_reason is not None
         )
         return evidence, unknowns
+
+    def _query_evidence(
+        self, queries: Sequence[EvidenceQuery], *, temporal_metadata: bool
+    ) -> tuple[EvidenceItem, ...]:
+        evidence = self._memory.query_many(queries)
+        if not temporal_metadata:
+            return evidence
+        scopes = {
+            query.query_id: (
+                "current"
+                if query.selector.source == "field" or query.operation == "latest"
+                else "historical"
+            )
+            for query in queries
+        }
+        return tuple(
+            item.model_copy(update={"temporal_scope": scopes[item.evidence_id]})
+            for item in evidence
+        )
 
     def _packet(
         self,
@@ -90,6 +124,7 @@ class QueryDrivenContextEngineer:
             generation=turn.generation,
             source_sequence=frame.sequence,
             assembled_at=frame.observed_at,
+            temporal_scope=plan.temporal_scope if plan.planner_id in TEMPORAL_PLANNER_IDS else None,
             situation=plan.situation,
             evidence=evidence,
             unknowns=self._unknowns(plan, evidence, capability_unknowns),
@@ -103,22 +138,26 @@ class QueryDrivenContextEngineer:
                 plan = await self._planner.plan(turn, signals, capabilities)
             except ContextPlanRejection as error:
                 radio_event(
-                    "radio_context_plan_rejected", reason=str(error),
+                    "radio_context_plan_rejected",
+                    reason=str(error),
                     selection=asdict(error.diagnostic) if error.diagnostic is not None else None,
                 )
                 raise
         if plan.turn_id != turn.turn_id:
             raise ContextEngineerError("context_plan_turn_mismatch")
         radio_event(
-            "radio_context_plan", planner_id=plan.planner_id,
-            temporal_scope=plan.temporal_scope, situation=plan.situation,
+            "radio_context_plan",
+            planner_id=plan.planner_id,
+            temporal_scope=plan.temporal_scope,
+            situation=plan.situation,
             capability_ids=[request.capability_id for request in plan.capability_requests],
             queries=[query.model_dump(mode="json") for query in plan.queries],
             unknowns=plan.unknowns,
         )
-        query_evidence = self._memory.query_many(plan.queries)
+        temporal_metadata = plan.planner_id in TEMPORAL_PLANNER_IDS
+        query_evidence = self._query_evidence(plan.queries, temporal_metadata=temporal_metadata)
         capability_evidence, capability_unknowns = self._execute_capabilities(
-            plan.capability_requests
+            plan.capability_requests, temporal_metadata=temporal_metadata
         )
         evidence = (*query_evidence, *capability_evidence)
         self._plans[turn.turn_id] = (turn, plan)
@@ -156,8 +195,13 @@ class QueryDrivenContextEngineer:
         selected_queries = tuple(
             queries[evidence_id] for evidence_id in evidence_ids if evidence_id in queries
         )
+        temporal_metadata = plan.planner_id in TEMPORAL_PLANNER_IDS
         refreshed = {
-            item.evidence_id: item for item in self._memory.query_many(selected_queries)
+            item.evidence_id: item
+            for item in self._query_evidence(
+                selected_queries,
+                temporal_metadata=temporal_metadata,
+            )
         }
         selected_capabilities = tuple(
             request
@@ -169,7 +213,7 @@ class QueryDrivenContextEngineer:
             )
         )
         capability_evidence, capability_unknowns = self._execute_capabilities(
-            selected_capabilities
+            selected_capabilities, temporal_metadata=temporal_metadata
         )
         refreshed.update(
             (item.evidence_id, item)

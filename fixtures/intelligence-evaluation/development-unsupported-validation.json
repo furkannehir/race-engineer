@@ -1,0 +1,83 @@
+{
+  "schema_version": "intelligence-eval.v1",
+  "dataset_id": "intelligence-development-unsupported-validation",
+  "revision": "2026-10-29.seed2",
+  "split": "development",
+  "fixture": "fixtures/synthetic/intelligence-capabilities",
+  "groups": [
+    {
+      "id": "unsupported-lap-duration-en", "family": "unsupported-lap-duration-en-20261029",
+      "category": "unsupported-lap-timing", "language": "en",
+      "questions": ["What was the time of my previous lap?", "What's my last lap?"],
+      "expected": {"purpose": "race_information", "temporal_scope": "historical", "evidence_outcome": "unavailable", "required_unknowns": ["requested_analysis_unavailable"]}
+    },
+    {
+      "id": "unsupported-lap-duration-tr", "family": "unsupported-lap-duration-tr-20261029",
+      "category": "unsupported-lap-timing", "language": "tr",
+      "questions": ["Bir önceki turumun süresi neydi?", "Son turum kaç saniyeydi?"],
+      "expected": {"purpose": "race_information", "temporal_scope": "historical", "evidence_outcome": "unavailable", "required_unknowns": ["requested_analysis_unavailable"]}
+    },
+    {
+      "id": "social-after-classification-en", "family": "social-after-classification-en-20261029",
+      "category": "social-history-isolation", "language": "en",
+      "questions": ["Hey, yo, are you there?", "Hello."],
+      "recent_dialogue": ["Driver: What's my position?", "Engineer: You're P1 of 1."],
+      "expected": {"purpose": "social", "temporal_scope": "social", "evidence_outcome": "no_evidence"}
+    },
+    {
+      "id": "social-after-classification-tr", "family": "social-after-classification-tr-20261029",
+      "category": "social-history-isolation", "language": "tr",
+      "questions": ["Orada mısın?", "Merhaba."],
+      "recent_dialogue": ["Driver: Şu an kaçıncıyım?", "Engineer: Bir aracın içinde P1'sin."],
+      "expected": {"purpose": "social", "temporal_scope": "social", "evidence_outcome": "no_evidence"}
+    },
+    {
+      "id": "unsupported-wing-en", "family": "unsupported-wing-en-20261028",
+      "category": "unsupported-damage", "language": "en",
+      "questions": ["Can you check whether the front wing is damaged?"],
+      "expected": {"purpose": "race_information", "temporal_scope": "current", "evidence_outcome": "unavailable", "required_unknowns": ["requested_analysis_unavailable"]}
+    },
+    {
+      "id": "unsupported-wing-tr", "family": "unsupported-wing-tr-20261028",
+      "category": "unsupported-damage", "language": "tr",
+      "questions": ["Ön kanadın hasarlı olup olmadığını kontrol eder misin?"],
+      "expected": {"purpose": "race_information", "temporal_scope": "current", "evidence_outcome": "unavailable", "required_unknowns": ["requested_analysis_unavailable"]}
+    },
+    {
+      "id": "unsupported-tyres-en", "family": "unsupported-tyres-en-20261028",
+      "category": "unsupported-tyres", "language": "en",
+      "questions": ["How worn are the tyres right now?"],
+      "expected": {"purpose": "race_information", "temporal_scope": "current", "evidence_outcome": "unavailable", "required_unknowns": ["requested_analysis_unavailable"]}
+    },
+    {
+      "id": "unsupported-tyres-tr", "family": "unsupported-tyres-tr-20261028",
+      "category": "unsupported-tyres", "language": "tr",
+      "questions": ["Şu an lastikler ne kadar aşınmış?"],
+      "expected": {"purpose": "race_information", "temporal_scope": "current", "evidence_outcome": "unavailable", "required_unknowns": ["requested_analysis_unavailable"]}
+    },
+    {
+      "id": "unsupported-damage-fuel-en", "family": "unsupported-damage-fuel-en-20261028",
+      "category": "partial-unsupported", "language": "en",
+      "questions": ["What's the damage situation, and how much fuel is in the tank?"],
+      "expected": {"purpose": "race_information", "temporal_scope": "current", "queries": [{"source": "player", "signal": "fuel_l", "operation": "latest"}], "evidence_outcome": "partial", "required_unknowns": ["requested_analysis_unavailable"]}
+    },
+    {
+      "id": "unsupported-damage-fuel-tr", "family": "unsupported-damage-fuel-tr-20261028",
+      "category": "partial-unsupported", "language": "tr",
+      "questions": ["Hasar durumu nasıl, bir de depoda ne kadar yakıt var?"],
+      "expected": {"purpose": "race_information", "temporal_scope": "current", "queries": [{"source": "player", "signal": "fuel_l", "operation": "latest"}], "evidence_outcome": "partial", "required_unknowns": ["requested_analysis_unavailable"]}
+    },
+    {
+      "id": "unsupported-tyres-speed-en", "family": "unsupported-tyres-speed-en-20261028",
+      "category": "partial-unsupported", "language": "en",
+      "questions": ["Tell me our current speed and tyre wear."],
+      "expected": {"purpose": "race_information", "temporal_scope": "current", "queries": [{"source": "player", "signal": "speed_mps", "operation": "latest"}], "evidence_outcome": "partial", "required_unknowns": ["requested_analysis_unavailable"]}
+    },
+    {
+      "id": "unsupported-tyres-speed-tr", "family": "unsupported-tyres-speed-tr-20261028",
+      "category": "partial-unsupported", "language": "tr",
+      "questions": ["Anlık hızımızı ve lastik aşınmasını söyler misin?"],
+      "expected": {"purpose": "race_information", "temporal_scope": "current", "queries": [{"source": "player", "signal": "speed_mps", "operation": "latest"}], "evidence_outcome": "partial", "required_unknowns": ["requested_analysis_unavailable"]}
+    }
+  ]
+}

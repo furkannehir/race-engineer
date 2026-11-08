@@ -2,13 +2,9 @@
 
 import argparse
 import asyncio
-import csv
 import io
 import json
-import os
 import random
-import shutil
-import subprocess
 import sys
 import time
 from datetime import UTC, datetime
@@ -26,6 +22,7 @@ from race_engineer.evaluation.system import (
     files_fingerprint,
     git_dirty,
     git_revision,
+    gpu_memory_snapshot,
     machine_metadata,
 )
 from race_engineer.fixtures import load_fixture
@@ -34,6 +31,7 @@ from race_engineer.intelligence.context_planner import (
     PLANNER_V5_ID,
     PLANNER_V6_ID,
     PLANNER_V7_ID,
+    PLANNER_V8_ID,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -45,39 +43,6 @@ DEFAULT_CASES = (
     "vent-en",
     "vent-tr",
 )
-
-
-def gpu_memory_snapshot() -> dict[str, object]:
-    """Whole-device sampled memory, not per-process memory or a measured VRAM peak."""
-    executable = shutil.which("nvidia-smi")
-    if executable is None:
-        return {"available": False, "reason": "nvidia_smi_unavailable"}
-    try:
-        result = subprocess.run(
-            [
-                executable,
-                "--query-gpu=index,name,memory.used,memory.total",
-                "--format=csv,noheader,nounits",
-            ],
-            capture_output=True,
-            text=True,
-            timeout=5,
-            creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
-        )
-        if result.returncode != 0:
-            return {"available": False, "reason": "gpu_query_failed"}
-        devices = [
-            {
-                "index": int(index),
-                "name": name.strip(),
-                "used_mib": int(used),
-                "total_mib": int(total),
-            }
-            for index, name, used, total in csv.reader(result.stdout.splitlines())
-        ]
-    except (OSError, ValueError, subprocess.TimeoutExpired):
-        return {"available": False, "reason": "gpu_query_failed"}
-    return {"available": True, "devices": devices}
 
 
 def verify_trial_runtime(server: ConversationServer, args: argparse.Namespace) -> None:
@@ -280,7 +245,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--candidate",
-        choices=(PLANNER_V5_ID, PLANNER_V6_ID, PLANNER_V7_ID),
+        choices=(PLANNER_V5_ID, PLANNER_V6_ID, PLANNER_V7_ID, PLANNER_V8_ID),
         default=PLANNER_ID,
         help="planner prompt candidate to benchmark",
     )

@@ -7,7 +7,11 @@ third-party components governed by their own terms.
   keeps the Qt libraries dynamically linked in the application directory.
 - PyInstaller bootloader: GPL-2.0-or-later with the PyInstaller bootloader exception.
 - llama.cpp CPU runtime: MIT.
-- Qwen3-4B-Instruct-2507 and Qwen3-ASR-0.6B: Apache-2.0 model terms.
+- LFM3-1.7B Q4_K_M: [LFM Open License v1.0](https://huggingface.co/LiquidAI/LFM3-1.7B/blob/main/LICENSE).
+  These are separate model terms; Pitward's GPL license does not replace them.
+- Qwen3-ASR-0.6B: Apache-2.0 model terms.
+  The explicit source Qwen3-4B rollback also uses Apache-2.0 model terms; its
+  weights are not part of component set 3.
 - Chatterbox TTS 0.1.7 and the pinned ResembleAI/chatterbox multilingual V2 model: MIT.
   The built-in `conds.pt` voice is used; no reference recordings are uploaded.
 - PyTorch/torchaudio, Transformers, Resemble Perth watermarking, sounddevice and

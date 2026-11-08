@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from race_engineer.config import AppConfig
-from race_engineer.tts_metadata import MODEL_FILES, MODEL_RELATIVE
+from race_engineer.tts_metadata import MODEL_RELATIVE, model_files
 
 _PRODUCT_DIRECTORY = "Pitward"
 
@@ -90,9 +90,9 @@ class Installation:
                 "accelerated_backend": None,
                 "device": None,
                 "cpu_executable_path": conversation
-                / "llama-b10964-cpu"
-                / "llama-server.exe",
-                "model_path": conversation / "Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+                / config.conversation.runtime.cpu_executable_path.parent.name
+                / config.conversation.runtime.cpu_executable_path.name,
+                "model_path": conversation / config.conversation.runtime.model_path.name,
             }
         )
         return config.model_copy(
@@ -136,6 +136,6 @@ class Installation:
             config.stt.model_path / "model.safetensors",
             config.tts.worker_path
             or self.install_root / "workers/PitwardTTSWorker/PitwardTTSWorker.exe",
-            *(config.tts.model_path / name for name in MODEL_FILES),
+            *(config.tts.model_path / name for name in model_files(config.tts.model_variant)),
         )
         return tuple(path for path in candidates if not path.is_file())

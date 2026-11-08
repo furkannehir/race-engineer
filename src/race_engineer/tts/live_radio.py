@@ -288,7 +288,7 @@ class LiveRadio:
                 await action()
 
             self._active = asyncio.create_task(invoke(), name="live-radio-playback")
-            self._activity("speaking")
+            self._activity("preparing")
             outcome = "completed"
             try:
                 await self._active
@@ -307,7 +307,9 @@ class LiveRadio:
                     "live speech failed; telemetry continues",
                     extra={
                         "event": "live_speech_failed",
-                        "reason": type(error).__name__,
+                        "reason": str(error)
+                        if isinstance(error, SpeechOutputError)
+                        else type(error).__name__,
                     },
                 )
             finally:

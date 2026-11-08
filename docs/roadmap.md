@@ -1,10 +1,90 @@
 # Working roadmap
 
-Updated 2026-10-28. This is the current progress/backlog companion to the original
+Updated 2026-11-08. This is the current progress/backlog companion to the original
 [implementation plan](personalized-ai-race-engineer-implementation-plan.docx), not a claim
 that every original milestone exit criterion has been formally validated.
 
 ## Current checkpoint
+
+November 8 model decision after the VR shakedown: **LFM3-1.7B Q4_K_M is the English
+MVP model**, using native tool selection and grounded JSON replies through one
+CUDA b12088 server. The source default now selects LFM; Qwen remains an explicit
+rollback in `config/qwen-legacy.toml`. Qwen3-ASR and the default Chatterbox settings
+are unchanged. Installer component set 3 selects the matching LFM model/CPU
+runtime; frozen inference and CPU race latency still require validation. Existing
+executables must be rebuilt, and release-clearance gates remain closed.
+
+The real VR session recorded 0.38 s mean LFM request time per spoken reply and
+2.21 s speech synthesis, with roughly 14.6 GiB combined VRAM while driving.
+Six of nine transcribed questions produced spoken replies; three best-lap
+requests failed argument validation, and a last-lap request selected a count.
+This model decision prioritizes the current resource/latency budget while keeping
+those correctness failures open. It is not a claim that LFM passed semantic acceptance.
+
+Next agreed sequence:
+
+1. Tighten supported/unavailable selection, bounded handling of invalid calls,
+   and prevention of measurement substitutions such as counts for lap duration.
+2. Add last completed lap, session best, difference from best and recent trend
+   from valid completed laps, accounting for invalid and pit laps.
+3. Validate the driver's real questions, paraphrases, follow-ups and missing data
+   for meaning as well as latency, then run another live shakedown.
+4. Deepen pit strategy with separately defined stop duration, pit window and
+   rejoin estimates, using verified inputs and explicit assumptions.
+
+November 8 English-first LFM3 trial: verified Q4 weights and separate CPU/CUDA
+llama.cpp b12088 runtimes are installed without replacing Qwen. An opt-in native
+tool adapter now selects existing capabilities/raw telemetry and submits grounded
+reply drafts through the same resident LFM server. It retains temporal validation,
+evidence refresh, unavailable-data handling and existing grounding. Terminal
+feedback exposed numeric replies bypassing the native function argument schema.
+Native tool selection now uses a constrained JSON reply on the same resident
+model, without changing Qwen. The conversational wording slice now gives LFM a
+compact human-readable fact view, with original references retained for grounding
+and live refresh. Unsupported-data follow-ups choose a bounded explanation style
+instead of repeating the same generic sentence. Follow-up framing still varies
+with longer dialogue. Current first/last checks now select distinct native tools,
+use Python-calculated yes/no claims and refresh both the claim and supporting
+position before speech. History is quoted context for selection; old spoken
+measurements are excluded from factual reply generation. The reported repeated
+ranking sequence and eight first/last classification states passed locally.
+The latest 50-turn development run completed all 50 turns, with 29 exact plans and 35
+evidence expectation matches, versus Qwen's 49 completed/45 exact/44 evidence
+matches. Native turns had 322 ms median and 473 ms p95 typed latency, with zero
+Core repairs; this excludes
+STT, speech generation, playback and VR load. Native selection alone is not an
+acceptance gate: social checks, broad overviews, compound questions and temporal
+scope still need better selection. A prompt-cache opt-out probe did not resolve
+the earlier history errors; cache settings are unchanged. These English-only
+measurements preceded the model decision above; no training was performed. Its model/runtime buffers save roughly
+2.34 GiB versus the tested Qwen baseline. See [the trial and follow-ups](lfm3-trial.md).
+
+November 8 speech memory placement: CUDA default-voice synthesis keeps unused
+reference encoders in system RAM, with active generation weights resident on the
+GPU. V3 warm-up allocation dropped from about 2100 to 1582 MiB without a per-reply
+weight transfer. The same placement adapter supports the pinned V2 runtime. Restart
+the source panel/engineer to apply it; model assets and live profile keys are unchanged.
+See [default-voice memory placement](text-to-speech.md#default-voice-memory-placement-2026-11-08).
+
+November 7 V3 speech trial: Chatterbox Multilingual V3 is installed in a separate
+source runtime with a verified cached checkpoint and explicit model selection.
+`data/trials/chatterbox-v3-live.toml` retains the previous Qwen v8/FP16 setup and
+selects CUDA/BF16 V3 for both conversational replies and automatic announcements.
+Seven real playback checks completed using one model/worker. Logs now identify the
+speech variant and allocator memory, alongside existing per-turn timings. Listening,
+unwanted-tail reliability and performance in a race remain to be accepted; TTS-002
+is open. Normal V2 setup and rollback remain available. See
+[the V3 race trial](text-to-speech.md#v3-source-race-trial-2026-11-07).
+
+October 29 live-delivery fixes: replies have a separate 15-second queue/preparation
+budget while latest-frame freshness stays at three seconds. The panel now separates
+Preparing speech from playback dispatch, and reports failed/unplayed answers.
+Only completed spoken replies enter intelligence history; internal redacted numbers
+cannot be spoken. The experimental v8 Core isolates radio checks/greetings from old
+factual replies, and its planner distinguishes lap duration from race rank. Real
+last-lap timing retrieval remains absent. See INT-012–014 for the live reproduction,
+tests and remaining Turkish/planner limitations. V7/FP16 remains the normal default;
+the separate `data/trials/qwen-v8-live.toml` profile remains the live shakedown candidate.
 
 October 25 speech migration: replies and automatic calls now share one persistent
 local Chatterbox Multilingual 0.1.7/V2 default-voice backend, selected through `[tts]`.
@@ -21,6 +101,35 @@ saved about 1 GiB of tensor memory but did not improve synthesis latency; explic
 FP32 rollback remains available. Real bilingual routing, interruption and shutdown
 checks passed. Combined iRacing/Qwen contention and longer race acceptance remain
 open; no other model or radio-cue changes are included.
+
+October 28 Qwen cache experiment: an offline, owned-server FP16/Q8 comparison
+keeps v7, the Q4 model and 8192-token capacity unchanged. Q8 saved 540 MiB of KV
+allocation and reduced isolated typed pipeline latency, but the full 62-question
+development comparison caught a Q8-only Turkish starting-grid/current-position
+confusion. Live Qwen remains FP16; reproduce that temporal regression and review
+the common baseline failures before any cache promotion. See
+[the cache trial and reports](qwen-cache-trial.md).
+
+October 28 v8 follow-up: the experimental planner now interprets time before tool
+selection, with bilingual contrasts and the unchanged v7 wire schema. Opt-in
+temporal evidence metadata reaches Core and final grounding; v7's authored prompt
+and live FP16 default stay unchanged. V8 passed the targeted starting-grid cases
+and completed all 84 questions per cache in the wider matrix, but exact-plan
+regressions and an unsupported negative damage claim remain. Review INT-010 and
+the [four-way v8 comparison](qwen-cache-trial.md#v8-results-2026-10-28-not-promoted)
+before promoting v8/Q8. No new model, extra LLM call, real starting-grid retrieval
+or live configuration change is included.
+
+October 28 unavailable-data follow-up: experimental v8 now separates an
+application-owned EN/TR limitation from supported, model-generated speech.
+Unavailable inputs are refreshed before final grounding; fully unavailable
+answers skip Core inference. The original unsupported negative damage claim is
+mitigated under FP16 and Q8 in the 92-question replay. FP16 completed 92/92 turns,
+Q8 91/92; planner/compound regressions, ambiguous references, Turkish units and
+unproven free-form semantics remain. Keep v7/FP16 live. See INT-010, INT-011 and
+[the guarded comparison](qwen-cache-trial.md#unavailable-data-safeguard-results-2026-10-28-not-promoted).
+This run had iRacing active alongside synthetic replay; its timings are not an
+isolated benchmark or live voice acceptance.
 
 Priority decision, October 12: stabilize Qwen request understanding before adding
 race-start features or doing further speed tuning. Reproduce the observed failures

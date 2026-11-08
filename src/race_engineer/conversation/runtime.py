@@ -45,6 +45,22 @@ class RuntimeCandidate:
     gpu_layers: int
 
 
+@dataclass(frozen=True)
+class ConversationTrialOptions:
+    """Explicit diagnostic-only overrides; live launchers leave these unset."""
+
+    flash_attention: Literal["auto", "on"]
+    cache_type: Literal["f16", "q8_0"]
+    log_path: Path
+    seed: int = 7
+
+    def __post_init__(self) -> None:
+        if self.flash_attention not in {"auto", "on"} or self.cache_type not in {"f16", "q8_0"}:
+            raise ValueError("unsupported conversation trial settings")
+        if not 0 <= self.seed < 2**31:
+            raise ValueError("invalid conversation trial seed")
+
+
 def _resolve(root: Path, configured: Path) -> Path:
     return configured if configured.is_absolute() else root / configured
 
@@ -150,7 +166,11 @@ async def runtime_candidates(
     return (accelerated,), None
 
 
-def server_command(candidate: RuntimeCandidate, config: ConversationConfig) -> tuple[str, ...]:
+def server_command(
+    candidate: RuntimeCandidate,
+    config: ConversationConfig,
+    trial: ConversationTrialOptions | None = None,
+) -> tuple[str, ...]:
     arguments = [
         str(candidate.executable),
         "--model",
@@ -174,6 +194,32 @@ def server_command(candidate: RuntimeCandidate, config: ConversationConfig) -> t
     ]
     if candidate.device is not None:
         arguments.extend(("--device", candidate.device))
+    if config.runtime.enable_thinking is not None:
+        arguments.extend(
+            (
+                "--chat-template-kwargs",
+                json.dumps({"enable_thinking": config.runtime.enable_thinking}),
+            )
+        )
+    if trial is not None:
+        arguments.extend(
+            (
+                "--flash-attn",
+                trial.flash_attention,
+                "--cache-type-k",
+                trial.cache_type,
+                "--cache-type-v",
+                trial.cache_type,
+                "--seed",
+                str(trial.seed),
+                "--log-file",
+                str(trial.log_path),
+                "--log-verbosity",
+                "4",
+                "--log-colors",
+                "off",
+            )
+        )
     return tuple(arguments)
 
 
@@ -187,11 +233,13 @@ class ConversationServer:
         *,
         notify: Callable[[str, str], None] = lambda *_: None,
         quiet: bool = True,
+        trial: ConversationTrialOptions | None = None,
     ) -> None:
         self.root = root
         self.config = config
         self.notify = notify
         self.quiet = quiet
+        self.trial = trial
         self.process: asyncio.subprocess.Process | None = None
         self.effective: RuntimeCandidate | None = None
 
@@ -219,7 +267,7 @@ class ConversationServer:
         output = asyncio.subprocess.DEVNULL if self.quiet else None
         try:
             self.process = await start_owned_process(
-                *server_command(candidate, self.config),
+                *server_command(candidate, self.config, self.trial),
                 stdout=output,
                 stderr=output,
                 creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
@@ -235,11 +283,15 @@ class ConversationServer:
                 self.notify("compute", f"{candidate.mode}:{candidate.backend}")
                 _LOGGER.info(
                     "local conversation runtime ready",
-                    extra={"event": "conversation_runtime_ready", "mode": candidate.mode,
-                           "backend": candidate.backend, "model": self.config.model,
-                           "threads": self.config.runtime.threads,
-                           "gpu_layers": candidate.gpu_layers,
-                           "context_size": self.config.runtime.context_size},
+                    extra={
+                        "event": "conversation_runtime_ready",
+                        "mode": candidate.mode,
+                        "backend": candidate.backend,
+                        "model": self.config.model,
+                        "threads": self.config.runtime.threads,
+                        "gpu_layers": candidate.gpu_layers,
+                        "context_size": self.config.runtime.context_size,
+                    },
                 )
                 return
             await asyncio.sleep(0.25)
@@ -254,8 +306,12 @@ class ConversationServer:
             self.notify("compute", "external:unmanaged")
             _LOGGER.info(
                 "reusing external conversation runtime",
-                extra={"event": "conversation_runtime_ready", "mode": "external",
-                       "backend": "unmanaged", "model": self.config.model},
+                extra={
+                    "event": "conversation_runtime_ready",
+                    "mode": "external",
+                    "backend": "unmanaged",
+                    "model": self.config.model,
+                },
             )
             return
         self.notify("phase", "loading_model")

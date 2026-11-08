@@ -71,32 +71,35 @@ queue_capacity = 8
 
 [conversation]
 adapter = "llama-cpp"
-# V7 is the development/live-test default; set v6 explicitly for rollback.
-context_planner = "qwen-context-v7"
-model = "Qwen3-4B-Instruct-2507"
-port = 8088
+# English MVP: one resident LFM model selects native tools and writes grounded replies.
+# Explicit Qwen rollback: --config config/qwen-legacy.toml.
+context_planner = "lfm3-native-v1"
+model = "LiquidAI/LFM3-1.7B"
+port = 8092
 timeout_s = 30.0
 history_turns = 6
 max_snapshot_age_s = 3.0
+# Queue + speech preparation budget. Latest live telemetry must still be fresh.
+reply_delivery_timeout_s = 15.0
 default_language = "en"
 
-# Main edition: Qwen context planning and replies run on NVIDIA/CUDA.
-# STT remains CPU-only; Chatterbox selects its device independently. CPU Qwen is explicit;
-# do not silently reuse an external CPU server or fall back during a GPU session.
+# LFM runs on NVIDIA/CUDA. Qwen3-ASR stays on CPU; Chatterbox selects its own device.
+# CPU LFM is explicit; never silently reuse a different server or switch model/backend.
 [conversation.runtime]
 mode = "gpu"
-cpu_executable_path = "data/conversation-prototype/llama-b10964-cpu/llama-server.exe"
-accelerated_executable_path = "data/conversation-prototype/llama-b10964-cuda-13.3/llama-server.exe"
+cpu_executable_path = "data/lfm3-prototype/llama-b12088-cpu/llama-server.exe"
+accelerated_executable_path = "data/lfm3-prototype/llama-b12088-cuda-13.4/llama-server.exe"
 accelerated_backend = "cuda"
 device = "CUDA0"
-model_path = "data/conversation-prototype/Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
-runtime_revision = "b10964"
-model_revision = "a06e946bb6b655725eafa393f4a9745d460374c9"
+model_path = "data/lfm3-prototype/LFM3-1.7B-Q4_K_M.gguf"
+runtime_revision = "b12088"
+model_revision = "cd0c74c575b5c416f3011b5b4c298077f26ca8c2"
 quantization = "Q4_K_M"
 threads = 8
 context_size = 8192
 parallel = 1
 gpu_layers = -1
+enable_thinking = false
 fallback_to_cpu = false
 reuse_external_server = false
 probe_timeout_s = 5.0

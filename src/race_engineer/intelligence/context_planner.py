@@ -34,6 +34,9 @@ from race_engineer.radio_diagnostics import radio_text
 PLANNER_V5_ID = "qwen-context-v5"
 PLANNER_V6_ID = "qwen-context-v6"
 PLANNER_V7_ID = "qwen-context-v7"
+PLANNER_V8_ID = "qwen-context-v8"
+LFM_NATIVE_ID = "lfm3-native-v1"
+TEMPORAL_PLANNER_IDS = frozenset({PLANNER_V8_ID, LFM_NATIVE_ID})
 PLANNER_ID = PLANNER_V7_ID
 _PROMPT = """Plan evidence for a racing driver's conversation with a calm teammate.
 Return the smallest COMPLETE JSON plan. Do not answer the driver or write radio dialogue.
@@ -423,6 +426,58 @@ def _v7_prompt() -> str:
     return instructions + examples + _V7_PROMPT + _V7_EXAMPLES
 
 
+def _v8_prompt() -> str:
+    """Experimental time-first interpretation; preserve v7 and its wire schema."""
+    prompt = (
+        _v7_prompt()
+        .replace(
+            "Match the requested quantity BEFORE matching time scope:",
+            "Interpret the requested quantity TOGETHER WITH its time reference before tools:",
+        )
+        .replace(
+            "Interpret quantity before tool/time scope. Race position/place/rank "
+            "means current_classification,",
+            "Interpret time and quantity before tools. Only PRESENT race position/place/rank "
+            "means current_classification,",
+        )
+    )
+    return (
+        prompt
+        + """
+Temporal interpretation contract:
+Decide WHEN the requested fact belongs before choosing any tool. A word naming a quantity
+does not make the request current. Past tense and a reference to an earlier race event
+must survive both requested_facts and temporal_scope, even in short Turkish questions.
+Present rank, original lineup, rank gained over a window and predicted finish are different
+facts. This distinction applies equally to fuel, gaps, speed and all other quantities.
+Current classification supplies only present rank; it cannot answer a race-start question.
+A historical trend/delta is not an original snapshot. A prediction is not a current value.
+An unavailable historical fact remains historical with unsupported_analysis and no unrelated
+tools. Do not invent a window, use latest, or reinterpret a past question to fit a tool.
+Explicit time in the new utterance overrides time in old dialogue. Resolve an actual time
+correction from dialogue; if genuinely unresolved, ask via ambiguous_reference, do not guess.
+These examples describe meanings, not phrases to match or a vocabulary restriction:
+"Report our running rank now." / "Yarışta şu anki yerimizi söyle.": present classification.
+"Report our race-launch grid slot." / "Kalkış dizilişindeki yerimizi söyle.": original past
+lineup. With no original-lineup tool, return requested_facts=["original lineup at race start"],
+social_kind=none, temporal_scope=historical, capability_ids=[], queries=[],
+missing_information=unsupported_analysis. Never select current_classification for that fact.
+"Fuel at the green light?" / "Start verildiğinde yakıt ne kadardı?": past-event fuel, not
+the current tank reading; if no matching past-event retrieval exists, say unsupported_analysis.
+"Fuel in the tank now?" / "Depoda şu an ne kadar yakıt var?": present fuel using latest.
+"And at the launch?" after a present-rank answer changes the requested time, not the quantity.
+"And now?" after a starting-grid discussion requests the present, not the original lineup.
+
+Distinguish the quantity itself: completed-lap duration, lap count and race rank are different.
+"last" / "son" can mean the most recently completed lap, not the last car in the field.
+For example, "Report the duration of the lap just completed." / "Bitirdiğim turun süresini
+söyle." asks for timing, never current_classification. If the catalog has no completed-lap
+timing, preserve the factual request and its time meaning with unsupported_analysis; do not
+substitute classification, lap number or unrelated window calculations.
+"""
+    )
+
+
 class ContextQueryDraft(ContractModel):
     signal_id: str = Field(min_length=1, max_length=160)
     operation: TelemetryOperation
@@ -670,7 +725,7 @@ class QwenContextQueryPlanner:
         planner_id: str = PLANNER_ID,
         on_request_inventory: Callable[[tuple[str, ...]], None] | None = None,
     ) -> None:
-        if planner_id not in {PLANNER_V5_ID, PLANNER_V6_ID, PLANNER_V7_ID}:
+        if planner_id not in {PLANNER_V5_ID, PLANNER_V6_ID, PLANNER_V7_ID, PLANNER_V8_ID}:
             raise ValueError("unsupported Qwen context planner candidate")
         self._model = model or LocalJsonModel(config)
         self._planner_id = planner_id
@@ -696,7 +751,7 @@ class QwenContextQueryPlanner:
                     "unavailable_reason": item.unavailable_reason,
                     **(
                         {"outputs": [output.description for output in item.outputs]}
-                        if self._planner_id == PLANNER_V7_ID
+                        if self._planner_id in {PLANNER_V7_ID, PLANNER_V8_ID}
                         else {}
                     ),
                 }
@@ -729,7 +784,9 @@ class QwenContextQueryPlanner:
         try:
             raw = await self._model.request(
                 system_prompt=(
-                    _v7_prompt()
+                    _v8_prompt()
+                    if self._planner_id == PLANNER_V8_ID
+                    else _v7_prompt()
                     if self._planner_id == PLANNER_V7_ID
                     else _PROMPT + _EXAMPLES
                     if self._planner_id == PLANNER_V5_ID
@@ -738,14 +795,14 @@ class QwenContextQueryPlanner:
                 content=json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
                 schema=(
                     _v7_plan_schema(capabilities, signal_by_id)
-                    if self._planner_id == PLANNER_V7_ID
+                    if self._planner_id in {PLANNER_V7_ID, PLANNER_V8_ID}
                     else _plan_schema(capabilities, signal_by_id)
                 ),
                 max_tokens=384,
             )
             draft = (
                 ContextPlanV7Draft.model_validate(raw)
-                if self._planner_id == PLANNER_V7_ID
+                if self._planner_id in {PLANNER_V7_ID, PLANNER_V8_ID}
                 else ContextPlanDraft.model_validate(raw)
             )
             radio_text(

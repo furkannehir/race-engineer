@@ -26,6 +26,19 @@ from race_engineer.ui.settings import PanelSettings, load_settings, save_setting
 ROOT = Path(__file__).parents[1]
 
 
+def test_speech_status_distinguishes_preparation_playback_and_idle(panel):
+    panel._status("phase", "ready")
+    panel._status("speech", "preparing")
+    assert panel.heading.text() == "Preparing speech…"
+    panel._status("speech", "speaking")
+    assert panel.heading.text() == "Speaking…"
+    panel._status("speech", "idle")
+    assert panel.heading.text() != "Speaking…"
+    panel._status("speech", "preparing")
+    panel._status("phase", "stopping")
+    assert panel.heading.text() == "Stopping…"
+
+
 @pytest.fixture(scope="module")
 def app():
     app = QApplication.instance() or QApplication([])

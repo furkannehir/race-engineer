@@ -94,6 +94,7 @@ class TtsConfig(ConfigModel):
     python_path: Path = Path("data/tts-chatterbox/runtime/Scripts/python.exe")
     worker_path: Path | None = None
     model_path: Path = Path("data/components") / MODEL_RELATIVE
+    model_variant: Literal["v2", "v3"] = "v2"
     device: Literal["auto", "cpu", "cuda"] = "auto"
     precision: Literal["auto", "fp32", "bf16"] = "auto"
     fallback_to_cpu: bool = True
@@ -138,6 +139,8 @@ class ConversationRuntimeConfig(ConfigModel):
     context_size: int = Field(default=8192, ge=512, le=131_072)
     parallel: int = Field(default=1, ge=1, le=16)
     gpu_layers: int = Field(default=-1, ge=-1, le=10_000)
+    # None preserves the runtime/model template defaults; explicit for model trials.
+    enable_thinking: bool | None = None
     fallback_to_cpu: bool = True
     reuse_external_server: bool = True
     probe_timeout_s: float = Field(default=5, gt=0, le=30, allow_inf_nan=False)
@@ -158,9 +161,10 @@ class ConversationRuntimeConfig(ConfigModel):
 
 class ConversationConfig(ConfigModel):
     adapter: Literal["llama-cpp"] = "llama-cpp"
-    context_planner: Literal["qwen-context-v5", "qwen-context-v6", "qwen-context-v7"] = (
-        "qwen-context-v7"
-    )
+    context_planner: Literal[
+        "qwen-context-v5", "qwen-context-v6", "qwen-context-v7", "qwen-context-v8",
+        "lfm3-native-v1",
+    ] = "qwen-context-v7"
     model: str = Field(
         default="Qwen3-4B-Instruct-2507",
         min_length=1,
@@ -172,6 +176,8 @@ class ConversationConfig(ConfigModel):
     timeout_s: float = Field(default=30.0, gt=0, le=120, allow_inf_nan=False)
     history_turns: int = Field(default=6, ge=0, le=MAX_CONVERSATION_HISTORY_TURNS)
     max_snapshot_age_s: float = Field(default=3.0, gt=0, le=30, allow_inf_nan=False)
+    # Queueing and speech preparation have their own budget; telemetry must still be fresh.
+    reply_delivery_timeout_s: float = Field(default=15.0, gt=0, le=120, allow_inf_nan=False)
     default_language: Literal["en", "tr"] = "en"
     runtime: ConversationRuntimeConfig = ConversationRuntimeConfig()
 

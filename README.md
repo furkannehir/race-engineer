@@ -21,8 +21,8 @@ the deterministic M2 policy slice, and the local M3 speech path:
   and
 - local Chatterbox speech with bounded priority queueing, expiry, interruption, and
   failure isolation; and
-- local English/Turkish conversations over paused replay data, using Qwen to
-  interpret questions and follow-ups with fact-bound bilingual replies; and
+- local English LFM conversations over live or replay telemetry, with an explicit
+  legacy Qwen profile for bilingual experiments; and
 - local Qwen3-ASR push-to-talk and Chatterbox spoken replies with text fallback; and
 - a native Windows control panel for the live radio, audio checks, press-to-bind
   keyboard/mouse/wheel PTT, mute and SQLite-backed driver preferences; and
@@ -34,20 +34,27 @@ Model-backed language generation, higher-quality speech adapters, adaptive polic
 advanced desktop controls remain later work.
 
 The conversational prototype supports text chat and local Qwen3-ASR push-to-talk, with
-bilingual Chatterbox spoken replies over replay data and live iRacing context. The combined
+Chatterbox spoken replies over replay data and live iRacing context. The combined
 `voice-iracing` command coordinates automatic calls and questions. The driver accepted
 the initial live prototype as sufficient to continue; quality upgrades and quantitative
 validation remain open. See the [live run guide](docs/live-conversation.md) and
 [current roadmap / next task](docs/roadmap.md).
 
-The standard edition on `main` uses **Qwen3-4B on NVIDIA/CUDA** for context planning
-and replies; Qwen3-ASR stays on CPU. Chatterbox independently prefers CUDA, using
+The standard source edition uses **LFM3-1.7B Q4_K_M on NVIDIA/CUDA** for native
+tool selection and grounded conversational replies. This is the selected English
+MVP model; Turkish conversation is not yet validated. Qwen3-ASR stays on CPU.
+Chatterbox independently prefers CUDA, using
 BF16 T3 on supported GPUs and an FP32 audio decoder. Its visible FP32 CPU fallback
 may not meet racing deadlines. The normal `start-panel.cmd` now
 uses the GPU configuration directly, with no silent CPU fallback or external-server
-reuse. See [GPU setup and measurements](docs/qwen-gpu-trial.md). The existing packaged
-`.exe` Qwen component installer remains CPU-only; packaged Qwen GPU distribution, compute UI
-controls and AMD/Vulkan validation are not implemented yet.
+reuse. See [LFM setup, measurements and remaining quality work](docs/lfm3-trial.md).
+The next packaged component set selects LFM and a CPU llama.cpp runtime; packaged
+CUDA distribution, CPU race latency and AMD/Vulkan validation remain unverified.
+The previous Qwen setup remains an explicit source rollback:
+`start-panel.cmd --config config/qwen-legacy.toml`.
+
+An [offline Qwen cache benchmark](docs/qwen-cache-trial.md) compares FP16/Q8 cache
+memory, latency and bilingual checks without changing live model/prompt settings.
 
 Interpreter experiments, draft datasets and training tools are preserved on
 [`light-version`](https://github.com/furkannehir/race-engineer/tree/light-version),
@@ -186,3 +193,7 @@ It extends the [original implementation
 plan](docs/personalized-ai-race-engineer-implementation-plan.docx); hosted Jev is deferred.
 These next-increment capabilities are planned, not yet implemented. Open defects are tracked in
 [docs/known-issues.md](docs/known-issues.md).
+
+The [English LFM3 native-tool guide](docs/lfm3-trial.md) includes setup, terminal
+tests, VR measurements and outstanding answer-quality work. The next slice improves
+tool selection and adds lap-performance telemetry before expanding pit strategy.

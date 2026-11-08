@@ -9,30 +9,49 @@ from race_engineer.config import TtsConfig, load_config
 from race_engineer.core.contracts import Utterance
 from race_engineer.core.conversation import ConversationReply
 from race_engineer.core.enums import PlaybackStatus
+from race_engineer.observability import configure_logging
 from race_engineer.tts.chatterbox import ChatterboxAnnouncementEngine, ChatterboxSpeechBackend
 
 
-async def smoke(config_path: Path, *, play_audio: bool, output_device: int | None = None) -> None:
+async def smoke(
+    config_path: Path,
+    *,
+    play_audio: bool,
+    output_device: int | None = None,
+    regression_texts: bool = False,
+) -> None:
     config = load_config(config_path)
+    configure_logging(config.logging.model_copy(update={"format": "json"}))
     speech = (
         config.tts
         if output_device is None
         else TtsConfig.model_validate(config.tts.model_dump() | {"output_device": output_device})
     )
-    backend = ChatterboxSpeechBackend(speech)
+    backend = ChatterboxSpeechBackend(
+        speech,
+        activity=lambda value: print(json.dumps({"speech_activity": value}), flush=True),
+    )
     automatic = ChatterboxAnnouncementEngine(backend)
     try:
         await backend.start()
         pid = backend.worker_pid
         print(
-            f"Chatterbox ready: device={backend.effective_device}, "
+            f"Chatterbox ready: model={config.tts.model_variant}, "
+            f"device={backend.effective_device}, "
             f"T3={backend.effective_precision}, decoder=fp32, worker={pid}",
             flush=True,
         )
-        for language, text in (
+        texts = (
             ("en", "Radio check. Your race engineer is ready."),
             ("tr", "Telsiz kontrolü. Yarış mühendisin hazır."),
-        ):
+        )
+        if regression_texts:
+            texts += (
+                ("en", "I don't have the historical data needed for that."),
+                ("en", "I can't assess that part from the available data."),
+                ("tr", "Bunun için gereken geçmiş veriler elimde yok."),
+            )
+        for language, text in texts:
             reply = ConversationReply(
                 language=language,
                 text=text,
@@ -41,7 +60,12 @@ async def smoke(config_path: Path, *, play_audio: bool, output_device: int | Non
                 source_sequence=0,
                 mode="replay",
             )
-            result = await backend.speak(reply, play_audio=play_audio)
+            result = await backend.speak(
+                reply,
+                play_audio=play_audio,
+                before_playback=lambda: True,
+                preparation_timeout_s=config.conversation.reply_delivery_timeout_s,
+            )
             print(
                 json.dumps({"path": "conversation", **result.model_dump()}, ensure_ascii=True),
                 flush=True,
@@ -70,10 +94,16 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, default=Path("config/default.toml"))
     parser.add_argument("--no-playback", action="store_true")
+    parser.add_argument("--regression-texts", action="store_true")
     parser.add_argument("--output-device", type=int, help="index from list-output-devices")
     args = parser.parse_args()
     asyncio.run(
-        smoke(args.config, play_audio=not args.no_playback, output_device=args.output_device)
+        smoke(
+            args.config,
+            play_audio=not args.no_playback,
+            output_device=args.output_device,
+            regression_texts=args.regression_texts,
+        )
     )
 
 

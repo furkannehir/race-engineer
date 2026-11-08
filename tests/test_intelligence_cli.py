@@ -39,7 +39,7 @@ def test_replay_candidate_override_does_not_edit_live_config(monkeypatch, capsys
             )
             == 0
         )
-    assert selected == ["qwen-context-v6", "qwen-context-v7"]
+    assert selected == ["qwen-context-v6", "lfm3-native-v1"]
 
 
 def test_replay_rejects_unknown_candidate_before_model_use():

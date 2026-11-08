@@ -33,7 +33,7 @@ class FixedModel:
 
 
 def setup():
-    config = load_config(ROOT / "config/default.toml")
+    config = load_config(ROOT / "config/qwen-legacy.toml")
     dataset = load_intelligence_evaluation_dataset(
         ROOT / "fixtures/intelligence-evaluation/development-controls.json"
     )
@@ -52,6 +52,46 @@ def planner_reply(extra=False):
         "queries": [{"signal_id": "player.speed_mps", "operation": "latest", "window_s": None}],
         "missing_information": "none",
     }
+
+
+def test_benchmark_inherits_native_default_for_both_selection_and_reply(monkeypatch):
+    from race_engineer.intelligence.native_model import NativeToolCall, NativeToolReply
+
+    config = load_config(ROOT / "config/default.toml", environ={}).conversation
+    _, contexts, group = setup()
+    selected = []
+
+    async def tools(self, **kwargs):
+        selected.append(kwargs)
+        return NativeToolReply(
+            calls=(
+                NativeToolCall(
+                    call_id="position",
+                    name="get_current_race_position",
+                    arguments={},
+                ),
+            )
+        )
+
+    monkeypatch.setattr(
+        "race_engineer.intelligence.native_model.LocalNativeModel.request_tools", tools
+    )
+    core = FixedModel({"goal": "inform", "speech": "We're P{{position}}."})
+    result, answer = asyncio.run(
+        measure_intelligence_turn(
+            config,
+            contexts,
+            group,
+            "Position?",
+            run_index=1,
+            repetition=1,
+            core_client=core,
+        )
+    )
+    assert len(selected) == core.calls == 1
+    assert result["pipeline_completed"] is True and answer.startswith("We're P")
+    assert result["observed_plan"]["capability_ids"] == ["current_classification"]
+    assert result["core_retries"] == 0
 
 
 def core_reply():
@@ -225,7 +265,7 @@ def test_benchmark_stops_after_timeout_and_closes_only_its_managed_runtime(monke
     monkeypatch.setattr(script, "git_revision", lambda _: None)
     monkeypatch.setattr(script, "git_dirty", lambda _: True)
     args = Namespace(
-        config=ROOT / "config/default.toml",
+        config=ROOT / "config/qwen-legacy.toml",
         dataset=ROOT / "fixtures/intelligence-evaluation/development-controls.json",
         case=["compound-en", "compound-tr"],
         repeats=2,
@@ -251,7 +291,7 @@ def test_benchmark_refuses_to_overwrite_an_existing_report_before_server_start(t
     output = tmp_path / "existing.json"
     output.write_text("user data", encoding="utf-8")
     args = Namespace(
-        config=ROOT / "config/default.toml",
+        config=ROOT / "config/qwen-legacy.toml",
         dataset=ROOT / "fixtures/intelligence-evaluation/development-controls.json",
         case=["compound-en"],
         repeats=1,
