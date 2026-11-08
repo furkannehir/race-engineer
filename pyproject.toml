@@ -59,6 +59,7 @@ version = {attr = "race_engineer.version.__version__"}
 [tool.pytest.ini_options]
 addopts = "-ra --strict-config --strict-markers"
 testpaths = ["tests"]
+pythonpath = ["."]
 
 [tool.ruff]
 line-length = 100

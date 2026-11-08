@@ -81,9 +81,9 @@ faster-whisper is reserved as a future performance alternative. See the
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 python -m pip install -e ".[dev,desktop]"
-pytest
-ruff check .
-mypy
+python -m pytest
+python -m ruff check .
+python -m mypy
 ```
 
 ## Desktop control panel
