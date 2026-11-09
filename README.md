@@ -4,6 +4,15 @@ Pitward is a local-first, simulator-adaptable foundation for real-time racing
 assistance. Its central policy engine decides what is worth communicating; telemetry,
 language generation, and speech synthesis remain replaceable adapters.
 
+## Download Pitward
+
+Get the Windows installer or portable ZIP at **[pitward.com](https://pitward.com)**
+or from the [0.1.0 GitHub release](https://github.com/furkannehir/race-engineer/releases/tag/v0.1.0).
+The packaged app does not require Python. Initial setup downloads approximately
+5.9 GB of local AI components under their separate third-party terms.
+
+## Development overview
+
 This repository contains the M0 architecture baseline, the M1 iRacing telemetry reader,
 the deterministic M2 policy slice, and the local M3 speech path:
 
