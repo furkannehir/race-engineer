@@ -6,6 +6,7 @@ __pycache__/
 .pytest-sandbox-*/
 .mypy_cache/
 .ruff_cache/
+.cache/
 .coverage
 htmlcov/
 build/

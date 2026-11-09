@@ -11,8 +11,9 @@ at 0.23 full scale before the application's volume setting. Runtime playback use
 WAVs and does not need an MP3 decoder.
 
 The procedural squelch components come from `scripts/build_radio_cues.py` under the
-project's GPL-3.0 license. The MP3's external source/license has not been supplied; those
-procedural components do not establish licensing for the recording or mixed assets.
+project's GPL-3.0 license. The maintainer confirmed in the 0.1.0 release conversation
+that the beep is an original project asset. This provenance confirmation is recorded
+in `distribution/REVIEW-0.1.0.md`; the beep and derived mixes use the project's license.
 
 Listen to the installed mixed pair without starting the engineer:
 

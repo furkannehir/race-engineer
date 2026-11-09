@@ -52,6 +52,8 @@ Copy-Item -LiteralPath (Join-Path $metadataRoot "build-info.json") -Destination 
 Copy-Item -LiteralPath "LICENSE" -Destination $appRoot
 Copy-Item -LiteralPath "distribution\README.txt" -Destination $appRoot
 Copy-Item -LiteralPath "distribution\THIRD_PARTY_NOTICES.md" -Destination $appRoot
+Copy-Item -LiteralPath "distribution\REVIEW-0.1.0.md" -Destination $appRoot
+Copy-Item -LiteralPath "distribution\licenses" -Destination $appRoot -Recurse -Force
 Copy-Item -LiteralPath "src\race_engineer\assets\components.v1.json" -Destination $appRoot
 
 if (-not $SkipWorkers) {
@@ -65,6 +67,19 @@ if (-not $SkipWorkers) {
     New-Item -ItemType Directory -Path $workers -Force | Out-Null
     Move-Item -LiteralPath (Join-Path $distRoot "PitwardSTTWorker") -Destination $workers
     Move-Item -LiteralPath (Join-Path $distRoot "PitwardTTSWorker") -Destination $workers
+}
+
+$licenseEnvironments = @(@{ Name = "main"; Python = $MainPython })
+if (-not $SkipWorkers) {
+    $licenseEnvironments += @(
+        @{ Name = "stt"; Python = $SttPython },
+        @{ Name = "tts"; Python = $TtsPython }
+    )
+}
+foreach ($licenseEnvironment in $licenseEnvironments) {
+    $licenseOutput = Join-Path $appRoot "licenses\runtime-$($licenseEnvironment.Name)"
+    & $licenseEnvironment.Python scripts\collect_distribution_licenses.py --output $licenseOutput
+    if ($LASTEXITCODE -ne 0) { throw "Could not retain runtime license notices" }
 }
 
 New-Item -ItemType Directory -Path $releaseRoot -Force | Out-Null

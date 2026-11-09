@@ -99,5 +99,5 @@ jobs:
           dist/SHA256SUMS.txt
           --draft
           --verify-tag
-          --generate-notes
+          --notes-file distribution/RELEASE_NOTES.md
           --title "Pitward ${{ github.ref_name }}"

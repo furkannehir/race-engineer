@@ -28,7 +28,8 @@ the configured model/runtime names and match the installer manifest; old install
 Qwen weights are retained but are no longer selected by the new configuration.
 Existing published or locally built executables do not change until rebuilt.
 LFM uses its own [LFM Open License v1.0](https://huggingface.co/LiquidAI/LFM3-1.7B/blob/main/LICENSE);
-distribution review is still required and the release-clearance gates stay closed.
+the 0.1.0 review is recorded in [the distribution review](../distribution/REVIEW-0.1.0.md).
+Full model license texts and runtime wheel notices are included in each package.
 The release workflow builds a CPU TTS worker; racing latency on CPU is not
 established. CUDA builds can use `setup_radio_tts.py --backend cuda` instead.
 Clean-Windows frozen-worker EN/TR synthesis and audio checks remain mandatory
@@ -76,6 +77,11 @@ checksum-verifying downloader. Update checks are also user-initiated: **Releases
 opens the project's latest-release page; Pitward makes no background update request.
 
 ## Release flow
+
+For the first release, use the [0.1.0 preparation record](releases/0.1.0.md) and
+[prepared release notes](../distribution/RELEASE_NOTES.md). The
+[download dashboard](../website/pitward-downloads/README.md) enables links only for
+the published target release with all expected assets.
 
 Manual runs of the `windows-package` workflow create a 14-day GitHub Actions artifact for
 testing. Pushing a matching version tag builds the same files and, after clearance checks,

@@ -23,7 +23,7 @@ datas = [
     (str(SRC / "race_engineer/stt/assets/radio-open.wav"), "race_engineer/stt/assets"),
     (str(SRC / "race_engineer/stt/assets/radio-close.wav"), "race_engineer/stt/assets"),
 ]
-datas += collect_data_files("qtawesome")
+datas += collect_data_files("qtawesome", includes=["fonts/materialdesignicons6-*"])
 
 analysis = Analysis(
     [str(ROOT / "packaging/pitward_entry.py")],

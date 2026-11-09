@@ -1,3 +1,5 @@
 * text=auto eol=lf
 *.ps1 text eol=crlf
+distribution/licenses/*.txt -text -whitespace
+website/pitward-downloads/public/assets/fonts/OFL.txt -whitespace
 

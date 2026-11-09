@@ -1,3 +1,4 @@
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -78,6 +79,25 @@ def test_component_manifest_is_unique_pinned_and_confined() -> None:
         assert re.fullmatch(r"[0-9a-f]{64}", artifact.sha256)
         assert artifact.size > 0 and not artifact.destination.is_absolute()
         assert ".." not in artifact.destination.parts
+
+
+def test_download_dashboard_matches_the_application_version_and_component_set() -> None:
+    dashboard = ROOT / "website/pitward-downloads/public/release.json"
+    release = json.loads(dashboard.read_text(encoding="utf-8"))
+    assert release["version"] == __version__
+    assert release["repository"] == "furkannehir/race-engineer"
+    assert release["componentBytes"] == sum(artifact.size for artifact in load_manifest()[1])
+
+
+def test_release_license_copies_match_the_recorded_upstream_texts() -> None:
+    directory = ROOT / "distribution/licenses"
+    sources = json.loads((directory / "sources.json").read_text(encoding="utf-8"))
+    assert {"LFM-Open-License-v1.0.txt", "Qwen3-ASR-Apache-2.0.txt", "Chatterbox-MIT.txt"} <= {
+        source["file"] for source in sources["sources"]
+    }
+    for source in sources["sources"]:
+        body = (directory / source["file"]).read_bytes()
+        assert hashlib.sha256(body).hexdigest() == source["sha256"]
 
 
 def test_default_packaged_model_and_runtime_match_the_verified_installer_manifest(tmp_path):
