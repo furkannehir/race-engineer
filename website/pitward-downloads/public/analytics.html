@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Pitward — Private analytics</title>
+  <link rel="icon" href="/assets/favicon.ico">
+  <link rel="stylesheet" href="/analytics-dashboard.css">
+  <script type="module" src="/analytics-dashboard.js"></script>
+</head>
+<body>
+  <main class="dashboard">
+    <header class="dashboard-header"><a href="/"><img src="/assets/logo.svg" width="178" height="56" alt="Pitward"></a><span class="private-label">PRIVATE / OWNER ACCESS</span><a class="quiet-link" href="/signout-with-chatgpt?return_to=%2Fanalytics" target="_top">Sign out ↗</a></header>
+    <section class="dashboard-intro"><div><span class="eyebrow">THE VIEW FROM THE PIT WALL</span><h1>Your traffic.<br><span>Your next move.</span></h1><p>Website visits and download clicks, without persistent visitor tracking.</p></div><div class="dashboard-controls"><label for="period">Date range</label><select id="period"><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option></select><button id="refresh" type="button">Refresh ↻</button></div></section>
+    <p id="dashboard-status" class="dashboard-status" role="status" aria-live="polite">Loading analytics…</p>
+    <section class="metric-grid" aria-label="Traffic totals"><article><span>VISITS</span><strong id="visits">—</strong><p>Page loads, not unique people</p></article><article><span>INSTALLER CLICKS</span><strong id="installer">—</strong><p>Windows .exe link</p></article><article><span>ZIP CLICKS</span><strong id="portable">—</strong><p>Portable Windows build</p></article><article class="conversion-card"><span>VISIT CONVERSION</span><strong id="conversion">—</strong><p>Visits with an installer or ZIP click</p></article></section>
+    <section class="chart-panel"><div class="panel-heading"><h2>The daily picture</h2><div class="legend"><span><i></i>Visits</span><span><i></i>App download clicks</span></div></div><div id="chart" class="chart"><p class="empty-state">Your first visits will appear here.</p></div><p class="chart-caption">Daily totals use Europe/Istanbul time. Download clicks are attributed to the visit date.</p></section>
+    <div class="table-grid"><section class="table-panel"><div class="panel-heading"><h2>Where they came from</h2><span>REFERRING HOSTNAME</span></div><table><thead><tr><th scope="col">Source</th><th scope="col">Visits</th><th scope="col">App clicks</th></tr></thead><tbody id="sources"><tr><td colspan="3" class="empty-state">No traffic recorded yet.</td></tr></tbody></table></section><section class="table-panel"><div class="panel-heading"><h2>Screen sizes</h2><span>VIEWPORT GROUP</span></div><table><thead><tr><th scope="col">Size</th><th scope="col">Visits</th><th scope="col">App clicks</th></tr></thead><tbody id="devices"><tr><td colspan="3" class="empty-state">No traffic recorded yet.</td></tr></tbody></table></section></div>
+    <section class="measurement-note"><h2>Keep the numbers honest.</h2><p>A download click does not confirm a completed download or installation. Visits are page loads; reloading can create another visit. Browsers that block analytics, send a privacy signal, or disable JavaScript may not be counted.</p><p>Signed-in owner visits, automated browsers, and test-mode events are excluded. Reports cover the latest 90 days. Older records are pruned during analytics activity and dashboard refreshes. No analytics cookies, raw IP addresses, or cross-visit browser identifiers are stored.</p><label class="optout-control"><input id="exclude-browser" type="checkbox"> Keep this browser excluded after signing out</label><span id="preference-status" role="status"></span></section>
+    <footer><span>PITWARD / LOCAL FIRST. DRIVER ALWAYS.</span><a href="/privacy">Website privacy ↗</a><a href="https://github.com/furkannehir/race-engineer/releases/tag/v0.1.0">GitHub release ↗</a></footer>
+  </main>
+</body>
+</html>

@@ -5,6 +5,12 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "test": "node --test tests/*.test.mjs"
+    "test": "node --test tests/*.test.mjs",
+    "db:generate": "drizzle-kit generate",
+    "preview": "node scripts/preview.mjs"
+  },
+  "devDependencies": {
+    "drizzle-kit": "0.31.10",
+    "drizzle-orm": "0.45.2"
   }
 }

@@ -1,2 +1,5 @@
 dist/
 .sites-checkout/
+node_modules/
+.env*
+!.env.example

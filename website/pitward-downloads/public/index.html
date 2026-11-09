@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <!-- PITWARD_ANALYTICS -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#101312">
   <meta name="description" content="Your pit wall. On your PC. Meet Pitward, a local race engineer for iRacing, and get ready for your next session.">
@@ -14,6 +15,7 @@
   <link rel="preload" as="font" href="assets/fonts/anton-regular.ttf" type="font/ttf" crossorigin>
   <link rel="stylesheet" href="styles.css">
   <script type="module" src="app.js"></script>
+  <script type="module" src="/analytics.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -51,6 +53,6 @@
     <section class="release-section" id="release-notes" aria-labelledby="notes-title"><div class="page-width"><div class="release-heading"><span class="eyebrow">THE RELEASE LOG</span><span class="release-note-status" id="release-note-status">First public release · in preparation</span></div><details class="release-notes"><summary><span data-version>0.1.0</span><h2 id="notes-title">THE FIRST LAP.</h2><span class="details-icon" aria-hidden="true">+</span></summary><div class="notes-grid"><div><h3>A foundation for your next session.</h3><ul><li>Live iRacing telemetry and automatic radio calls.</li><li>English conversations with local LFM AI.</li><li>Local speech input and Chatterbox spoken replies.</li><li>Native Windows radio controls and push-to-talk.</li><li>Persistent driver preferences and local history.</li></ul></div><div class="expectations"><h3>Before you take the wheel.</h3><p>This is an early release. Packaged inference uses CPU, and speech may be too slow for racing on some PCs.</p><p>Turkish conversation is still unvalidated. Builds are unsigned, so Windows may display a SmartScreen prompt.</p><a href="https://github.com/furkannehir/race-engineer/blob/main/docs/known-issues.md">Known limitations <span aria-hidden="true">↗</span></a></div></div></details></div></section>
     <section class="setup-section light-section" id="getting-started" aria-labelledby="setup-title"><div class="page-width"><div class="setup-heading reveal"><div><span class="eyebrow">FROM DOWNLOAD TO RADIO CHECK</span><h2 id="setup-title">THREE STEPS.<br>THEN YOU DRIVE.</h2></div><a class="quiet-link" href="https://github.com/furkannehir/race-engineer/blob/main/docs/distribution.md">The full setup guide <span aria-hidden="true">↗</span></a></div><ol class="setup-steps"><li class="reveal"><span class="step">01</span><h3>MAKE IT YOURS.</h3><p>Run the Windows installer, or extract the portable ZIP and open Pitward.exe.</p></li><li class="reveal"><span class="step">02</span><h3>MEET YOUR ENGINEER.</h3><p>Choose “Set up local AI components,” review the third-party terms, and let the verified downloads finish. Restart Pitward.</p></li><li class="reveal"><span class="step">03</span><h3>GET ON THE RADIO.</h3><p>Choose your devices. Bind push-to-talk. Check your voice output. Then start iRacing and your engineer.</p></li></ol></div></section>
   </main>
-  <footer><div class="page-width"><div class="footer-top"><a class="brand" href="#main" aria-label="Back to top"><img src="assets/logo.svg" width="178" height="56" alt="Pitward"></a><div><a href="https://github.com/furkannehir/race-engineer">GitHub ↗</a><a href="https://github.com/furkannehir/race-engineer/issues">Report an issue ↗</a><a href="https://github.com/furkannehir/race-engineer/blob/main/distribution/THIRD_PARTY_NOTICES.md">Third-party notices ↗</a></div></div><p class="footer-manifesto">STAY IN THE RACE<span>.</span></p><div class="footer-bottom"><span>LOCAL FIRST. DRIVER ALWAYS.</span><p>Independent project. Not affiliated with or endorsed by iRacing.</p><a href="https://github.com/furkannehir/race-engineer/blob/main/LICENSE">OPEN SOURCE / GPL-3.0</a></div></div></footer>
+  <footer><div class="page-width"><div class="footer-top"><a class="brand" href="#main" aria-label="Back to top"><img src="assets/logo.svg" width="178" height="56" alt="Pitward"></a><div><a href="https://github.com/furkannehir/race-engineer">GitHub ↗</a><a href="https://github.com/furkannehir/race-engineer/issues">Report an issue ↗</a><a href="https://github.com/furkannehir/race-engineer/blob/main/distribution/THIRD_PARTY_NOTICES.md">Third-party notices ↗</a><a href="/privacy">Website privacy ↗</a></div></div><p class="footer-manifesto">STAY IN THE RACE<span>.</span></p><div class="footer-bottom"><span>LOCAL FIRST. DRIVER ALWAYS.</span><p>Independent project. Not affiliated with or endorsed by iRacing.</p><a href="https://github.com/furkannehir/race-engineer/blob/main/LICENSE">OPEN SOURCE / GPL-3.0</a></div></div></footer>
 </body>
 </html>
