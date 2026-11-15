@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 from pathlib import Path
 
@@ -12,13 +13,14 @@ pytest.importorskip("qtawesome")
 from PySide6.QtCore import QObject, Qt, QTimer, Signal
 from PySide6.QtGui import QFontDatabase
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QCheckBox, QDialog, QDialogButtonBox
+from PySide6.QtWidgets import QApplication, QCheckBox, QDialog, QDialogButtonBox, QMessageBox
 
 from race_engineer.application.control import LiveControl
 from race_engineer.config import PttBindingConfig
 from race_engineer.core.speech_input import SpeechInputError
 from race_engineer.installation import Installation
 from race_engineer.memory import SqliteDriverProfileRepository
+from race_engineer.ui import app as panel_app
 from race_engineer.ui.app import BindingDialog, RadioDesk
 from race_engineer.ui.branding import PRODUCT_NAME
 from race_engineer.ui.settings import PanelSettings, load_settings, save_settings
@@ -37,6 +39,18 @@ def test_speech_status_distinguishes_preparation_playback_and_idle(panel):
     panel._status("speech", "preparing")
     panel._status("phase", "stopping")
     assert panel.heading.text() == "Stopping…"
+
+
+def test_failed_voice_remains_visible_while_waiting_for_iracing_and_clears_on_retry(panel):
+    panel._status("telemetry", "waiting")
+    panel._status("models", "no_reply_voice")
+    panel._status("phase", "ready")
+    assert panel.heading.text() == "Speech unavailable"
+    assert panel.models.text.text() == "Local speech unavailable"
+    panel._status("telemetry", "ready")
+    assert panel.heading.text() == "Speech unavailable"
+    panel._status("models", "ready")
+    assert panel.heading.text() == "Radio ready" and panel._models_ready
 
 
 @pytest.fixture(scope="module")
@@ -360,3 +374,240 @@ def test_packaged_first_launch_requires_local_component_setup(app, tmp_path):
     assert panel.setup_components.isVisible()
     assert "not installed" in panel.notice.text()
     panel.close()
+
+
+@pytest.fixture
+def component_setup(app, tmp_path, monkeypatch):
+    installation = Installation.discover(
+        environ={"PITWARD_DATA_DIR": str(tmp_path / "custom data")},
+        executable=tmp_path / "program/Pitward.exe",
+        bundle_root=ROOT,
+        frozen=True,
+    )
+    installation.install_root.mkdir(parents=True)
+    installation.component_installer_path.touch()
+    widget = RadioDesk(
+        installation.install_root,
+        ROOT / "config/default.toml",
+        installation.settings_path,
+        devices=([], []),
+        installation=installation,
+    )
+    widget.show()
+    app.processEvents()
+
+    class Download:
+        returncode = None
+
+        def poll(self):
+            return self.returncode
+
+    process = Download()
+    calls = []
+
+    def launch(*args, **kwargs):
+        calls.append((args, kwargs))
+        return process
+
+    monkeypatch.setattr(panel_app.subprocess, "Popen", launch)
+    monkeypatch.setattr(
+        panel_app.QMessageBox, "question", lambda *args: QMessageBox.StandardButton.Yes
+    )
+    yield widget, process, calls
+    widget.close()
+    app.processEvents()
+
+
+def complete_components(widget):
+    for path in widget._missing_components:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.touch()
+
+
+def test_component_setup_waits_without_blocking_and_restarts_once_after_success(component_setup):
+    widget, process, calls = component_setup
+    completed = []
+    widget.restart_ready.connect(lambda: completed.append(True))
+    widget._setup_local_components()
+    widget._setup_local_components()
+    widget._poll_component_setup()
+    assert len(calls) == 1 and not widget.restart_requested
+    assert widget._component_setup_timer.isActive()
+    assert not widget.setup_components.isEnabled() and not widget.test_mic.isEnabled()
+    assert not widget.test_voice.isEnabled()
+    assert "--root" in calls[0][0][0]
+    assert calls[0][0][0][-1] == str(widget.installation.components_root)
+    widget._start("mic")
+    assert widget.worker is None
+    widget.volume.setValue(42)
+    widget.hide()  # Completion must also request exit when minimized to the tray.
+    complete_components(widget)
+    process.returncode = 0
+    widget._poll_component_setup()
+    widget._poll_component_setup()
+    assert widget.restart_requested and completed == [True]
+    assert not widget.isVisible() and not widget._component_setup_timer.isActive()
+    assert load_settings(widget.settings_path, PanelSettings()).volume == 42
+
+
+@pytest.mark.parametrize("exit_code", [1, 130])
+def test_failed_or_cancelled_download_stays_open_and_can_retry(component_setup, exit_code):
+    widget, process, calls = component_setup
+    widget._setup_local_components()
+    process.returncode = exit_code
+    widget._poll_component_setup()
+    assert not widget.restart_requested and widget.isVisible()
+    assert not widget._component_setup_timer.isActive()
+    assert widget.setup_components.isEnabled()
+    assert "Retry setup" in widget.notice.text()
+    process.returncode = None
+    widget._setup_local_components()
+    assert len(calls) == 2 and widget._component_setup_timer.isActive()
+
+
+def test_successful_downloader_with_missing_files_does_not_restart(component_setup):
+    widget, process, _ = component_setup
+    widget._setup_local_components()
+    process.returncode = 0
+    widget._poll_component_setup()
+    assert not widget.restart_requested and widget.isVisible()
+    assert "still missing" in widget.notice.text()
+    assert widget.setup_components.isEnabled() and not widget.start_button.isEnabled()
+
+
+def test_closing_during_download_does_not_reopen_the_panel(component_setup):
+    widget, process, _ = component_setup
+    widget._setup_local_components()
+    widget.close()
+    complete_components(widget)
+    process.returncode = 0
+    widget._poll_component_setup()
+    assert not widget.restart_requested and not widget.isVisible()
+    assert not widget._component_setup_timer.isActive()
+
+
+def test_completed_setup_stays_open_if_settings_cannot_be_saved(component_setup, monkeypatch):
+    widget, process, _ = component_setup
+    widget._setup_local_components()
+    complete_components(widget)
+
+    def fail(*args):
+        raise OSError("settings are read-only")
+
+    monkeypatch.setattr(panel_app, "save_settings", fail)
+    process.returncode = 0
+    widget._poll_component_setup()
+    assert not widget.restart_requested and widget.isVisible()
+    assert "Settings not saved" in widget.notice.text()
+
+
+def test_setup_cannot_start_when_previewing_or_an_engineer_is_active(component_setup):
+    widget, _, calls = component_setup
+    widget.preview = True
+    widget._setup_local_components()
+    widget.preview = False
+    widget.worker = object()
+    widget._setup_local_components()
+    widget.worker = None
+    assert not calls
+
+
+def test_setup_launch_failure_keeps_the_panel_available_for_retry(component_setup, monkeypatch):
+    widget, _, _ = component_setup
+
+    def fail(*args, **kwargs):
+        raise OSError("cannot launch")
+
+    monkeypatch.setattr(panel_app.subprocess, "Popen", fail)
+    widget._setup_local_components()
+    assert widget.setup_components.isEnabled() and widget.isVisible()
+    assert widget._component_setup_process is None and not widget.restart_requested
+    assert "could not be started" in widget.notice.text()
+
+
+@pytest.mark.parametrize(
+    "restart,launch_error,install_update",
+    [(False, False, False), (True, False, False), (True, True, False),
+     (False, False, True), (False, True, True)],
+)
+def test_restart_handoff_releases_lock_and_preserves_launch_paths(
+    app, tmp_path, monkeypatch, restart, launch_error, install_update
+):
+    layout = Installation.discover(
+        environ={"PITWARD_DATA_DIR": str(tmp_path / "custom data")},
+        executable=tmp_path / "program/Pitward.exe",
+        bundle_root=ROOT,
+        frozen=True,
+    )
+    custom_config, settings = tmp_path / "my config.toml", tmp_path / "my settings.json"
+    events, errors = [], []
+
+    class Lock:
+        def __init__(self, path):
+            pass
+
+        def tryLock(self, timeout):
+            return True
+
+        def unlock(self):
+            events.append("unlock")
+
+    class FinishedPanel(QObject):
+        restart_ready = Signal()
+        installer_ready = Signal()
+        restart_requested = restart
+        installer_requested = tmp_path / "verified update.exe" if install_update else None
+
+        def __init__(self, *args, **kwargs):
+            super().__init__()
+
+        def show(self):
+            pass
+
+    def launch(command, **kwargs):
+        assert events == ["unlock"]
+        if install_update:
+            assert command == panel_app.installer_command(
+                FinishedPanel.installer_requested, layout.install_root, custom_config, settings
+            )
+            assert kwargs["cwd"] == tmp_path
+        else:
+            assert command == [
+                str(layout.install_root / "Pitward.exe"),
+                "--config", str(custom_config), "--settings", str(settings),
+            ]
+            assert kwargs["cwd"] == layout.install_root
+        assert kwargs["env"]["PYINSTALLER_RESET_ENVIRONMENT"] == "1"
+        assert kwargs["env"]["PITWARD_DATA_DIR"] == str(layout.data_root)
+        events.append("launch")
+        if launch_error:
+            raise OSError("cannot relaunch")
+
+    monkeypatch.setattr(
+        panel_app.sys,
+        "argv",
+        ["panel", "--config", str(custom_config), "--settings", str(settings)],
+    )
+    monkeypatch.setattr(panel_app.sys, "executable", str(layout.install_root / "Pitward.exe"))
+    monkeypatch.setenv("PITWARD_DATA_DIR", str(layout.data_root))
+    monkeypatch.setattr(panel_app.Installation, "discover", lambda: layout)
+    monkeypatch.setattr(panel_app, "QLockFile", Lock)
+    monkeypatch.setattr(panel_app, "RadioDesk", FinishedPanel)
+    monkeypatch.setattr(app, "exec", lambda: 0)
+    monkeypatch.setattr(panel_app.subprocess, "Popen", launch)
+    monkeypatch.setattr(panel_app.QMessageBox, "critical", lambda *args: errors.append(args[-1]))
+    handler, logger = logging.NullHandler(), logging.getLogger()
+    old_level = logger.level
+    monkeypatch.setattr(panel_app, "RotatingFileHandler", lambda *args, **kwargs: handler)
+    try:
+        assert panel_app.main() == (1 if launch_error else 0)
+        assert events == (["unlock", "launch"] if restart or install_update else ["unlock"])
+        assert bool(errors) == launch_error
+        if launch_error:
+            message = (
+                "installer could not start" if install_update else "Open Pitward again manually"
+            )
+            assert message in errors[0]
+    finally:
+        logger.removeHandler(handler)
+        logger.setLevel(old_level)

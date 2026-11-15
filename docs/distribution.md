@@ -21,6 +21,13 @@ Application settings, logs and SQLite profiles also live below `%LOCALAPPDATA%\P
 packaged builds. Source launches keep using the repository's ignored `data` and `logs`
 directories.
 
+An explicit uninstall removes the downloaded AI cache at
+`%LOCALAPPDATA%\Pitward\components`, plus downloaded installers in
+`%LOCALAPPDATA%\Pitward\updates`. Settings, profiles/history and logs are retained;
+in-place upgrades retain the models too. A custom `PITWARD_DATA_DIR` is outside this
+installer cleanup rule and must be cleaned up manually. Existing 0.1.0 uninstallers
+retain their old behavior until replaced by a rebuilt installer.
+
 Component set 3 selects LFM3-1.7B Q4_K_M and llama.cpp b12088 CPU. It retains
 Qwen3-ASR and the five pinned multilingual V2 speech assets, including `conds.pt`
 for the built-in voice. Total downloads are about 5.9 GB. Frozen paths follow
@@ -52,8 +59,22 @@ Build the portable archive:
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\build_windows.ps1
 ```
 
-After a local build, load both frozen speech workers against the development models and
-synthesize a silent radio check:
+After a local build, first exercise the frozen TTS dependency imports without loading or
+downloading model weights. `--help` only checks the command-line parser:
+
+```powershell
+& .\build\package\dist\Pitward\workers\PitwardTTSWorker\PitwardTTSWorker.exe --check-runtime --diagnostics
+if ($LASTEXITCODE -ne 0) { throw "Frozen speech dependencies failed initialization" }
+```
+
+The worker must return `runtime_ready: true`. The release workflow runs this check too.
+Transformers 5 must be collected as external Python source: its import-time filename
+inspection is incompatible with shortened filenames inside PYZ. Diffusers and Transformers
+also require dependency distribution metadata; copying the importable modules alone is
+insufficient. Keep these rules in the TTS worker spec.
+
+Then load both frozen speech workers against the development models and synthesize English
+and Turkish replies and announcements with one shared worker, without audio playback:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\smoke_packaged_workers.py
@@ -73,8 +94,49 @@ commercially must obtain the applicable [Inno Setup license](https://jrsoftware.
 
 On a packaged first launch, the Start button remains disabled until the pinned component
 set is present. **Set up local AI components** shows the relevant terms and launches the
-checksum-verifying downloader. Update checks are also user-initiated: **Releases & updates**
-opens the project's latest-release page; Pitward makes no background update request.
+checksum-verifying downloader. The panel monitors setup without blocking the UI and
+restarts automatically after a successful exit and a check that required files are
+present. The restart saves panel settings, preserves config/settings paths and the data
+directory, and releases the single-instance lock before relaunching. Failed or cancelled
+setup stays open for retry; quitting the panel stops automatic restart. Running
+`PitwardComponents.exe` directly still requires a manual panel restart.
+
+## Application updates
+
+Installer-managed Windows builds check the public GitHub latest-release endpoint once
+after startup, after local components are present. **Releases & updates** provides a
+manual check and a switch to disable startup checks. Source launches, design previews
+and portable builds keep the release-page link and do not check automatically. This is
+an explicit network exception to local speech/conversation: no audio, telemetry, profiles
+or authentication tokens are sent.
+
+Only newer published stable versions from `furkannehir/race-engineer` qualify. The
+updater requires the exact versioned Windows installer and `SHA256SUMS.txt`, validates
+the published checksum against the GitHub asset digest when available, and verifies
+the size and SHA-256 of the entire download before offering it to Windows. Metadata and
+download work runs off the UI thread. Offline startup checks are quiet; manual failures
+are visible and leave the current installation running.
+
+The **Update now / Later** prompt waits until the engineer is stopped and the panel is
+visible. Nothing is downloaded without Update now. A cancellable download is staged
+under the user's `updates` folder. Pitward then saves settings, releases the single-instance
+lock, closes and opens the normal Inno Setup wizard in the existing installation folder.
+The optional **Launch Pitward** step preserves custom config/settings paths. The upgrade
+does not invoke the uninstaller, so existing models, settings and driver history remain.
+Cancelling the installer itself requires reopening Pitward manually. Verified installers
+can be reused on retry; explicit uninstall removes the standard update cache as well.
+
+The public 0.1.0 binary predates this updater. Users need one manual installation of a
+new build containing it before later releases can be offered inside the app. Keep
+published releases immutable and increment the authoritative application version for
+each future public release. Checksums verify download integrity; the current unsigned
+installer still has the signing/SmartScreen limitation described above.
+
+Before release, verify on Windows: newer/equal/older versions, offline and rate-limited
+checks, Later, download cancellation and checksum failure, deferral during a live session,
+and an actual installer upgrade retaining models, profiles and custom paths. See the
+[GitHub release API](https://docs.github.com/en/rest/releases/releases#get-the-latest-release)
+and [Inno Setup parameters](https://jrsoftware.org/inno-setup/documentation/topic_setupcmdline.htm).
 
 ## Release flow
 
@@ -111,3 +173,7 @@ Before publishing, use a Windows 11 x64 machine without Python or this repositor
 5. English LFM replies against live iRacing, plus isolated English/Turkish speech
    worker checks; Turkish LFM conversation remains unvalidated; and
 6. preservation of settings, profile/history database and models across an upgrade.
+
+Also verify that explicit uninstall removes only the standard components cache and app
+installation, while retaining settings, profiles/history and logs. A source test or
+`--check-runtime` cannot replace this clean-machine acceptance or a listening test.

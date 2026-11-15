@@ -23,6 +23,7 @@ class PanelSettings(ConfigModel):
     input_name: str | None = None
     output_name: str | None = None
     volume: int = Field(default=80, ge=0, le=100)
+    check_updates_on_startup: bool = True
 
     @classmethod
     def from_config(cls, config: AppConfig) -> "PanelSettings":

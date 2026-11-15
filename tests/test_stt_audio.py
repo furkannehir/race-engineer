@@ -8,6 +8,7 @@ from pydantic import ValidationError
 
 from race_engineer.config import PttBindingConfig, SttConfig
 from race_engineer.core.speech_input import AudioClip, SpeechInputError, Transcription
+from race_engineer.radio_diagnostics import RadioTrace
 from race_engineer.stt.audio import load_wav, silence_reason
 from race_engineer.stt.capture import CaptureBuffer, PushToTalkMicrophone, virtual_key
 from race_engineer.stt.worker import normalize_result
@@ -196,9 +197,7 @@ def test_radio_cues_are_excluded_and_microphone_is_ready_when_opening_finishes()
     async def opened():
         events.append("open_cue")
         streams[0].callback(b"\2\0" * 320, 320, None, False)
-        asyncio.get_running_loop().call_soon(
-            streams[0].callback, spoken_pcm, 6400, None, False
-        )
+        asyncio.get_running_loop().call_soon(streams[0].callback, spoken_pcm, 6400, None, False)
 
     async def closed():
         events.append("close_cue")
@@ -216,7 +215,12 @@ def test_radio_cues_are_excluded_and_microphone_is_ready_when_opening_finishes()
     clip = asyncio.run(run())
     assert clip is not None and clip.pcm16 == spoken_pcm
     assert events == [
-        "input_started", "open_cue", "listening", "input_stopped", "close_cue", "input_closed"
+        "input_started",
+        "open_cue",
+        "listening",
+        "input_stopped",
+        "close_cue",
+        "input_closed",
     ]
 
 
@@ -239,7 +243,8 @@ def test_releasing_during_opening_cue_discards_capture_and_has_no_close_cue():
 
     states = iter((False, True, False))
     microphone = PushToTalkMicrophone(
-        SttConfig(), stream_factory=Stream,
+        SttConfig(),
+        stream_factory=Stream,
         key_down=lambda key: next(states, False) if key == 0x77 else False,
     )
 
@@ -250,14 +255,80 @@ def test_releasing_during_opening_cue_discards_capture_and_has_no_close_cue():
         events.append("close")
 
     async def run():
-        with pytest.raises(SpeechInputError, match="capture_empty"):
-            await microphone.next_clip(
-                after_stream_started=opened, after_capture=closed
-            )
+        with pytest.raises(SpeechInputError, match="ptt_released_before_recording"):
+            await microphone.next_clip(after_stream_started=opened, after_capture=closed)
         await microphone.aclose()
 
     asyncio.run(run())
     assert events == ["started", "open", "stopped"]
+
+
+@pytest.mark.parametrize("fault", ["no_frames", "bad_callback", "silent_frames"])
+def test_normal_release_closes_radio_and_distinguishes_input_faults(fault, caplog):
+    events, streams = [], []
+
+    class BadBytes:
+        def __bytes__(self):
+            raise TypeError("private callback detail")
+
+    class Stream:
+        def __init__(self, **kwargs):
+            self.callback = kwargs["callback"]
+            streams.append(self)
+
+        def start(self):
+            events.append("started")
+
+        def stop(self):
+            events.append("stopped")
+
+        def close(self):
+            pass
+
+    states = iter((False, True, True, True, False))
+    microphone = PushToTalkMicrophone(
+        SttConfig(),
+        stream_factory=Stream,
+        key_down=lambda key: next(states, False) if key == 0x77 else False,
+    )
+
+    async def opened():
+        if fault != "no_frames":
+            data = BadBytes() if fault == "bad_callback" else b"\0\0" * 320
+            asyncio.get_running_loop().call_soon(streams[0].callback, data, 320, None, False)
+
+    async def closed():
+        events.append("close_cue")
+        # Audio after the recording boundary must never enter this clip.
+        streams[0].callback(tone().pcm16, 6400, None, False)
+
+    async def run():
+        try:
+            if fault == "silent_frames":
+                clip = await microphone.next_clip(after_stream_started=opened, after_capture=closed)
+                assert clip.pcm16 == b"\0\0" * 320
+            else:
+                reason = (
+                    "microphone_no_audio_frames"
+                    if fault == "no_frames"
+                    else "microphone_callback_failed"
+                )
+                with pytest.raises(SpeechInputError, match=reason):
+                    await microphone.next_clip(after_stream_started=opened, after_capture=closed)
+        finally:
+            await microphone.aclose()
+
+    with caplog.at_level("INFO"), RadioTrace("run", "turn").bind():
+        asyncio.run(run())
+    released = next(
+        record
+        for record in caplog.records
+        if getattr(record, "event", "") == "radio_capture_released"
+    )
+    assert released.callback_count == (0 if fault == "no_frames" else 1)
+    assert released.callback_error_type == ("TypeError" if fault == "bad_callback" else None)
+    assert events == ["started", "stopped", "close_cue"]
+    assert "private callback detail" not in caplog.text
 
 
 def test_cancelling_opening_cue_stops_capture_without_a_closing_cue():
@@ -278,7 +349,8 @@ def test_cancelling_opening_cue_stops_capture_without_a_closing_cue():
 
     states = iter((False, True))
     microphone = PushToTalkMicrophone(
-        SttConfig(), stream_factory=Stream,
+        SttConfig(),
+        stream_factory=Stream,
         key_down=lambda key: next(states, True) if key == 0x77 else False,
     )
 
@@ -293,9 +365,9 @@ def test_cancelling_opening_cue_stops_capture_without_a_closing_cue():
         async def closed():
             events.append("close")
 
-        task = asyncio.create_task(microphone.next_clip(
-            after_stream_started=opened, after_capture=closed
-        ))
+        task = asyncio.create_task(
+            microphone.next_clip(after_stream_started=opened, after_capture=closed)
+        )
         await opened_started.wait()
         task.cancel()
         with pytest.raises(asyncio.CancelledError):

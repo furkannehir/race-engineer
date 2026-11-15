@@ -162,8 +162,23 @@ class ChatterboxSpeechBackend:
                 "tts_precision_invalid",
                 "tts_model_variant_unsupported",
                 "tts_default_voice_layout_unsupported",
+                "tts_dependency_missing",
+                "tts_package_metadata_missing",
             }
             reason = ready.get("error")
+            exception_type = ready.get("exception_type")
+            _LOGGER.error(
+                "local speech initialization failed",
+                extra={
+                    "event": "tts_worker_startup_failed",
+                    "reason": str(reason) if reason in allowed else "tts_model_load_failed",
+                    "exception_type": exception_type
+                    if isinstance(exception_type, str)
+                    and exception_type.isidentifier()
+                    and len(exception_type) <= 100
+                    else None,
+                },
+            )
             raise SpeechOutputError(str(reason) if reason in allowed else "tts_model_load_failed")
         if ready.get("model_variant", "v2") != self._config.model_variant:
             raise SpeechOutputError("tts_model_variant_mismatch")
@@ -216,9 +231,14 @@ class ChatterboxSpeechBackend:
                 else "tts_start_failed"
             )
             if not isinstance(error, asyncio.CancelledError):
+                recovery = (
+                    "Update or reinstall Pitward; check the local application logs."
+                    if self._config.worker_path
+                    else "Run scripts/setup_radio_tts.py."
+                )
                 self._report(
-                    f"Speech unavailable ({self._failed}). Run scripts/setup_radio_tts.py; "
-                    "telemetry and text replies remain active. No alternate voice is used."
+                    f"Speech unavailable ({self._failed}). {recovery} "
+                    "Telemetry and text replies remain active. No alternate voice is used."
                 )
                 raise SpeechOutputError(self._failed) from error
             raise

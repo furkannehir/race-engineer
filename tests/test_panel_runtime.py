@@ -1,6 +1,7 @@
 import asyncio
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from test_live_conversation import context
@@ -14,6 +15,7 @@ from race_engineer.conversation.live import LiveRaceState
 from race_engineer.memory import CommunicationPreferences
 from race_engineer.stt.buttons import effective_binding, legacy_binding
 from race_engineer.tts.live_radio import LiveRadio
+from race_engineer.ui import runtime as panel_runtime
 from race_engineer.ui.runtime import ConversationServer, run_engineer, run_until_stopped
 from race_engineer.ui.settings import (
     PanelSettings,
@@ -23,6 +25,43 @@ from race_engineer.ui.settings import (
 )
 
 ROOT = Path(__file__).parents[1]
+
+
+@pytest.mark.parametrize("frames_arrive", [True, False])
+def test_microphone_test_distinguishes_silence_from_no_callbacks(
+    monkeypatch, caplog, frames_arrive
+):
+    class Stream:
+        device = 7
+
+        def __init__(self, **kwargs):
+            self.callback = kwargs["callback"]
+
+        def __enter__(self):
+            if frames_arrive:
+                self.callback(b"\0\0" * 320, 320, None, False)
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+    async def no_wait(*args):
+        pass
+
+    monkeypatch.setattr(
+        panel_runtime, "_sounddevice", lambda: SimpleNamespace(RawInputStream=Stream)
+    )
+    monkeypatch.setattr(panel_runtime.asyncio, "sleep", no_wait)
+    notices = []
+    control = LiveControl(notify=lambda topic, value: notices.append((topic, value)))
+    with caplog.at_level("INFO"):
+        asyncio.run(panel_runtime.test_microphone(PanelSettings(), control))
+    message = next(value for topic, value in notices if topic == "notice")
+    assert ("Very quiet" if frames_arrive else "No microphone audio frames") in message
+    record = next(
+        r for r in caplog.records if getattr(r, "event", "") == "microphone_test_finished"
+    )
+    assert record.callback_count == int(frames_arrive) and record.resolved_input_device == 7
 
 
 def test_settings_round_trip_and_explicit_config_application(tmp_path):

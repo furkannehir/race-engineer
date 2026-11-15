@@ -1,5 +1,50 @@
 # Known issues and deferred improvements
 
+## DIST-001: Installed speech worker fails before the radio becomes ready
+
+**Status:** Fixed in source; frozen synthesis verified; clean-machine acceptance pending
+
+**Reported:** 2026-11-15, installed Pitward 0.1.0
+
+The installed application can load LFM and Qwen3-ASR but fail Chatterbox startup with
+`tts_model_load_failed`. The UI then shows "Waiting for iRacing" and "Local speech not
+ready", obscuring the separate speech failure. The cached voice weights are usable:
+the source runtime loads the same files successfully.
+
+Reproducing the frozen worker exposed Transformers 5 source-filename inspection failing
+on shortened PYZ paths, followed by missing Requests distribution metadata required by
+Diffusers. The bundle now imports Transformers from external source files and includes
+recursive dependency metadata. A frozen `--check-runtime --diagnostics` gate exercises
+these imports without downloading weights. On 2026-11-15, the rebuilt CPU executable
+also synthesized English/Turkish replies and announcements from the existing cache
+through one reused worker, without audio playback. Startup failures expose a stable
+reason and exception type, and the panel shows "Speech unavailable" while telemetry can
+continue. See [build and acceptance instructions](distribution.md).
+
+The new installer also removes the standard downloaded component cache on explicit
+uninstall, preserving profile/history, settings and logs. Previously published binaries
+and their uninstallers are unchanged until a new installer is built and distributed.
+
+## STT-002: PTT returns to ready without submitting a clip
+
+**Status:** User reports capture working again; original trigger unconfirmed
+
+**Reported:** 2026-11-15, installed test build
+
+Two installed sessions contained 15 `capture_empty` failures and no completed clips,
+despite ASR and Chatterbox being ready. The old error covered both release before the
+opening cue finished and a recording with no incoming audio. The configured system
+default resolved to the OBSBOT camera microphone during investigation; this alone does
+not establish the cause. The user subsequently reported input working, so no additional
+microphone recording/health check was run.
+
+Capture diagnostics now record stream start, opening-cue timing, recording boundaries,
+callback counts and callback exception types, without storing microphone samples.
+Early PTT release, no audio frames and callback failures have distinct notices. A normal
+release after recording is armed plays the closing cue even if no usable clip exists;
+aborted or cancelled capture still stops without that cue. **Test mic** distinguishes
+silence from a stream delivering no callbacks and logs only counts and level statistics.
+
 ## STT-001: Short and single-word questions are sometimes misrecognized
 
 **Status:** Chatterbox migration implemented; driver listening/game-load validation pending

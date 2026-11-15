@@ -45,8 +45,25 @@ Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: deskto
 Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription: "Additional shortcuts:"
 
 [Run]
-Filename: "{app}\{#AppExeName}"; Description: "Launch {#AppName}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#AppExeName}"; Parameters: "{code:LaunchParameters}"; Description: "Launch {#AppName}"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
-; User profiles, logs and downloaded models under %LOCALAPPDATA%\Pitward are retained.
+; Explicit uninstall removes component/update caches; profiles and logs are retained.
+; In-place upgrades do not run UninstallDelete.
+Type: filesandordirs; Name: "{localappdata}\Pitward\components"
+Type: filesandordirs; Name: "{localappdata}\Pitward\updates"
 Type: filesandordirs; Name: "{app}"
+
+[Code]
+function LaunchParameters(Param: String): String;
+var
+  ConfigPath, SettingsPath: String;
+begin
+  Result := '';
+  ConfigPath := ExpandConstant('{param:PITWARDCONFIG|}');
+  SettingsPath := ExpandConstant('{param:PITWARDSETTINGS|}');
+  if ConfigPath <> '' then
+    Result := Result + ' --config "' + ConfigPath + '"';
+  if SettingsPath <> '' then
+    Result := Result + ' --settings "' + SettingsPath + '"';
+end;

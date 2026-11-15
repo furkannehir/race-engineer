@@ -11,6 +11,7 @@ from typing import Any
 
 from race_engineer.config import SttConfig
 from race_engineer.core.speech_input import AudioClip, SpeechInputError
+from race_engineer.radio_diagnostics import radio_event
 from race_engineer.stt.buttons import (
     ButtonInput,
     JoystickButtonInput,
@@ -144,6 +145,10 @@ class PushToTalkMicrophone:
         else:
             self._escape_down = lambda: False
         self._buffer = CaptureBuffer(config.sample_rate_hz, config.max_capture_s)
+        self._callback_lock = threading.Lock()
+        self._callback_count = 0
+        self._callback_frames = 0
+        self._callback_error: str | None = None
         self._stream: Any = None
         try:
             factory = stream_factory or _sounddevice().RawInputStream
@@ -163,8 +168,25 @@ class PushToTalkMicrophone:
             raise SpeechInputError("microphone_open_failed") from error
 
     def _callback(self, data: Any, frames: int, times: Any, status: Any) -> None:
-        del frames, times
-        self._buffer.append(bytes(data), overflow=bool(status))
+        del times
+        try:
+            with self._callback_lock:
+                self._callback_count += 1
+                self._callback_frames += frames
+            self._buffer.append(bytes(data), overflow=bool(status))
+        except Exception as error:
+            # PortAudio normally prints callback exceptions to stderr, which a
+            # windowed executable cannot show. Report the type after capture.
+            with self._callback_lock:
+                self._callback_error = type(error).__name__
+
+    def _callback_diagnostics(self) -> dict[str, object]:
+        with self._callback_lock:
+            return {
+                "callback_count": self._callback_count,
+                "input_frames": self._callback_frames,
+                "callback_error_type": self._callback_error,
+            }
 
     async def _operate(self, operation: Callable[[], Any]) -> None:
         # A cancelled to_thread await must not leave a late stream.start after cleanup.
@@ -194,19 +216,36 @@ class PushToTalkMicrophone:
             await asyncio.sleep(0.01)
         if before_capture is not None:
             before_capture()
+        with self._callback_lock:
+            self._callback_count = self._callback_frames = 0
+            self._callback_error = None
         self._buffer.discard()
         if after_stream_started is None:
             self._buffer.begin()
         try:
             await self._operate(self._stream.start)
+            radio_event(
+                "radio_capture_stream_started",
+                input_device=self._config.input_device,
+                resolved_input_device=getattr(self._stream, "device", None),
+                sample_rate_hz=self._config.sample_rate_hz,
+                **self._callback_diagnostics(),
+            )
             if after_stream_started is not None:
                 # Prepare the input first, but exclude the opening cue from its clip.
+                cue_started = time.perf_counter()
                 await after_stream_started()
+                radio_event(
+                    "radio_capture_open_cue_finished",
+                    cue_duration_ms=round((time.perf_counter() - cue_started) * 1000, 3),
+                    **self._callback_diagnostics(),
+                )
                 if self._escape_down():
                     return None
                 if not self._button.is_down():
-                    raise SpeechInputError("capture_empty")
+                    raise SpeechInputError("ptt_released_before_recording")
                 self._buffer.begin()
+            radio_event("radio_capture_armed", **self._callback_diagnostics())
             notify("Listening... release the push-to-talk button to submit.")
             started = time.monotonic()
             while self._button.is_down():
@@ -217,6 +256,11 @@ class PushToTalkMicrophone:
                     self._buffer.discard()
                     raise SpeechInputError("capture_too_long")
                 await asyncio.sleep(0.01)
+            radio_event(
+                "radio_capture_released",
+                recording_ms=round((time.monotonic() - started) * 1000, 3),
+                **self._callback_diagnostics(),
+            )
         except (OSError, RuntimeError) as error:
             self._buffer.discard()
             raise SpeechInputError("microphone_capture_failed") from error
@@ -229,9 +273,21 @@ class PushToTalkMicrophone:
             except Exception as error:
                 self._buffer.discard()
                 raise SpeechInputError("microphone_stop_failed") from error
-        clip = self._buffer.finish()
-        if after_capture is not None:
-            await after_capture()
+        try:
+            if self._callback_error is not None:
+                self._buffer.discard()
+                raise SpeechInputError("microphone_callback_failed")
+            try:
+                clip = self._buffer.finish()
+            except SpeechInputError as error:
+                if str(error) == "capture_empty":
+                    raise SpeechInputError("microphone_no_audio_frames") from error
+                raise
+        finally:
+            # A normal PTT release closes the radio even when the device supplied
+            # no usable audio. Cancelled/aborted captures do not reach this point.
+            if after_capture is not None:
+                await after_capture()
         return clip
 
     async def aclose(self) -> None:

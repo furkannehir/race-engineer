@@ -1,6 +1,7 @@
 """Qt-free runtime for the panel, using the existing live radio pipeline."""
 
 import asyncio
+import logging
 import math
 import struct
 from collections.abc import Awaitable
@@ -96,13 +97,20 @@ async def test_microphone(settings: PanelSettings, control: LiveControl) -> None
     """Explicit user-initiated test; compute level only, never persist samples."""
     sd = _sounddevice()
     peak = [0.0]
+    callbacks, input_frames = [0], [0]
+    callback_error: list[str | None] = [None]
 
-    def level(data: Any, frames: object, times: object, status: object) -> None:
-        del frames, times, status
-        raw = bytes(data)
-        samples = [sample[0] / 32768 for sample in struct.iter_unpack("<h", raw)]
-        if samples:
-            peak[0] = max(peak[0], math.sqrt(sum(x * x for x in samples) / len(samples)))
+    def level(data: Any, frames: int, times: object, status: object) -> None:
+        del times, status
+        callbacks[0] += 1
+        input_frames[0] += frames
+        try:
+            raw = bytes(data)
+            samples = [sample[0] / 32768 for sample in struct.iter_unpack("<h", raw)]
+            if samples:
+                peak[0] = max(peak[0], math.sqrt(sum(x * x for x in samples) / len(samples)))
+        except Exception as error:
+            callback_error[0] = type(error).__name__
 
     control.emit("phase", "testing_mic")
     # PortAudio callbacks run separately; the stream is always closed on cancellation.
@@ -112,11 +120,26 @@ async def test_microphone(settings: PanelSettings, control: LiveControl) -> None
         dtype="int16",
         device=settings.input_device,
         callback=level,
-    ):
+    ) as stream:
         await asyncio.sleep(3)
     db = 20 * math.log10(max(peak[0], 1e-6))
-    message = f"Microphone peak: {db:.0f} dBFS. "
-    message += "Signal detected." if db > -42 else "Very quiet; check your input device."
+    logging.getLogger(__name__).info(
+        "microphone test finished",
+        extra={
+            "event": "microphone_test_finished",
+            "input_device": settings.input_device,
+            "resolved_input_device": getattr(stream, "device", None),
+            "callback_count": callbacks[0], "input_frames": input_frames[0],
+            "callback_error_type": callback_error[0], "peak_dbfs": round(db, 1),
+        },
+    )
+    if callback_error[0]:
+        message = "Microphone callback failed. Check the local log and your selected input device."
+    elif not callbacks[0]:
+        message = "No microphone audio frames arrived. Select your microphone explicitly and retry."
+    else:
+        message = f"Microphone peak: {db:.0f} dBFS. "
+        message += "Signal detected." if db > -42 else "Very quiet; check your input device."
     control.emit("notice", message)
 
 

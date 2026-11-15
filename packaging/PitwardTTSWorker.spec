@@ -9,7 +9,8 @@ SRC = ROOT / "src"
 
 speech_data, speech_binaries, speech_hidden = collect_all("chatterbox")
 speech_data += collect_data_files("transformers") + copy_metadata("chatterbox-tts")
-speech_data += copy_metadata("transformers") + copy_metadata("torch")
+speech_data += copy_metadata("transformers", recursive=True) + copy_metadata("torch")
+speech_data += copy_metadata("diffusers", recursive=True)
 perth_data, perth_binaries, perth_hidden = collect_all("perth")
 
 analysis = Analysis(
@@ -24,6 +25,9 @@ analysis = Analysis(
     hookspath=[],
     runtime_hooks=[],
     excludes=["PySide6", "qtawesome", "pygame"],
+    # Transformers 5 inspects source filenames while importing model classes.
+    # PYZ code uses shortened filenames even when .py data is also included.
+    module_collection_mode={"transformers": "py"},
     noarchive=False,
 )
 pyz = PYZ(analysis.pure)

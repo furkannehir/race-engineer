@@ -272,9 +272,15 @@ async def live_dialogue(
                 print(f"All speech unavailable: {error}; telemetry/text replies remain enabled.")
                 speaker = None
                 if control:
+                    recovery = (
+                        "Update or reinstall Pitward."
+                        if config.tts.worker_path
+                        else "Run the Chatterbox setup."
+                    )
                     control.emit(
                         "notice",
-                        "Speech unavailable; run the Chatterbox setup. No old voice fallback.",
+                        f"Speech unavailable ({error_code(error)}). {recovery} "
+                        "No old voice fallback.",
                     )
         microphone = (
             PushToTalkMicrophone(stt, exit_on_escape=False)
@@ -567,7 +573,25 @@ async def live_dialogue(
                 trace.finish("speech_input_failed", reason=error_code(error))
                 print(f"Speech input: {error}. Release the key before trying again.")
                 if control:
-                    control.emit("notice", f"Speech input: {error}. Release PTT and try again.")
+                    messages = {
+                        "ptt_released_before_recording": (
+                            "PTT was released before recording began. Hold it through the opening "
+                            "sound, then speak and release."
+                        ),
+                        "microphone_no_audio_frames": (
+                            "The microphone supplied no audio frames. Stop the engineer, select "
+                            "your microphone explicitly, and use Test mic."
+                        ),
+                        "microphone_callback_failed": (
+                            "Microphone capture failed. Check the local log and try Test mic."
+                        ),
+                    }
+                    control.emit(
+                        "notice",
+                        messages.get(
+                            str(error), f"Speech input: {error}. Release PTT and try again."
+                        ),
+                    )
             except BaseException as error:
                 trace.finish(
                     "cancelled"

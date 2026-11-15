@@ -335,7 +335,14 @@ def test_failed_generation_is_visible_and_does_not_select_another_voice(tmp_path
 
 
 @pytest.mark.parametrize(
-    "failure", ["tts_default_voice_missing", "tts_cuda_unavailable", "tts_model_load_failed"]
+    "failure",
+    [
+        "tts_default_voice_missing",
+        "tts_cuda_unavailable",
+        "tts_model_load_failed",
+        "tts_dependency_missing",
+        "tts_package_metadata_missing",
+    ],
 )
 def test_initialization_failure_is_latched_and_reported(tmp_path, monkeypatch, failure):
     process = FakeProcess([{"error": failure}])
@@ -351,6 +358,38 @@ def test_initialization_failure_is_latched_and_reported(tmp_path, monkeypatch, f
 
     asyncio.run(run())
     assert len(calls) == 1 and process.killed and notices
+
+
+@pytest.mark.parametrize(
+    "exception_type,logged", [("IndexError", "IndexError"), ("private path/detail", None)]
+)
+def test_packaged_startup_failure_logs_sanitized_cause_and_recovery(
+    tmp_path, monkeypatch, caplog, exception_type, logged
+):
+    process = FakeProcess([{"error": "tts_model_load_failed", "exception_type": exception_type}])
+    install_process(monkeypatch, process)
+    executable = tmp_path / "PitwardTTSWorker.exe"
+    executable.touch()
+    notices = []
+    backend = ChatterboxSpeechBackend(
+        settings(tmp_path, worker_path=executable), notice=notices.append
+    )
+
+    async def run():
+        with pytest.raises(SpeechOutputError, match="tts_model_load_failed"):
+            await backend.start()
+        await backend.aclose()
+
+    asyncio.run(run())
+    record = next(
+        entry
+        for entry in caplog.records
+        if getattr(entry, "event", "") == "tts_worker_startup_failed"
+    )
+    assert record.reason == "tts_model_load_failed" and record.exception_type == logged
+    assert "Update or reinstall Pitward" in notices[0]
+    assert "setup_radio_tts.py" not in notices[0]
+    assert "private path/detail" not in caplog.text
 
 
 def test_cpu_fallback_is_visible_and_frozen_worker_path_is_supported(tmp_path, monkeypatch):

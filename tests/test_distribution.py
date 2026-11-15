@@ -56,6 +56,16 @@ def test_source_installation_preserves_repository_layout(tmp_path: Path) -> None
     assert layout.missing_required_components(config) == ()
 
 
+def test_uninstaller_deletes_only_owned_models_and_app_not_profiles_or_logs():
+    script = (ROOT / "packaging/Pitward.iss").read_text(encoding="utf-8")
+    section = script.split("[UninstallDelete]", 1)[1]
+    targets = re.findall(r'^Type: filesandordirs; Name: "([^"]+)"', section, re.MULTILINE)
+    assert set(targets) == {
+        r"{localappdata}\Pitward\components", r"{localappdata}\Pitward\updates", "{app}"
+    }
+    assert r"{localappdata}\Pitward" not in targets
+
+
 def test_build_identity_requires_matching_version_and_valid_commit(tmp_path: Path) -> None:
     commit = "a" * 40
     (tmp_path / "build-info.json").write_text(

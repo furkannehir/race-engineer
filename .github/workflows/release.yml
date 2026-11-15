@@ -60,6 +60,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "STT worker did not start" }
           & build/package/dist/Pitward/workers/PitwardTTSWorker/PitwardTTSWorker.exe --help
           if ($LASTEXITCODE -ne 0) { throw "TTS worker did not start" }
+          & build/package/dist/Pitward/workers/PitwardTTSWorker/PitwardTTSWorker.exe --check-runtime --diagnostics
+          if ($LASTEXITCODE -ne 0) { throw "Frozen speech dependencies failed initialization" }
       - name: Build Windows installer
         shell: pwsh
         run: |

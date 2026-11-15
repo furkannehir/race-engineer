@@ -34,6 +34,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QMenu,
     QMessageBox,
+    QProgressDialog,
     QPushButton,
     QSlider,
     QSystemTrayIcon,
@@ -77,6 +78,9 @@ from race_engineer.ui.runtime import (
     test_voice,
 )
 from race_engineer.ui.settings import PanelSettings, load_settings_state, save_settings
+from race_engineer.ui.updates import UpdateWorker
+from race_engineer.updates import RELEASES_URL, AvailableUpdate, installer_command
+from race_engineer.version import __version__
 
 _ACCENT = "#2dc9c0"
 _MUTED = "#a7b0bd"
@@ -426,6 +430,9 @@ class EngineWorker(QThread):
 
 
 class RadioDesk(QWidget):
+    restart_ready = Signal()
+    installer_ready = Signal()
+
     def __init__(
         self,
         root: Path,
@@ -495,9 +502,24 @@ class RadioDesk(QWidget):
             except (DriverMemoryError, OSError, ValueError) as error:
                 self._settings_error = _friendly_error(error)
         self.worker: EngineWorker | None = None
+        self._component_setup_process: subprocess.Popen[bytes] | None = None
+        self._component_setup_timer = QTimer(self)
+        self._component_setup_timer.setInterval(500)
+        self._component_setup_timer.timeout.connect(self._poll_component_setup)
+        self.restart_requested = False
+        self.installer_requested: Path | None = None
+        self._update_worker: UpdateWorker | None = None
+        self._update_manual = False
+        self._pending_update: AvailableUpdate | None = None
+        self._downloaded_update: Path | None = None
+        self._update_progress: QProgressDialog | None = None
+        self._update_check_timer = QTimer(self)
+        self._update_check_timer.setSingleShot(True)
+        self._update_check_timer.timeout.connect(self._automatic_update_check)
         self._quitting = False
         self._telemetry_ready = False
         self._models_ready = False
+        self._models_failed = False
         self._phase = "stopped"
         self._speaking = False
         self._preparing_speech = False
@@ -526,6 +548,8 @@ class RadioDesk(QWidget):
             self._phase = "ready"
             self._render()
             self.notice.setText("Design preview — no telemetry, microphone or speech active.")
+        elif self._installer_managed() and self.settings.check_updates_on_startup:
+            self._update_check_timer.start(3000)
 
     def _build(self) -> None:
         outer = QVBoxLayout(self)
@@ -971,12 +995,173 @@ class RadioDesk(QWidget):
         )
 
     def _open_releases(self) -> None:
-        QDesktopServices.openUrl(
-            QUrl("https://github.com/furkannehir/race-engineer/releases/latest")
+        if not self._installer_managed() or self.preview:
+            QDesktopServices.openUrl(QUrl(RELEASES_URL))
+            return
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Pitward updates")
+        layout = QVBoxLayout(dialog)
+        layout.addWidget(label(f"Installed version: {__version__}"))
+        automatic = QCheckBox("Check GitHub for updates when Pitward starts")
+        automatic.setChecked(self.settings.check_updates_on_startup)
+        layout.addWidget(automatic)
+        layout.addWidget(label("Updates are downloaded only after you choose Update now.", "muted"))
+        releases = QPushButton("View releases on GitHub")
+        releases.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(RELEASES_URL)))
+        layout.addWidget(releases)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        check = buttons.addButton("Check now", QDialogButtonBox.ButtonRole.AcceptRole)
+        check.setEnabled(self._update_worker is None)
+        buttons.accepted.connect(dialog.accept)
+        buttons.rejected.connect(dialog.reject)
+        layout.addWidget(buttons)
+        result = dialog.exec()
+        previous = self.settings
+        self.settings = self.settings.model_copy(
+            update={"check_updates_on_startup": automatic.isChecked()}
+        )
+        if not self._save():
+            self.settings = previous
+            return
+        if not self.settings.check_updates_on_startup:
+            self._update_check_timer.stop()
+        if result == QDialog.DialogCode.Accepted:
+            self._check_updates(manual=True)
+
+    def _installer_managed(self) -> bool:
+        return bool(
+            self.installation and self.installation.frozen
+            and any(path.is_file() for path in self.installation.install_root.glob("unins*.exe"))
         )
 
+    def _automatic_update_check(self) -> None:
+        if self.settings.check_updates_on_startup and not self._missing_components:
+            self._check_updates(manual=False)
+
+    def _check_updates(self, *, manual: bool) -> None:
+        if (
+            self.preview or self._quitting or not self._installer_managed()
+            or self._update_worker is not None or self._component_setup_process is not None
+        ):
+            return
+        self._update_manual = manual
+        self._downloaded_update = None
+        self._pending_update = None
+        self._update_worker = UpdateWorker()
+        self._connect_update_worker()
+        if manual:
+            self.notice.setText("Checking GitHub for updates…")
+        self._update_worker.start()
+
+    def _connect_update_worker(self) -> None:
+        assert self._update_worker is not None
+        self._update_worker.completed.connect(self._update_result)
+        self._update_worker.failed.connect(self._update_error)
+        self._update_worker.progress.connect(self._update_download_progress)
+        self._update_worker.finished.connect(self._update_finished)
+
+    def _update_result(self, result: object) -> None:
+        if self._quitting:
+            return
+        if isinstance(result, AvailableUpdate):
+            self._pending_update = result
+        elif isinstance(result, Path):
+            self._downloaded_update = result
+        elif self._update_manual:
+            self.notice.setText(f"Pitward {__version__} is up to date.")
+
+    def _update_error(self, reason: str) -> None:
+        if self._update_manual and not self._quitting:
+            self.notice.setText(
+                f"Update unavailable ({reason}). Your current installation is unchanged. "
+                "Try again from Releases & updates."
+            )
+
+    def _update_finished(self) -> None:
+        worker, self._update_worker = self._update_worker, None
+        if worker is None:
+            return
+        cancelled = worker.cancelled or worker.isInterruptionRequested()
+        worker.deleteLater()
+        if self._update_progress is not None:
+            self._update_progress.close()
+            self._update_progress.deleteLater()
+            self._update_progress = None
+        if self._quitting:
+            self.close()
+            return
+        if cancelled:
+            self._downloaded_update = None
+            self.notice.setText("Update download cancelled. Pitward remains ready to use.")
+            self._render()
+            return
+        self._render()
+        if self._downloaded_update is not None:
+            if self._save():
+                self.installer_requested = self._downloaded_update
+                self.close()
+                self.installer_ready.emit()
+            return
+        self._maybe_offer_update()
+
+    def _maybe_offer_update(self) -> None:
+        if (
+            self._pending_update is None or self._update_worker is not None
+            or self.worker is not None or self._component_setup_process is not None
+            or self._quitting or not self.isVisible() or self.isMinimized()
+        ):
+            return
+        release, self._pending_update = self._pending_update, None
+        prompt = QMessageBox(self)
+        prompt.setWindowTitle("Pitward update available")
+        prompt.setText(f"Pitward {release.version} is available. You have {__version__}.")
+        prompt.setInformativeText(
+            "Download and verify the update, then close Pitward and open the Windows installer? "
+            "Your models, profiles and settings will be kept."
+        )
+        update = prompt.addButton("Update now", QMessageBox.ButtonRole.AcceptRole)
+        later = prompt.addButton("Later", QMessageBox.ButtonRole.RejectRole)
+        prompt.setDefaultButton(later)
+        prompt.exec()
+        if prompt.clickedButton() == update:
+            self._download_update(release)
+
+    def _download_update(self, release: AvailableUpdate) -> None:
+        if self.installation is None or self.worker is not None or self._update_worker is not None:
+            return
+        self._update_manual = True
+        self._downloaded_update = None
+        self._update_worker = UpdateWorker(release, self.installation.data_root / "updates")
+        self._connect_update_worker()
+        self._update_progress = QProgressDialog(
+            f"Downloading Pitward {release.version}…", "Cancel", 0, 100, self
+        )
+        self._update_progress.setWindowTitle("Pitward update")
+        self._update_progress.setWindowModality(Qt.WindowModality.WindowModal)
+        self._update_progress.setMinimumDuration(0)
+        self._update_progress.canceled.connect(self._cancel_update)
+        self._update_progress.show()
+        self._render()
+        self._update_worker.start()
+
+    def _update_download_progress(self, value: int) -> None:
+        if self._update_progress is not None:
+            self._update_progress.setValue(min(value, 99))
+
+    def _cancel_update(self) -> None:
+        if self._update_worker is not None:
+            self._update_worker.cancelled = True
+            self._update_worker.requestInterruption()
+
     def _setup_local_components(self) -> None:
-        if self.installation is None or not self.installation.frozen:
+        if (
+            self.preview
+            or self.installation is None
+            or not self.installation.frozen
+            or self._component_setup_process is not None
+            or self._update_worker is not None
+            or self.worker is not None
+        ):
             return
         installer = self.installation.component_installer_path
         if not installer.is_file():
@@ -990,15 +1175,19 @@ class RadioDesk(QWidget):
             "LFM3 uses the LFM Open License v1.0. Qwen3-ASR uses Apache 2.0 terms. "
             "Chatterbox and its built-in "
             "multilingual voice use MIT terms. Full notices are included with "
-            "Pitward.\n\nContinue with the download?",
+            "Pitward.\n\nPitward will restart automatically after successful setup.\n\n"
+            "Continue with the download?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )
         if answer != QMessageBox.StandardButton.Yes:
             return
         try:
-            subprocess.Popen(
-                [str(installer), "install", "--accept-third-party-licenses"],
+            self._component_setup_process = subprocess.Popen(
+                [
+                    str(installer), "install", "--accept-third-party-licenses",
+                    "--root", str(self.installation.components_root),
+                ],
                 cwd=self.installation.install_root,
                 creationflags=getattr(subprocess, "CREATE_NEW_CONSOLE", 0),
             )
@@ -1007,8 +1196,53 @@ class RadioDesk(QWidget):
             return
         self.setup_components.setEnabled(False)
         self.notice.setText(
-            "Component setup is running in a separate window. Restart Pitward when it finishes."
+            "Downloading local AI components in a separate window. "
+            "Pitward will restart automatically when setup succeeds."
         )
+        self._component_setup_timer.start()
+        self._render()
+
+    def _poll_component_setup(self) -> None:
+        process = self._component_setup_process
+        if process is None or self._quitting:
+            return
+        exit_code = process.poll()
+        if exit_code is None:
+            return
+        self._component_setup_timer.stop()
+        self._component_setup_process = None
+        self.setup_components.setEnabled(True)
+        logging.getLogger(__name__).info(
+            "local AI component setup finished",
+            extra={"event": "component_setup_finished", "exit_code": exit_code},
+        )
+        if exit_code != 0:
+            self.notice.setText(
+                f"Local AI setup failed or was cancelled (exit code {exit_code}). "
+                "Retry setup to resume the downloads."
+            )
+            self._render()
+            return
+        assert self.installation is not None
+        self._missing_components = self.installation.missing_required_components(self.config)
+        self.setup_components.setVisible(bool(self._missing_components))
+        self._render()
+        if self._missing_components:
+            self.notice.setText(
+                "Setup finished, but required components are still missing. "
+                "Retry setup or reinstall Pitward."
+            )
+            return
+        if not self._save():
+            return
+        self.notice.setText("Local AI components are ready. Restarting Pitward…")
+        logging.getLogger(__name__).info(
+            "restarting control panel after local AI setup",
+            extra={"event": "panel_restart_requested", "reason": "component_setup_completed"},
+        )
+        self.restart_requested = True
+        self.close()
+        self.restart_ready.emit()
 
     def _start_or_stop(self) -> None:
         if self.worker:
@@ -1017,6 +1251,10 @@ class RadioDesk(QWidget):
             self._start("engineer")
 
     def _start(self, mode: str) -> None:
+        if self._component_setup_process is not None or (
+            self._update_worker is not None and self._update_worker.release is not None
+        ):
+            return
         if self.preview:
             self.notice.setText("Design preview only. Launch without --preview for a real session.")
             return
@@ -1049,6 +1287,7 @@ class RadioDesk(QWidget):
                 self.notice.setText(_friendly_error(error))
                 return
         self._mode, self._failed = mode, False
+        self._models_failed = False
         self._phase = "starting"
         self._telemetry_ready = self._models_ready = self._speaking = False
         self._preparing_speech = False
@@ -1090,6 +1329,7 @@ class RadioDesk(QWidget):
             self._telemetry_ready = value == "ready"
         elif topic == "models":
             self._models_ready = value == "ready"
+            self._models_failed = value == "no_reply_voice"
         elif topic == "phase" and self._phase != "stopping":
             self._phase = value
         elif topic == "speech":
@@ -1108,11 +1348,14 @@ class RadioDesk(QWidget):
         if worker:
             worker.deleteLater()
         self._phase = "error" if self._failed else "stopped"
+        self._models_failed = False
         self._telemetry_ready = self._models_ready = self._speaking = False
         self._preparing_speech = False
         self._render()
         if self._quitting:
             self.close()
+        else:
+            self._maybe_offer_update()
 
     def _render(self) -> None:
         active = self.worker is not None or self.preview
@@ -1136,7 +1379,11 @@ class RadioDesk(QWidget):
             "testing_voice": "Testing voice…",
             "testing_mic": "Speak now…",
             "stopping": "Stopping…",
-            "ready": "Radio ready" if self._telemetry_ready else "Waiting for iRacing",
+            "ready": "Speech unavailable"
+            if self._models_failed
+            else "Radio ready"
+            if self._telemetry_ready
+            else "Waiting for iRacing",
         }
         heading = titles.get(self._phase, "Starting…")
         if self._preparing_speech and self._phase != "stopping":
@@ -1163,7 +1410,11 @@ class RadioDesk(QWidget):
             self._telemetry_ready,
         )
         self.models.update_status(
-            "Local speech ready" if self._models_ready else "Local speech not ready",
+            "Local speech unavailable"
+            if self._models_failed
+            else "Local speech ready"
+            if self._models_ready
+            else "Local speech not ready",
             self._models_ready,
         )
         self.start_button.setText(
@@ -1175,11 +1426,18 @@ class RadioDesk(QWidget):
             self._phase != "stopping"
             and not self._settings_error
             and not self._missing_components
+            and self._component_setup_process is None
+            and not (self._update_worker is not None and self._update_worker.release is not None)
         )
         self.tray_stop.setEnabled(self.worker is not None)
         self.tray.setToolTip(f"{PRODUCT_NAME} — {heading}")
         for control in self._settings_controls:
             control.setEnabled(not active or self.preview)
+        if self._component_setup_process is not None or (
+            self._update_worker is not None and self._update_worker.release is not None
+        ):
+            self.test_mic.setEnabled(False)
+            self.test_voice.setEnabled(False)
 
     def _minimize(self) -> None:
         if self.tray.isVisible() and QSystemTrayIcon.isSystemTrayAvailable():
@@ -1191,6 +1449,7 @@ class RadioDesk(QWidget):
         self.showNormal()
         self.raise_()
         self.activateWindow()
+        self._maybe_offer_update()
 
     def _tray_activated(self, reason: QSystemTrayIcon.ActivationReason) -> None:
         if reason in (
@@ -1216,6 +1475,15 @@ class RadioDesk(QWidget):
                 self._quitting = True
                 self._stop()
         else:
+            self._quitting = True
+            self._component_setup_timer.stop()
+            self._update_check_timer.stop()
+            if self._update_worker is not None:
+                self._update_worker.cancelled = True
+                self._update_worker.requestInterruption()
+                self.notice.setText("Closing after the update request stops…")
+                event.ignore()
+                return
             self.tray.hide()
             event.accept()
 
@@ -1271,6 +1539,8 @@ def main() -> int:
     except (OSError, ValueError) as error:
         QMessageBox.critical(None, f"Cannot open {PRODUCT_NAME}", str(error))
         return 1
+    panel.restart_ready.connect(app.quit)
+    panel.installer_ready.connect(app.quit)
     panel.show()
     if args.smoke_test:
         app.processEvents()
@@ -1282,6 +1552,50 @@ def main() -> int:
     result = app.exec()
     if lock:
         lock.unlock()
+    if panel.installer_requested is not None:
+        try:
+            subprocess.Popen(
+                installer_command(panel.installer_requested, root, config_path, settings_path),
+                cwd=panel.installer_requested.parent,
+                env={**os.environ, "PYINSTALLER_RESET_ENVIRONMENT": "1"},
+            )
+        except OSError as error:
+            logging.getLogger(__name__).error(
+                "update installer launch failed",
+                extra={"event": "update_installer_failed", "reason": type(error).__name__},
+            )
+            QMessageBox.critical(
+                None, PRODUCT_NAME,
+                "The verified update installer could not start. Open Pitward again and retry "
+                "from Releases & updates.",
+            )
+            return 1
+    elif panel.restart_requested:
+        try:
+            # Release the single-instance lock before the new panel starts.
+            subprocess.Popen(
+                [
+                    sys.executable,
+                    "--config", str(config_path),
+                    "--settings", str(settings_path),
+                ],
+                cwd=root,
+                # A relaunched frozen app must be independent of the old bootloader.
+                env={**os.environ, "PYINSTALLER_RESET_ENVIRONMENT": "1"},
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            )
+        except OSError as error:
+            logging.getLogger(__name__).error(
+                "control panel restart failed",
+                extra={"event": "panel_restart_failed", "reason": type(error).__name__},
+            )
+            QMessageBox.critical(
+                None,
+                PRODUCT_NAME,
+                "Local AI setup completed, but Pitward could not restart. "
+                "Open Pitward again manually.",
+            )
+            return 1
     return result
 
 

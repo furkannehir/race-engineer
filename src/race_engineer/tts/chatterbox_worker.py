@@ -16,6 +16,7 @@ import os
 import sys
 import threading
 import time
+import traceback
 from contextlib import redirect_stdout
 from pathlib import Path
 from typing import Any
@@ -89,6 +90,54 @@ def validate_model(model: Any) -> None:
         raise RuntimeError("tts_default_voice_missing")
     if not {"en", "tr"}.issubset(model.get_supported_languages()):
         raise RuntimeError("tts_languages_missing")
+
+
+def check_runtime() -> dict[str, object]:
+    """Exercise frozen speech imports without downloading/loading the voice weights."""
+    if importlib.metadata.version("chatterbox-tts") != CHATTERBOX_VERSION:
+        raise RuntimeError("tts_version_mismatch")
+    torch = importlib.import_module("torch")
+    api = importlib.import_module("chatterbox.mtl_tts")
+    # Perth normally suppresses ImportError and replaces its class with None.
+    # Import its implementation directly so a broken bundle fails this check.
+    watermark = importlib.import_module("perth.perth_net.perth_net_implicit.perth_watermarker")
+    if not callable(watermark.PerthImplicitWatermarker):
+        raise RuntimeError("tts_dependency_missing")
+    if not {"en", "tr"}.issubset(api.ChatterboxMultilingualTTS.get_supported_languages()):
+        raise RuntimeError("tts_languages_missing")
+    return {
+        "runtime_ready": True,
+        "version": CHATTERBOX_VERSION,
+        "torch_version": str(torch.__version__),
+        "transformers_version": importlib.metadata.version("transformers"),
+    }
+
+
+def report_startup_failure(error: Exception, *, diagnostics: bool) -> None:
+    allowed = {
+        "tts_version_mismatch",
+        "tts_model_missing",
+        "tts_default_voice_missing",
+        "tts_languages_missing",
+        "tts_cuda_unavailable",
+        "tts_bf16_unavailable",
+        "tts_precision_invalid",
+        "tts_model_variant_unsupported",
+        "tts_default_voice_layout_unsupported",
+        "tts_dependency_missing",
+    }
+    reason = (
+        "tts_package_metadata_missing"
+        if isinstance(error, importlib.metadata.PackageNotFoundError)
+        else "tts_dependency_missing"
+        if isinstance(error, ImportError)
+        else str(error)
+        if str(error) in allowed
+        else "tts_model_load_failed"
+    )
+    if diagnostics:
+        traceback.print_exception(error, file=sys.stderr)
+    send({"error": reason, "exception_type": type(error).__name__})
 
 
 def load_model(
@@ -319,7 +368,11 @@ async def serve(model: Any, *, volume: float, output_device: int | None) -> None
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", type=Path, required=True)
+    parser.add_argument("--model", type=Path)
+    parser.add_argument("--check-runtime", action="store_true")
+    parser.add_argument(
+        "--diagnostics", action="store_true", help="Print startup traceback to stderr"
+    )
     parser.add_argument("--model-variant", choices=("v2", "v3"), default="v2")
     parser.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
     parser.add_argument("--precision", choices=("auto", "fp32", "bf16"), default="auto")
@@ -328,7 +381,18 @@ def main() -> None:
     parser.add_argument("--volume", type=float, default=0.8)
     parser.add_argument("--output-device", type=int)
     args = parser.parse_args()
+    if args.model is None and not args.check_runtime:
+        parser.error("--model is required unless --check-runtime is selected")
     os.environ.update(HF_HUB_OFFLINE="1", TRANSFORMERS_OFFLINE="1", DO_NOT_TRACK="1")
+    if args.check_runtime:
+        try:
+            with redirect_stdout(sys.stderr):
+                result = check_runtime()
+        except Exception as error:
+            report_startup_failure(error, diagnostics=args.diagnostics)
+            raise SystemExit(1) from None
+        send(result)
+        return
     started = time.perf_counter()
     try:
         with redirect_stdout(sys.stderr):
@@ -370,19 +434,7 @@ def main() -> None:
             }
         )
     except Exception as error:
-        code = str(error)
-        allowed = {
-            "tts_version_mismatch",
-            "tts_model_missing",
-            "tts_default_voice_missing",
-            "tts_languages_missing",
-            "tts_cuda_unavailable",
-            "tts_bf16_unavailable",
-            "tts_precision_invalid",
-            "tts_model_variant_unsupported",
-            "tts_default_voice_layout_unsupported",
-        }
-        send({"error": code if code in allowed else "tts_model_load_failed"})
+        report_startup_failure(error, diagnostics=args.diagnostics)
         return
     asyncio.run(serve(model, volume=args.volume, output_device=args.output_device))
 
