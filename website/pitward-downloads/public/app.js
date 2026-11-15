@@ -21,7 +21,7 @@ async function checkRelease() {
   }
   document.querySelector('#download-label').textContent = 'Download for Windows';
   document.querySelector('#release-badge').textContent = 'AVAILABLE NOW';
-  document.querySelector('#release-note-status').textContent = 'First public release';
+  document.querySelector('#release-note-status').textContent = 'Published release';
   const date = new Date(release.published_at);
   status.textContent = Number.isNaN(date.getTime()) ? `Version ${config.version} is ready to download.` : `Published ${new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(date)} · Downloads hosted on GitHub.`;
 }

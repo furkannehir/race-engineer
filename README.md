@@ -7,7 +7,7 @@ language generation, and speech synthesis remain replaceable adapters.
 ## Download Pitward
 
 Get the Windows installer or portable ZIP at **[pitward.com](https://pitward.com)**
-or from the [0.1.0 GitHub release](https://github.com/furkannehir/race-engineer/releases/tag/v0.1.0).
+or from the [0.1.1 GitHub release](https://github.com/furkannehir/race-engineer/releases/tag/v0.1.1).
 The packaged app does not require Python. Initial setup downloads approximately
 5.9 GB of local AI components under their separate third-party terms.
 

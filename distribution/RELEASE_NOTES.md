@@ -1,32 +1,47 @@
-# Pitward 0.1.0
+# Pitward 0.1.1
 
-The first Pitward release brings local race assistance to iRacing on Windows.
+This patch fixes speech startup in the Windows installer and makes setup, updates,
+and microphone failures easier to handle.
 
-- Live iRacing telemetry, deterministic automatic radio calls, and English LFM conversations.
-- Local Qwen3-ASR push-to-talk and Chatterbox spoken replies.
-- A native desktop panel with microphone/output selection, radio checks, keyboard,
-  mouse and wheel bindings, mute and tray controls.
-- Local driver preferences and decision history.
-- A portable ZIP, Windows installer, and SHA-256 checksums.
+## Changes
 
-## Getting started
+- Fixed Chatterbox initialization in packaged builds. Downloaded voice models are
+  reused; no reference recording or replacement voice is needed.
+- Pitward restarts automatically after successful local AI component setup.
+- Installed builds can check for newer stable GitHub releases. **Update now**
+  downloads and verifies the installer, then opens the normal Windows setup wizard.
+  **Later** keeps the current app running. Prompts wait until the engineer is stopped.
+- Added clearer speech-startup failures, microphone tests, and push-to-talk capture
+  diagnostics. Normal recording releases play the closing cue even if capture fails.
+- Explicit uninstall now removes downloaded models and cached update installers.
+  Settings, driver profiles, history, and logs are retained.
 
-Install the Windows x64 app, or extract the portable ZIP and open `Pitward.exe`.
-Choose **Set up local AI components**, review the third-party terms, and allow about
-5.9 GB of verified downloads to finish. Restart the app, select your radio devices,
-bind push-to-talk, and perform a voice check before starting your engineer.
+## Installing or upgrading
 
-Models, profiles, settings, and logs stay under `%LOCALAPPDATA%\Pitward` and are
-preserved when you replace or uninstall the application.
+Run `Pitward-Setup-0.1.1-windows-x64.exe` over the existing installation. Do not
+uninstall first: an in-place upgrade keeps your downloaded models and driver data.
+The public 0.1.0 app predates the updater, so this upgrade must be installed manually.
+Later releases can be offered in the app. Startup checks can be disabled under
+**Releases & updates**; portable/source launches use the GitHub release page.
 
-## Early-release limitations
+For a fresh install, open **Set up local AI components**, review the third-party
+terms, and allow about 5.9 GB of verified downloads. Pitward then restarts itself.
+Select your microphone, output, and push-to-talk button, and use **Test mic** and
+**Test voice** before starting the engineer.
 
-- Windows 11 x64 is the clean-machine acceptance target.
-- Packaged inference and speech workers use CPU; race-time speech latency is not yet
-  established and may be too slow on some PCs. Source CUDA setup is separate.
-- English conversation is the MVP. Turkish conversation remains unvalidated.
-- Builds are unsigned; Windows may display a SmartScreen warning.
-- An internet connection is required for the initial component downloads.
+## Known limitations
 
-Source, third-party notices, and known issues are available in the
-[repository](https://github.com/furkannehir/race-engineer).
+- Windows 11 x64 remains the release test target. Builds are unsigned and may
+  display a SmartScreen prompt.
+- Packaged inference and speech run on CPU; speech may miss racing deadlines.
+  Source CUDA setup is separate.
+- English conversation is the MVP; Turkish conversation remains unvalidated.
+  LFM can still misunderstand questions or produce poor replies. This patch does
+  not change the conversation model or claim to fix answer quality.
+- Internet is used for component downloads and optional GitHub update checks.
+  Speech, telemetry, and driver data remain local.
+- If you use a custom `PITWARD_DATA_DIR`, its caches require manual cleanup on
+  uninstall. Cancelling an update wizard requires reopening Pitward manually.
+
+See [known issues](https://github.com/furkannehir/race-engineer/blob/main/docs/known-issues.md)
+and the bundled third-party notices for details.
