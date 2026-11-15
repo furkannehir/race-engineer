@@ -140,6 +140,9 @@ and [Inno Setup parameters](https://jrsoftware.org/inno-setup/documentation/topi
 
 ## Release flow
 
+The current patch release is recorded in [the 0.1.1 release record](releases/0.1.1.md),
+including verified public assets, the tagged workflow and upgrade instructions.
+
 For the first release, use the [0.1.0 preparation record](releases/0.1.0.md) and
 [prepared release notes](../distribution/RELEASE_NOTES.md). The
 [download dashboard](../website/pitward-downloads/README.md) enables links only for

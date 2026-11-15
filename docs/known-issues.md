@@ -2,7 +2,7 @@
 
 ## DIST-001: Installed speech worker fails before the radio becomes ready
 
-**Status:** Fixed in source; frozen synthesis verified; clean-machine acceptance pending
+**Status:** Fix published in v0.1.1; frozen synthesis verified; full clean-machine acceptance pending
 
 **Reported:** 2026-11-15, installed Pitward 0.1.0
 
