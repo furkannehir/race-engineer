@@ -274,6 +274,11 @@ def test_capability_catalog_contains_the_complete_int06_workload():
         "pit_loss_projection",
         "pit_stop_duration_projection",
         "projected_rejoin_position",
+        "last_lap_time",
+        "best_lap_time",
+        "lap_time_comparison",
+        "race_progress",
+        "fuel_to_finish",
     ]
 
 

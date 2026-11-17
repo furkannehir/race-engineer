@@ -14,6 +14,7 @@ from race_engineer.core.intelligence import (
     SignalSelector,
 )
 from race_engineer.core.interfaces import TelemetryMemory
+from race_engineer.intelligence.race_progress import SPECS, execute_progress, progress_catalog
 
 _CLASSIFICATION = "current_classification"
 _FUEL_RANGE = "fuel_range"
@@ -506,6 +507,7 @@ class DeterministicRaceCapabilities:
                 available=False,
                 unavailable_reason="missing_rejoin_projection_model",
             ),
+            *progress_catalog(current, self._freshness_s),
         )
 
     def _descriptor(self, capability_id: str) -> CapabilityDescriptor:
@@ -895,6 +897,8 @@ class DeterministicRaceCapabilities:
             raise RaceCapabilityError("capability_arguments_not_supported")
         descriptor = self._descriptor(request.capability_id)
         current = self._memory.latest_context()
+        if request.capability_id in SPECS:
+            return execute_progress(request, current, self._freshness_s)
         if request.capability_id == _CLASSIFICATION:
             return self._classification(request, descriptor, current)
         if request.capability_id == _FUEL_RANGE:

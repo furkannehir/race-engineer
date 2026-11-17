@@ -1,10 +1,52 @@
 # Working roadmap
 
-Updated 2026-11-08. This is the current progress/backlog companion to the original
+Updated 2026-11-18. This is the current progress/backlog companion to the original
 [implementation plan](personalized-ai-race-engineer-implementation-plan.docx), not a claim
 that every original milestone exit criterion has been formally validated.
 
 ## Current checkpoint
+
+November 18 data expansion: the adapter now selects 25 SDK fields, including
+last/best lap duration, completed laps, race lap limit/remaining count and clock.
+Five new core capabilities provide last/best timing, their difference, race
+progress and a conservative fuel-to-finish budget with an explicit one-lap reserve.
+The checked Ministral demo exposes 14 implemented calculations, 26 current signal
+paths and 26 read/conversation operations, including focused lap/time tools.
+Fuel endurance says "laps of fuel". Timed-only remaining laps/fuel projection,
+clean-lap history and opponent per-lap pace remain unavailable. The new default
+synthetic demo separates 12 laps of fuel from 10 remaining race laps. Fresh live
+adapter capture and opt-in Ministral live integration are still pending; installed
+model/speech defaults and driver-only cockpit controls are unchanged.
+
+November 17 planning update: the accepted English Ministral chat prototype is
+the next live-trial candidate for November 18; opt-in live integration is still
+required and the live/installed defaults remain unchanged. See
+[trial notes](dialogue-model-comparison.md#planned-english-live-trial-18-november-2026).
+The complete [telemetry expansion inventory](telemetry-expansion.md) now records
+26 feature areas, uses across the application, existing foundations, data limits
+and the proposed expansion order after the trial.
+The companion [engineer control inventory](engineer-controls.md) records pit
+requests, verified candidates for adjustments performed at a stop, and optional
+simulator utilities, distinguishing SDK commands from macros and mapped inputs.
+Agreed scope: cockpit adjustments and immediate vehicle controls remain
+driver-operated. Pitward may read and advise on them, but must not execute changes;
+their inventory entries are excluded reference, not future control tasks.
+Control execution remains future work and does not change the planned model trial.
+The [implementation/access matrix](telemetry-expansion.md#implementation-and-ministral-access-snapshot)
+now separates implemented adapter data, core calculations and actual Ministral
+tools for all 26 telemetry areas. The
+[control status matrix](engineer-controls.md#implementation-and-ministral-access-snapshot)
+covers all 47 control areas: simulator writes are unimplemented or driver-only.
+The November 17 implementation exposes nine existing core calculations, 18
+normalized signal paths, bounded numeric history and verified radio recall to
+Ministral's 17-operation read-only prototype. `try_ministral.py` now accepts
+normalized recordings through `--fixture`. New telemetry fields/calculations,
+simulator writes and the live connection remain separate work.
+Driver-facing speed/velocity has been removed. Relative-gap tools expose only
+qualitative movement; numerical gap-change rates and generic gap-window queries
+are hidden. Numerical gains/losses must use verified lap-to-lap comparisons,
+which remain a telemetry-expansion task; never relabel a ten-second trend as
+lap pace or substitute instantaneous speed for pace.
 
 November 8 model decision after the VR shakedown: **LFM3-1.7B Q4_K_M is the English
 MVP model**, using native tool selection and grounded JSON replies through one

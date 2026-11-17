@@ -27,6 +27,8 @@ CAPABILITY_VARIABLES: dict[str, frozenset[str]] = {
     "fuel": frozenset({"FuelLevel"}),
     "gaps": frozenset({"CarIdxF2Time", "CarIdxLapCompleted", "CarIdxPosition", "PlayerCarIdx"}),
     "lap": frozenset({"Lap"}),
+    "lap_timing": frozenset({"LapLastLapTime", "LapBestLapTime"}),
+    "race_progress": frozenset({"LapCompleted", "SessionLapsTotal", "SessionLapsRemainEx"}),
     "opponents": frozenset({"CarIdxPosition", "PlayerCarIdx"}),
     "pit": frozenset({"OnPitRoad"}),
     "position": frozenset({"PlayerCarPosition"}),
@@ -45,6 +47,22 @@ def _valid_non_negative(value: float | None) -> float | None:
 
 def _valid_positive_int(value: int | None) -> int | None:
     return value if value is not None and value > 0 else None
+
+
+def _lap_time(value: float | None) -> float | None:
+    value = _valid_non_negative(value)
+    return value if value is not None and value > 0 else None
+
+
+def _lap_limit(value: int | None, *, zero: bool = False) -> int | None:
+    # SDK's unlimited lap-count sentinel must never become a race distance.
+    return value if value is not None and (0 if zero else 1) <= value < 32767 else None
+
+
+def _session_duration(value: float | None, *, zero: bool = False) -> float | None:
+    value = _valid_non_negative(value)
+    # Unlimited sessions use the SDK's seven-day duration sentinel.
+    return value if value is not None and (zero or value > 0) and value < 604800 else None
 
 
 def _valid_lap(value: int | None) -> int | None:
@@ -194,9 +212,27 @@ def normalize_sample(sample: IracingRawSample) -> TelemetryFrame | None:
         observed_at=sample.observed_at,
         session_time_s=sample.session_time_s,
         session_phase=_session_phase(sample.session_state, flags),
+        session_type=sample.session_type if variables.intersection({
+            "LapCompleted", "LapLastLapTime", "LapBestLapTime", "SessionLapsTotal",
+            "SessionLapsRemainEx", "SessionTimeRemain", "SessionTimeTotal",
+        }) else None,
+        session_laps_total=_lap_limit(sample.session_laps_total),
+        session_laps_remaining=(
+            _lap_limit(sample.session_laps_remaining, zero=True)
+            if _lap_limit(sample.session_laps_total) is not None else None
+        ),
+        session_time_remaining_s=(
+            None if (sample.session_time_total_s is not None
+                     and sample.session_time_total_s >= 604800)
+            else _session_duration(sample.session_time_remaining_s, zero=True)
+        ),
+        session_time_total_s=_session_duration(sample.session_time_total_s),
         player=PlayerState(
             driver_id=_driver_id(drivers.get(player_idx), player_idx),
             lap_number=_valid_lap(sample.lap),
+            laps_completed=_valid_lap(sample.laps_completed),
+            last_lap_time_s=_lap_time(sample.last_lap_time_s),
+            best_lap_time_s=_lap_time(sample.best_lap_time_s),
             position=_valid_positive_int(sample.player_position),
             speed_mps=_valid_non_negative(sample.speed_mps),
             fuel_l=_valid_non_negative(sample.fuel_l),

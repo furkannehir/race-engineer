@@ -333,7 +333,9 @@ class GeneratedResponse(ContractModel):
         reference_names.extend(reference.placeholder for reference in self.limitation_references)
         if len(reference_names) != len(set(reference_names)):
             raise ValueError("response placeholders must be unique")
-        if sorted(placeholders) != sorted(reference_names):
+        # One verified binding may be spoken more than once ("P5, fifth place").
+        # Names still have exactly one reference; every occurrence uses that binding.
+        if set(placeholders) != set(reference_names):
             raise ValueError("every speech placeholder requires exactly one reference")
         text_without_placeholders = _PLACEHOLDER.sub("", self.speech_template)
         if _RAW_NUMBER.search(text_without_placeholders):

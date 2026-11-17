@@ -619,6 +619,194 @@ Synthetic diagnostic artifacts remain ignored under
 `gap-turns.log`, `gap-turns-no-reasoning-wire.jsonl`, and
 `gap-turns-no-reasoning.log`. See [the LFM trial](lfm3-trial.md).
 
+## INT-016: LFM social replies and grounded answers can miss the driver's meaning
+
+**Status:** Social guidance improved in source; semantic acceptance remains open
+
+**Reported and reproduced:** 2026-11-15, installed English CPU session and typed replay
+
+Unrelated social replies repeatedly mentioned radio checks. Identity questions were
+echoed, and a dirty-driving complaint became literal dirt despite the planner correctly
+identifying venting. The social prompt contained an unconditional radio-check instruction;
+native Core also lacked delivered dialogue for follow-ups. Typed input reproduced the
+failure independently of microphone capture, ASR and speech generation.
+
+Source now supplies one model-selected social-purpose hint, the original question and
+number-redacted delivered history. Hints guide generated wording rather than selecting
+fixed replies. Brevity is style guidance; schema/evidence validation and one bounded
+repair attempt remain. In the initial focused CPU development replay all 32 turns completed, versus
+15/16 before the change; exact plans improved from 6/16 to 22/32. Presence, identity,
+greeting and venting examples improved. Completion/evidence matches are not semantic
+acceptance. Keep these reproduced failures in the regression set:
+
+- Neutral comments still get generic or question-shaped wording.
+- A name follow-up can return the engineer's role without its name.
+- A neutral current-position question can include an unrequested `No`.
+- A request for fuel **laps** can receive fuel **liters**, even after selecting fuel range.
+- Mixed inputs can lose the social acknowledgment while answering the factual part.
+
+**Sequential replay, 2026-11-15:** An eight-turn driver conversation plus four
+fresh-history probes reproduced the reported replies exactly. A requested joke was
+correctly selected and generated, but the twelve-word rejection introduced by this
+slice discarded both valid drafts. That fatal style check is now removed; the same
+replay completes 12/12 instead of 10/12. The existing sixty-word grounded radio limit
+and factual/schema validation remain. Regression coverage preserves a complete valid
+joke beyond the style target and still rejects fabricated evidence after one repair.
+
+Other errors remain: a frustrated opponent remark selected current position, and that
+unrelated position was already in the raw model draft. A broad race overview retrieved
+only classification and echoed the question. Tyre choice requested generic clarification;
+compound choice selected stationary pit-service duration and got a generic prediction
+limitation. These reproduce without history. Correctly grounded numbers and safe generic
+limitations can conceal irrelevant selection. This is a relevance/coverage boundary
+problem as well as a model-selection problem; no automatic position fallback produced
+the inspected opponent reply. See the recorded calls and drafts in the LFM trial notes.
+
+The live position refusal was separate: the correct capability returned
+`missing_player_position`; raw telemetry values were not recorded, so its cause is
+unconfirmed. Two of five generated replies in the latest session also expired during
+the fifteen-second speech-preparation budget. This source slice changes neither
+telemetry availability nor the TTS budget. The installed app needs rebuilding to use it.
+
+**Relevance-review trial, 2026-11-15:** A candidate allowing Core to decline evidence
+in its existing wording pass was tested against the driver's sequence plus controls.
+Completion fell from 16/16 to 13/16, with rambling, unrelated history text and social
+classification of first/last questions while speaking plain ordinal rank claims.
+A decision-only probe was faster (699 ms median with full facts) but still mislabeled
+clear tyre/identity requests and simple factual controls. Neither candidate was
+promoted; temporary application-script integration was removed. See the
+[rejected experiment and reproduction](lfm3-trial.md#relevance-review-experiment-rejected-15-november-2026).
+
+Next acceptance checks: review reply relevance as well as selection/evidence, retain
+natural paraphrases and delivered-history follow-ups, and check these cases again after
+changes. No keyword command router or unvalidated free-text fallback should substitute
+for understanding. See the [reproduction and measurements](lfm3-trial.md#installed-session-social-regression-15-november-2026).
+
+**Native conversation trial, 2026-11-15:** The separate source command
+`scripts/try_lfm3_dialogue.py` now keeps the original user message, native assistant
+call and paired Python tool result together for normal-text generation. It is limited
+to current position, direct social conversation and unsupported tyre advice; one
+resident model is reused. An initial 13-question CPU development run completed 11
+turns. Direct position and tyre calls worked, but follow-up selection could truncate,
+a position question could produce invented lap counts (rejected by validation), and
+a radio check could still retrieve unrequested position. The native free-text path
+also exposed residual thinking delimiters; the trial separates final content and
+preserves current tool-turn reasoning metadata. This is not evidence that every
+earlier error was a runtime bug. The live app is unchanged. See the
+[native trial command, boundaries and results](lfm3-trial.md#native-tool-conversation-trial-15-november-2026).
+
+**Driver gap replay, 2026-11-15:** Fixed an actual trial-policy bug: a stale-number
+rejection forced `tool_choice="required"`, diverting overview/gap questions into an
+unrelated tyre function. Repairs now keep tools optional and retain the original
+question. The trial now exposes existing gap-ahead/behind calculations and replaces
+the tyre dummy with a generic unavailable-information function naming the request.
+Gap units, freshness and explicit direction reversals have focused coverage. Further
+inspection found that three intermediate rejections came from parser errors on valid
+natural wording (`1.6-second`, `a second behind`, `the next one`); those are fixed.
+The observed unsupported leadership and snapshot-based pace claims have focused
+rejection coverage, but this is not a complete semantic truth checker.
+
+Semantic acceptance still fails. The final 12-turn CPU replay completed 11 turns,
+median 2.49 seconds, including correct fresh gap readings. In conversation, `Gap ahead`
+selected `get_gap_behind`; overview requests received a single measurement instead of
+the trial's limitation. The rejected turn invented combined facts during repair, and
+some completed replies still added unsupported qualitative wording. Completion is not
+an accuracy score. A same-frame fact-reuse experiment was removed; current numerical
+answers still require a new tool read. A requested 64-token thinking experiment
+completed only 3/12 under the 256-token output limit and remains disabled by default.
+These results do not justify promoting the trial or loosening factual checks. See the
+[retry correction and real-model evidence](lfm3-trial.md#driver-gap-feedback-retry-bug-fixed-semantic-acceptance-still-failing).
+
+**Model screening, 2026-11-15:** The [controlled native dialogue comparison](dialogue-model-comparison.md)
+tested four Q4_K_M models and two sampling controls (504 typed attempts across GPU
+and a shorter CPU set). LFM is not leading the screened configurations. Ministral
+had the strongest supported Turkish lookups and fastest typed latency, while
+greedy Qwen3.5 had a memory footprint close to LFM. Neither is accepted for live
+use: unknown handling, copied measurements, wrong-topic answers and spoken gap
+direction still fail in some cases. The comparison also independently reproduced
+validator false positives for P5/fifth and car-relative gap wording. The live
+model selection remains unchanged; tool-selection counts are not answer accuracy.
+
+**Ministral prototype follow-up, 2026-11-16:** The default terminal demo now uses
+explicit native operations, current reads and a bounded verified radio-memory
+tool. Old numerical replies are kept out of working chat history, so current
+queries cannot simply copy them; clarifications retrieve the delivered historical
+reading. The shared contract permits repeated use of one evidence binding, and
+the native parser fixes the observed car-relative gap false positive. The final
+changing-telemetry replay delivered 62/62 English turns, with 22/22 current-reading
+and 4/4 historical-clarification cases. English venting improved, including fresh
+paraphrases and mixed requests. These are development results, not general
+accuracy. Turkish still fails presence/current/clarification acceptance (20/22
+delivered, 6/8 current reads, 0/2 historical clarifications). The live factory and
+installed application have not adopted the prototype. See the
+[16 November follow-up](dialogue-model-comparison.md#checked-prototype-follow-up-16-november-2026).
+
+**Driver acceptance and deferred wording/context work, 2026-11-16:** The driver
+accepted the current English chat prototype as sufficient for continued work.
+Rhetorical venting (`What's that guy doing!!`) can still select unavailable-data
+reporting, and communication feedback (`give me simple answers please`) can
+incorrectly trigger position. Repetitive unavailable replies are currently owned
+by the application. These remain open; acceptance is not a claim that semantic
+correctness or live-race readiness is complete. The same review found and fixed
+trace/history dictionary aliasing so logs retain the actual tool result after
+working-history compaction. Chat behavior is unchanged by that diagnostic fix.
+
+**Read-only exposure slice, 2026-11-17:** The checked Ministral terminal
+prototype now exposes the implemented classification/fuel/position-change/gap
+trend/catch calculations, normalized current reads and bounded numeric history.
+This is tool access, not new simulator data, a live-model promotion or proof of
+semantic accuracy. New unavailable inputs and control requests still fail closed;
+cockpit execution remains excluded. Number/unit binding, query-window provenance,
+current-only wording context, explicit closing verdicts and refreshed-boolean
+repair cover failures found in development replay. See the
+[exposure method and verification](dialogue-model-comparison.md#existing-telemetry-and-core-exposure-17-november-2026)
+and [current access matrix](telemetry-expansion.md#implementation-and-ministral-access-snapshot).
+
+The final expanded English development replay delivered 94/94 replies at a
+272.686 ms GPU median, excluding speech and game load. Manual review still
+found a contradictory behind-trend sentence: `falling back, not catching`
+followed by `The gap is closing`. The core supplied the correct state/rate;
+the surrounding model prose remains wrong and passed numeric grounding. This
+is an open answer-quality issue, not a fixed calculation bug or live acceptance.
+Turkish context/recall acceptance also remains open. See the linked report
+method for test scope and the distinction between delivery and accuracy.
+
+**Driver measurement policy, 2026-11-17:** Instantaneous speed is no longer
+exposed to the checked Ministral prototype. Relative-gap tools now return only
+qualitative movement and a closing verdict, without their internal numerical
+rate. Generic speed/derivative queries and gap-window comparisons are excluded.
+Numerical gap gain/loss must be lap based; no verified completed-lap comparison
+exists yet, so those requests remain unavailable. This prevents reporting
+seconds per second or treating speed as pace; it does not establish general
+semantic correctness or promote the prototype to the live application.
+
+The measurement-policy replay delivered 96/100 English turns at a 237.864 ms GPU
+median. No excluded speed/gap-rate units were spoken. Speed-history substitution
+with position changes now triggers bounded repair to unavailable information.
+Two repeated last-place checks still rejected a valid bare `You are last`
+without a reference; two opponent-identity requests selected unrelated data and
+were rejected. Keep these validation/selection issues open rather than presenting
+the delivery count as semantic accuracy. No speech/game-load validation was run.
+
+**Lap/progress expansion, 2026-11-18:** New adapter fields and five core
+capabilities expose last/best timing, their difference, race progress and a
+scheduled-distance fuel estimate with a one-lap reserve. Focused count tools
+prevent remaining-lap questions from receiving the current lap number. Fuel
+endurance is explicitly "laps of fuel"; timed-only finish fuel estimates remain
+unavailable. Replay delivered 135/140 English replies, with five rejections left
+open. The model can still phrase the additional reserve as included in remaining
+race laps, describe it as fuel available, repeat a clock instead of explaining a
+missing timed-race lap count, and assume an ambiguous catching target. These are
+remaining wording/selection limits, not failures of the deterministic arithmetic.
+See [test scope and transcripts](dialogue-model-comparison.md#lap-timing-race-progress-and-fuel-18-november-2026).
+
+**Lap-time radio wording, 2026-11-18:** Last/best durations now use deterministic
+radio pronunciation (92.5 seconds becomes "one thirty two point five"). Stored
+seconds, differences, gaps and clock values are unchanged. A focused local-model
+check confirmed the format but twice selected the most recent best-lap reading
+when asked to recall last lap. The formatter/refresh/history mechanics are tested;
+that separate recall-topic selection issue remains open for later conversation work.
+
 ## RACE-001: Announce starting grid and an expected finishing position
 
 **Status:** Deferred feature - after Qwen request-understanding work

@@ -28,6 +28,13 @@ class IracingRawSample(ContractModel):
     is_replay_playing: bool | None = None
     player_car_idx: int | None = None
     lap: int | None = None
+    laps_completed: int | None = None
+    last_lap_time_s: float | None = Field(default=None, allow_inf_nan=False)
+    best_lap_time_s: float | None = Field(default=None, allow_inf_nan=False)
+    session_laps_total: int | None = None
+    session_laps_remaining: int | None = None
+    session_time_remaining_s: float | None = Field(default=None, allow_inf_nan=False)
+    session_time_total_s: float | None = Field(default=None, allow_inf_nan=False)
     player_position: int | None = None
     speed_mps: float | None = Field(default=None, allow_inf_nan=False)
     fuel_l: float | None = Field(default=None, allow_inf_nan=False)

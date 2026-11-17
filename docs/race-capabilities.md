@@ -1,5 +1,11 @@
 # Deterministic race capabilities
 
+The [telemetry expansion inventory](telemetry-expansion.md) records proposed
+features and priorities beyond the implemented calculation baseline below.
+Its [implementation/access matrix](telemetry-expansion.md#implementation-and-ministral-access-snapshot)
+also records which calculations are exposed to the checked Ministral prototype;
+registration in this core catalog alone does not make a capability model-accessible.
+
 INT-06 adds typed race calculations beside the generic Telemetry Memory queries. A capability
 is selected by meaning, not by matching a driver phrase:
 
@@ -48,6 +54,50 @@ is selected by meaning, not by matching a driver phrase:
 : Advertised future-counterfactual capabilities with stable typed outputs and authoritative
   unavailable reasons. They deliberately do not calculate until track/car pit loss, requested
   service, simulator rules, and field-trajectory models are normalized and validated.
+
+## Lap timing and race progress, 18 November 2026
+
+The core now adds `last_lap_time`, `best_lap_time`, `lap_time_comparison`,
+`race_progress` and `fuel_to_finish`. These are Python calculations over nullable
+normalized fields, exposed to the checked Ministral prototype through dedicated
+tools. Last/best durations are simulator reports, not promises of clean laps or
+multi-lap pace. Their comparison returns an absolute difference and direction.
+Repeated last/best snapshots cannot be averaged as if each sample were a lap.
+
+Last/best durations in the checked Ministral prototype now use race-radio
+pronunciation: `92.5` seconds becomes **one thirty two point five**, and `91.25`
+becomes **one thirty one point two five**. The shared language formatter keeps
+up to three decimal places, trims trailing zeros and rounds before splitting
+minutes/seconds. It supplies English/Turkish words without changing stored values,
+units, calculations, delivery refresh or historical recall. Gaps, lap-time
+differences and session-clock values retain their ordinary seconds rendering.
+The model may copy a verified token or a matching duration; the application owns
+the final pronunciation. This adds no model call or speech dependency.
+
+Race progress distinguishes current lap, completed laps, scheduled lap limit,
+SDK remaining race laps and session clock. Focused tools return only the requested
+count/time to avoid confusing current lap with remaining laps. Timed-only races
+have a clock but no exact remaining lap count; clock zero is not a finish crossing.
+
+Fuel range is always rendered as **laps of fuel** in the checked prototype.
+Fuel-to-finish uses the larger of `total laps - player completed laps` and the
+reported remaining count, counts the unfinished lap in full, and budgets **one
+additional lap of reserve** at observed consumption. Required fuel includes this
+reserve already; the core returns the verdict and positive shortage/surplus too.
+This conservative full-distance budget can overestimate what a lapped driver or
+a race ending on time actually needs. The reserve is currently an explicit
+constant, not a driver preference or a voice-adjustable setting.
+
+Fuel-to-finish is unavailable without confirmed active race context, a scheduled
+lap limit, a valid completed count and positive observed consumption. Timed-only
+fuel projection, fuel saving, pit strategy, opponent lap comparisons and clean-lap
+history remain future work. There is no new model or model-authored arithmetic.
+The existing live model selection, speech and control scope are unchanged.
+
+SDK field names/units were checked against the binding's
+[upstream variable catalog](https://github.com/kutu/pyirsdk/blob/master/vars.txt).
+Source tests and normalized replay are not a substitute for a fresh live recording
+from the new adapter; old recordings cannot supply fields they never captured.
 
 ## Safety boundary
 

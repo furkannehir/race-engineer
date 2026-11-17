@@ -1,0 +1,169 @@
+{
+  "schema_version": "intelligence-eval.v1",
+  "dataset_id": "lfm-social-regression",
+  "revision": "2026-11-15.seed2",
+  "split": "development",
+  "fixture": "fixtures/synthetic/intelligence-capabilities",
+  "groups": [
+    {
+      "id": "driver-gap-behind-en",
+      "family": "lfm-driver-gap-behind",
+      "category": "driver-gap-regression",
+      "language": "en",
+      "questions": ["Gap behind", "What's the gap behind?"],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": ["gap_behind"],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "driver-gap-ahead-en",
+      "family": "lfm-driver-gap-ahead",
+      "category": "driver-gap-regression",
+      "language": "en",
+      "questions": ["Gap ahead"],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": ["gap_ahead"],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "presence-en",
+      "family": "lfm-social-presence",
+      "category": "radio-check",
+      "language": "en",
+      "questions": ["Are you there?", "Can you hear me?"],
+      "expected": {
+        "purpose": "social",
+        "temporal_scope": "social",
+        "evidence_outcome": "no_evidence",
+        "required_situation": ["driver_radio_check"]
+      }
+    },
+    {
+      "id": "identity-en",
+      "family": "lfm-social-identity",
+      "category": "identity",
+      "language": "en",
+      "questions": ["Who are you?", "What's your job here?"],
+      "expected": {
+        "purpose": "social",
+        "temporal_scope": "social",
+        "evidence_outcome": "no_evidence",
+        "required_situation": ["driver_other"]
+      }
+    },
+    {
+      "id": "neutral-comment-en",
+      "family": "lfm-social-neutral-comment",
+      "category": "comment",
+      "language": "en",
+      "questions": ["This is interesting.", "Well, that was unexpected."],
+      "expected": {
+        "purpose": "social",
+        "temporal_scope": "social",
+        "evidence_outcome": "no_evidence",
+        "required_situation": ["driver_other"]
+      }
+    },
+    {
+      "id": "dirty-move-en",
+      "family": "lfm-social-dirty-move",
+      "category": "vent",
+      "language": "en",
+      "questions": ["This was very dirty.", "Such a dirty move."],
+      "expected": {
+        "purpose": "social",
+        "temporal_scope": "social",
+        "evidence_outcome": "no_evidence",
+        "required_situation": ["driver_vent"]
+      }
+    },
+    {
+      "id": "greeting-en",
+      "family": "lfm-social-greeting",
+      "category": "greeting",
+      "language": "en",
+      "questions": ["Hello, baby.", "Hey engineer."],
+      "expected": {
+        "purpose": "social",
+        "temporal_scope": "social",
+        "evidence_outcome": "no_evidence",
+        "required_situation": ["driver_greeting"]
+      }
+    },
+    {
+      "id": "identity-followup-en",
+      "family": "lfm-social-identity-followup",
+      "category": "followup",
+      "language": "en",
+      "questions": ["And what's your name?"],
+      "recent_dialogue": ["driver: Who are you?", "engineer: I'm your race engineer."],
+      "expected": {
+        "purpose": "social",
+        "temporal_scope": "social",
+        "evidence_outcome": "no_evidence",
+        "required_situation": ["driver_other"]
+      }
+    },
+    {
+      "id": "frustration-followup-en",
+      "family": "lfm-social-frustration-followup",
+      "category": "followup",
+      "language": "en",
+      "questions": ["That's what I meant."],
+      "recent_dialogue": ["driver: Such a dirty move.", "engineer: Sounds frustrating. Focus on your race."],
+      "expected": {
+        "purpose": "social",
+        "temporal_scope": "social",
+        "evidence_outcome": "no_evidence",
+        "required_situation": ["driver_acknowledgment"]
+      }
+    },
+    {
+      "id": "position-control-en",
+      "family": "lfm-social-position-control",
+      "category": "telemetry-control",
+      "language": "en",
+      "questions": ["What is the position", "Where are we running?"],
+      "expected": {
+        "purpose": "race_information",
+        "temporal_scope": "current",
+        "capability_ids": ["current_classification"],
+        "evidence_outcome": "available"
+      }
+    },
+    {
+      "id": "vent-gap-control-en",
+      "family": "lfm-social-vent-gap-control",
+      "category": "mixed",
+      "language": "en",
+      "questions": ["That was dirty. What's the gap behind?"],
+      "expected": {
+        "purpose": "mixed",
+        "temporal_scope": "current",
+        "capability_ids": ["gap_behind"],
+        "evidence_outcome": "available",
+        "required_situation": ["driver_vent"]
+      }
+    },
+    {
+      "id": "presence-fuel-control-en",
+      "family": "lfm-social-presence-fuel-control",
+      "category": "mixed",
+      "language": "en",
+      "questions": ["Are you there? How many laps of fuel have we got?"],
+      "expected": {
+        "purpose": "mixed",
+        "temporal_scope": "current",
+        "capability_ids": ["fuel_range"],
+        "evidence_outcome": "available",
+        "required_situation": ["driver_radio_check"]
+      }
+    }
+  ]
+}

@@ -52,6 +52,10 @@ different fact. Select every independent part of a compound question.
 For greetings, radio/presence checks, thanks or venting, call acknowledge_driver with
 the appropriate kind. For a social remark plus a question, call both acknowledge_driver
 and the relevant data function. Never invent an observed incident.
+Use kind="other" for identity/role questions and neutral comments, "greeting" only for
+an actual greeting, and "acknowledgment" for thanks or agreement. Complaints about driving
+conduct are venting, not requests for track-surface data. Classify the CURRENT message;
+an earlier radio check does not make every later social message another radio check.
 A radio check is about hearing/presence of the engineer, not the driver's race rank.
 It needs acknowledge_driver(kind="radio_check"), without any position or telemetry tool.
 For quantities covered by a capability use that function, without also reading its inputs.
@@ -67,7 +71,13 @@ rules. Do not write a spoken answer yet. Call functions; the application execute
 
 
 class _SocialArguments(ContractModel):
-    kind: Literal["greeting", "radio_check", "vent", "acknowledgment", "other"]
+    kind: Literal["greeting", "radio_check", "vent", "acknowledgment", "other"] = Field(
+        description=(
+            "greeting: a hello; radio_check: checking hearing/presence; vent: frustration "
+            "about driving; acknowledgment: thanks or agreement; other: a question about "
+            "the engineer's identity/role or a neutral comment."
+        )
+    )
 
 
 class _ReadArguments(ContractModel):
@@ -145,7 +155,8 @@ class LfmNativePlanner:
             function_tool(
                 _SOCIAL,
                 "Acknowledge a social part: greeting, radio check, "
-                "venting or thanks. No race facts. Combine with data functions "
+                "venting, thanks, or other conversation including identity/role questions "
+                "and neutral comments. No race facts. Combine with data functions "
                 "when the driver also asks for information.",
                 _SocialArguments.model_json_schema()["properties"],
                 ["kind"],

@@ -27,6 +27,7 @@ from race_engineer.evaluation.system import (
 )
 from race_engineer.fixtures import load_fixture
 from race_engineer.intelligence.context_planner import (
+    LFM_NATIVE_ID,
     PLANNER_ID,
     PLANNER_V5_ID,
     PLANNER_V6_ID,
@@ -103,7 +104,7 @@ async def benchmark(args: argparse.Namespace) -> dict[str, object]:
     started = time.perf_counter()
     runtime: dict[str, object] = {}
     try:
-        print("Starting or reusing local Qwen server...", flush=True)
+        print(f"Starting or reusing local {config.conversation.model} server...", flush=True)
         await server.start()
         verify_trial_runtime(server, args)
         startup_ms = (time.perf_counter() - started) * 1000
@@ -245,7 +246,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--candidate",
-        choices=(PLANNER_V5_ID, PLANNER_V6_ID, PLANNER_V7_ID, PLANNER_V8_ID),
+        choices=(PLANNER_V5_ID, PLANNER_V6_ID, PLANNER_V7_ID, PLANNER_V8_ID, LFM_NATIVE_ID),
         default=PLANNER_ID,
         help="planner prompt candidate to benchmark",
     )

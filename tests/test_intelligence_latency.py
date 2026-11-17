@@ -304,3 +304,32 @@ def test_benchmark_refuses_to_overwrite_an_existing_report_before_server_start(t
     with pytest.raises(ValueError, match="output already exists"):
         asyncio.run(benchmark(args))
     assert output.read_text(encoding="utf-8") == "user data"
+
+
+def test_text_benchmark_cli_accepts_native_lfm_candidate(monkeypatch):
+    from scripts import benchmark_intelligence as script
+
+    captured = []
+
+    async def benchmark(args):
+        captured.append(args)
+        return {"summary": {"pipeline_failed": 0}}
+
+    monkeypatch.setattr(script, "benchmark", benchmark)
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "benchmark_intelligence.py",
+            "--candidate",
+            "lfm3-native-v1",
+            "--dataset",
+            "fixtures/intelligence-evaluation/lfm-social-regression.json",
+            "--show-replies",
+        ],
+    )
+    with pytest.raises(SystemExit) as result:
+        script.main()
+    assert result.value.code == 0
+    assert captured[0].candidate == "lfm3-native-v1"
+    assert captured[0].show_replies
+    assert captured[0].case is None

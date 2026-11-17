@@ -1,0 +1,6 @@
+{
+  "fixture_version": "race-fixture.v1",
+  "fixture_id": "synthetic:ministral-telemetry:1",
+  "description": "Read-only Ministral tools: existing 30-second position/fuel/gap calculations plus explicit synthetic flags, pit-state and metre-distance inputs. No real race or new strategy model.",
+  "frames_file": "frames.jsonl"
+}

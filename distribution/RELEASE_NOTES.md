@@ -1,47 +1,72 @@
-# Pitward 0.1.1
+# Pitward 0.2.0
 
-This patch fixes speech startup in the Windows installer and makes setup, updates,
-and microphone failures easier to handle.
+This release adds lap timing and race-progress data, deterministic fuel estimates,
+and a source-only Ministral conversation preview. **The Windows application still
+uses LFM3-1.7B. Ministral is not yet connected to the live desktop radio.**
 
-## Changes
+## New telemetry and calculations
 
-- Fixed Chatterbox initialization in packaged builds. Downloaded voice models are
-  reused; no reference recording or replacement voice is needed.
-- Pitward restarts automatically after successful local AI component setup.
-- Installed builds can check for newer stable GitHub releases. **Update now**
-  downloads and verifies the installer, then opens the normal Windows setup wizard.
-  **Later** keeps the current app running. Prompts wait until the engineer is stopped.
-- Added clearer speech-startup failures, microphone tests, and push-to-talk capture
-  diagnostics. Normal recording releases play the closing cue even if capture fails.
-- Explicit uninstall now removes downloaded models and cached update installers.
-  Settings, driver profiles, history, and logs are retained.
+- iRacing capture now includes completed laps, last/best lap durations, the race
+  lap limit, remaining race laps and the session clock. Missing channels and
+  unlimited-session sentinels remain unknown rather than becoming fake readings.
+- New core tools read last/best lap time, compare the last lap with the best,
+  distinguish lap counts and estimate fuel for the full scheduled distance.
+- Fuel-to-finish includes an explicit one-lap reserve at observed consumption.
+  This is a conservative estimate, not a guaranteed finish or pit strategy.
+  Timed-only races do not receive an invented exact remaining lap count or finish
+  fuel prediction.
+- Existing recordings remain readable; new fields require a new capture.
 
-## Installing or upgrading
+## Conversation preview for source users
 
-Run `Pitward-Setup-0.1.1-windows-x64.exe` over the existing installation. Do not
-uninstall first: an in-place upgrade keeps your downloaded models and driver data.
-The public 0.1.0 app predates the updater, so this upgrade must be installed manually.
-Later releases can be offered in the app. Startup checks can be disabled under
-**Releases & updates**; portable/source launches use the GitHub release page.
+The checked Ministral 3 3B Q4_K_M demo offers fresh native-tool readings, bounded
+history and recall of delivered readings. It exposes 14 implemented core
+capabilities through 26 read/conversation operations. English is the test focus.
 
-For a fresh install, open **Set up local AI components**, review the third-party
-terms, and allow about 5.9 GB of verified downloads. Pitward then restarts itself.
-Select your microphone, output, and push-to-talk button, and use **Test mic** and
-**Test voice** before starting the engineer.
+Last/best lap durations use race-radio wording: **92.5 seconds becomes "one thirty
+two point five"**. Fuel range explicitly says "laps of fuel". Instantaneous speed
+and numerical per-second gap rates are excluded; recent closing movement is
+qualitative. Lap differences and gaps keep seconds as their unit.
 
-## Known limitations
+With the repository development environment installed, explicitly set up the
+separate preview weights and then start typed chat:
 
-- Windows 11 x64 remains the release test target. Builds are unsigned and may
-  display a SmartScreen prompt.
-- Packaged inference and speech run on CPU; speech may miss racing deadlines.
-  Source CUDA setup is separate.
-- English conversation is the MVP; Turkish conversation remains unvalidated.
-  LFM can still misunderstand questions or produce poor replies. This patch does
-  not change the conversation model or claim to fix answer quality.
-- Internet is used for component downloads and optional GitHub update checks.
-  Speech, telemetry, and driver data remain local.
-- If you use a custom `PITWARD_DATA_DIR`, its caches require manual cleanup on
-  uninstall. Cancelling an update wizard requires reopening Pitward manually.
+```powershell
+.\.venv\Scripts\python.exe scripts\setup_dialogue_comparison.py --model ministral
+.\.venv\Scripts\python.exe scripts\try_ministral.py
+```
+
+This starts its own local GPU server and uses synthetic telemetry without audio.
+`--backend cpu` selects an explicit CPU trial; CPU racing latency is not established.
+Model weights, recordings and local diagnostic reports are not included in Git.
+
+## Existing desktop path
+
+The LFM social prompt now uses the current question and bounded dialogue context
+more directly, and supports a bounded repair for invalid social output. Repeated
+uses of one verified evidence binding no longer reject an otherwise valid reply.
+These changes do not establish general conversation accuracy.
+
+The installer component set, Qwen3-ASR, Chatterbox voice, PTT cues and driver
+profiles are unchanged. The installer does not download Ministral or include the
+source-only chat scripts. In-place upgrades retain downloaded models and driver
+data; uninstalling first is unnecessary.
+
+## Validation and known limitations
+
+- Source: 965 tests passed, two NumPy-dependent audio tests skipped; Ruff and mypy
+  passed. Windows packaging checks run separately in the tagged workflow.
+- The expanded GPU text replay delivered 135/140 replies at a 348 ms median.
+  Completion is not accuracy: remaining failures and misleading reserve/recall
+  wording are documented. Timing excludes startup, STT, TTS and racing/VR load.
+- The radio-format smoke check delivered eight replies with the requested lap
+  pronunciation; a separate last-versus-best recall-selection error remains open.
+- Opponent lap pace/fastest-driver comparisons, multi-lap clean-lap history and
+  pit projections remain unavailable. Cockpit controls stay driver-operated.
+- Turkish conversation is unvalidated. English/Turkish speech support is retained,
+  but this release's source checks do not validate actual audio playback.
+- Windows 11 x64 remains the packaging target. Builds are unsigned; packaged
+  inference uses CPU and may miss racing deadlines. The source CUDA setup is separate.
 
 See [known issues](https://github.com/furkannehir/race-engineer/blob/main/docs/known-issues.md)
-and the bundled third-party notices for details.
+and the [telemetry access matrix](https://github.com/furkannehir/race-engineer/blob/main/docs/telemetry-expansion.md).

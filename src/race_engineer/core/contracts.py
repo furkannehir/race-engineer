@@ -50,6 +50,9 @@ class ContractModel(BaseModel):
 class PlayerState(ContractModel):
     driver_id: str = Field(min_length=1)
     lap_number: int | None = Field(default=None, ge=0)
+    laps_completed: int | None = Field(default=None, ge=0)
+    last_lap_time_s: Annotated[float, Field(gt=0, allow_inf_nan=False)] | None = None
+    best_lap_time_s: Annotated[float, Field(gt=0, allow_inf_nan=False)] | None = None
     position: int | None = Field(default=None, ge=1)
     speed_mps: NonNegativeFloat | None = None
     fuel_l: NonNegativeFloat | None = None
@@ -73,6 +76,11 @@ class TelemetryFrame(ContractModel):
     observed_at: UtcDatetime
     session_time_s: NonNegativeFloat
     session_phase: SessionPhase = SessionPhase.UNKNOWN
+    session_type: str | None = None
+    session_laps_total: int | None = Field(default=None, gt=0, lt=32767)
+    session_laps_remaining: int | None = Field(default=None, ge=0, lt=32767)
+    session_time_remaining_s: Annotated[float, Field(ge=0, lt=604800)] | None = None
+    session_time_total_s: Annotated[float, Field(gt=0, lt=604800)] | None = None
     player: PlayerState
     opponents: tuple[OpponentState, ...] = ()
     flags: tuple[RaceFlag, ...] = ()

@@ -324,3 +324,83 @@ def test_native_reply_cannot_bypass_number_grounding_or_claim_unavailable_data()
     assert brief.unknown_ids == missing.unknowns
     assert response.speech_template == "{{unavailable}}" and not response.references
     assert len(wrong.calls) == 3  # Invalid framing falls back to an application-owned limitation.
+
+
+def test_native_social_reply_receives_original_question_and_redacted_followup_context():
+    from test_portable_engineer import FakeJsonModel, packet, turn
+
+    from race_engineer.intelligence.portable_engineer import PortableQwenEngineer
+
+    model = FakeJsonModel({"goal": "acknowledge", "speech": "I'm Pitward, your race engineer."})
+    core = PortableQwenEngineer(ConversationConfig(context_planner=LFM_NATIVE_ID), model=model)
+    request = turn("And what's your name?").model_copy(
+        update={
+            "recent_dialogue": (
+                "driver: Position?",
+                "engineer: You're P28.",
+                "driver: Who are you?",
+                "engineer: I'm your race engineer.",
+            )
+        }
+    )
+    # A mistaken greeting label must not erase the actual question sent to Core.
+    context = packet().model_copy(
+        update={"temporal_scope": "social", "situation": ("driver_greeting",)}
+    )
+    brief = asyncio.run(core.decide(request, context))
+    response = asyncio.run(core.generate(request, context, brief))
+    body = json.loads(model.calls[0]["content"])
+    assert body["driver_question"] == request.transcript
+    assert body["recent_dialogue"] == [
+        "driver: Position?",
+        "engineer: You're P[unverified_number].",
+        "driver: Who are you?",
+        "engineer: I'm your race engineer.",
+    ]
+    assert set(body) == {"required_language", "driver_question", "recent_dialogue"}
+    assert response.speech_template == "I'm Pitward, your race engineer."
+    assert not brief.evidence_ids and not response.references
+    assert len(model.calls) == 1
+
+
+def test_native_valid_social_reply_is_not_rejected_for_exceeding_style_target():
+    from test_portable_engineer import FakeJsonModel, packet, turn
+
+    from race_engineer.intelligence.grounding import StrictEvidenceGrounder
+    from race_engineer.intelligence.portable_engineer import PortableQwenEngineer
+
+    joke = "Sure, here's a quick one: Why did the tire go to therapy? Too many cracks!"
+    assert 12 < len(joke.split()) < 60
+    model = FakeJsonModel({"goal": "acknowledge", "speech": joke})
+    core = PortableQwenEngineer(ConversationConfig(context_planner=LFM_NATIVE_ID), model=model)
+    request, context = turn("Can you tell me a joke?"), packet()
+    brief = asyncio.run(core.decide(request, context))
+    response = asyncio.run(core.generate(request, context, brief))
+    result = StrictEvidenceGrounder().ground(response, context, brief)
+    assert result.text == joke
+    assert not result.evidence_ids
+    assert len(model.calls) == 1
+
+
+@pytest.mark.parametrize("repair_succeeds", [True, False])
+def test_native_social_reply_still_repairs_invalid_evidence_once(repair_succeeds):
+    from test_portable_engineer import FakeJsonModel, packet, turn
+
+    from race_engineer.intelligence.portable_engineer import PortableQwenEngineer
+
+    invalid_reply = {
+        "goal": "acknowledge",
+        "speech": "Copy {{unknown_fact}}.",
+    }
+    short_reply = {"goal": "acknowledge", "speech": "Copy. I'm here."}
+    model = FakeJsonModel([invalid_reply, short_reply if repair_succeeds else invalid_reply])
+    core = PortableQwenEngineer(ConversationConfig(context_planner=LFM_NATIVE_ID), model=model)
+    request, context = turn("Are you there?"), packet()
+    if repair_succeeds:
+        brief = asyncio.run(core.decide(request, context))
+        response = asyncio.run(core.generate(request, context, brief))
+        assert response.speech_template == short_reply["speech"]
+    else:
+        with pytest.raises(LocalIntelligenceError, match="engineer_model_response_invalid"):
+            asyncio.run(core.decide(request, context))
+    assert len(model.calls) == 2

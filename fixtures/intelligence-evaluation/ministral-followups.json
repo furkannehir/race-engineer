@@ -1,0 +1,55 @@
+{
+  "revision": "ministral-followups-development-v3",
+  "sequences": [
+    {"id": "reported-followups", "language": "en", "turns": [
+      {"question": "ay yo are you there", "tool": null},
+      {"question": "How are you doing today", "tool": null},
+      {"question": "Good. How's the race going", "unavailable": true},
+      {"question": "Gap ahead", "tool": "get_gap_ahead"},
+      {"question": "Is it one second or 1.6", "update": {"ahead": 1.9}, "tool": "recall_radio_reading", "scope": "historical"},
+      {"question": "Gap ahead", "update": {"ahead": 2.4}, "tool": "get_gap_ahead"},
+      {"question": "Gap behind", "update": {"behind": 2.8}, "tool": "get_gap_behind"},
+      {"question": "position", "tool": "get_current_race_position"},
+      {"question": "position", "update": {"position": 4}, "tool": "get_current_race_position"},
+      {"question": "position", "update": {"position": 3}, "tool": "get_current_race_position"},
+      {"question": "position", "update": {"position": 6}, "tool": "get_current_race_position"},
+      {"question": "Which lap is that", "unavailable": true},
+      {"question": "fuel situation", "unavailable": true},
+      {"question": "Pit strategy", "unavailable": true}
+    ]},
+    {"id": "vent-and-problem", "language": "en", "turns": [
+      {"question": "Such a dirty move", "tool": null},
+      {"question": "He has no idea about racing", "tool": null},
+      {"question": "That guy is fucking clueless", "tool": null},
+      {"question": "Great, another genius who thinks this is bumper cars", "tool": null},
+      {"question": "That was dirty. What's the gap behind?", "tool": "get_gap_behind"},
+      {"question": "My brakes aren't working", "unavailable": true},
+      {"question": "Who's behind me?", "unavailable": true},
+      {"question": "Are we catching the car ahead?", "unavailable": true}
+    ]},
+    {"id": "fresh-paraphrases", "language": "en", "turns": [
+      {"question": "You've gone quiet. Are you still listening?", "tool": "reply_to_driver"},
+      {"question": "That bloke drives like he bought his licence", "tool": "reply_to_driver"},
+      {"question": "Absolutely brilliant, he just tried to park on the apex", "tool": "reply_to_driver"},
+      {"question": "Unbelievable driving. How far back is the next car?", "tool": "get_gap_behind"},
+      {"question": "Tell me where we're running now", "tool": "get_current_race_position"},
+      {"question": "Could you repeat the number you just gave me?", "update": {"position": 4}, "tool": "recall_radio_reading", "scope": "historical"},
+      {"question": "And our place right now?", "tool": "get_current_race_position"},
+      {"question": "Would you call this a strong race?", "unavailable": true},
+      {"question": "The steering suddenly feels heavy", "unavailable": true}
+    ]},
+    {"id": "turkish-followups", "language": "tr", "turns": [
+      {"question": "Orada mısın?", "tool": null},
+      {"question": "Kaçıncı sıradayız?", "tool": "get_current_race_position"},
+      {"question": "Öndekiyle fark?", "tool": "get_gap_ahead"},
+      {"question": "Bir saniye mi dedin?", "update": {"ahead": 1.9}, "tool": "recall_radio_reading", "scope": "historical"},
+      {"question": "Öndekiyle fark şimdi ne kadar?", "update": {"ahead": 2.4}, "tool": "get_gap_ahead"},
+      {"question": "Adam yarışmayı bilmiyor", "tool": null},
+      {"question": "Çok pis bir hareketti bu", "tool": null},
+      {"question": "Çok pis bir hareketti. Arkayla fark ne?", "tool": "get_gap_behind"},
+      {"question": "Yarış nasıl gidiyor?", "unavailable": true},
+      {"question": "Arkamdaki kim?", "unavailable": true},
+      {"question": "Frenlerim tutmuyor", "unavailable": true}
+    ]}
+  ]
+}

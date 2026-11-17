@@ -1,0 +1,71 @@
+{
+  "revision": "dialogue-comparison-seed1",
+  "fixture": "fixtures/synthetic/intelligence-capabilities",
+  "scope": "development_not_held_out",
+  "sequences": [
+    {"id": "reported-gaps", "language": "en", "turns": [
+      {"question": "Ay yo are you there", "tool": null},
+      {"question": "Where am i", "tool": "get_current_race_position"},
+      {"question": "How's the race going", "tool": "report_unavailable_information"},
+      {"question": "Gap behind", "tool": "get_gap_behind"},
+      {"question": "Gap ahead", "tool": "get_gap_ahead"},
+      {"question": "What's the gap behind?", "tool": "get_gap_behind"}
+    ]},
+    {"id": "reported-identity", "language": "en", "turns": [
+      {"question": "ay yo hey there", "tool": null},
+      {"question": "You should be letting me know where stand bruh", "tool": "get_current_race_position"},
+      {"question": "Gap behind", "tool": "get_gap_behind"},
+      {"question": "Who's behind me?", "tool": "report_unavailable_information"}
+    ]},
+    {"id": "fresh-position", "language": "en", "turns": [
+      {"question": "What position am I at the moment?", "tool": "get_current_race_position"}
+    ]},
+    {"id": "fresh-behind", "language": "en", "turns": [
+      {"question": "What's the interval to the driver following me?", "tool": "get_gap_behind"}
+    ]},
+    {"id": "fresh-ahead", "language": "en", "turns": [
+      {"question": "How far away is the next car in front?", "tool": "get_gap_ahead"}
+    ]},
+    {"id": "fresh-unsupported", "language": "en", "turns": [
+      {"question": "What compound should we use at the pitstop?", "tool": "report_unavailable_information"}
+    ]},
+    {"id": "social-and-mixed", "language": "en", "turns": [
+      {"question": "That was such a dirty move", "tool": null},
+      {"question": "That guy is an idiot. What's the gap behind?", "tool": "get_gap_behind"},
+      {"question": "Are we catching the car ahead?", "tool": "report_unavailable_information"},
+      {"question": "Who are you?", "tool": null}
+    ]},
+    {"id": "gaps-tr", "language": "tr", "turns": [
+      {"question": "Orada mısın?", "tool": null},
+      {"question": "Kaçıncı sıradayız?", "tool": "get_current_race_position"},
+      {"question": "Yarış nasıl gidiyor?", "tool": "report_unavailable_information"},
+      {"question": "Arkamdakiyle fark ne kadar?", "tool": "get_gap_behind"},
+      {"question": "Öndekiyle fark?", "tool": "get_gap_ahead"},
+      {"question": "Arkamdakiyle kaç saniye var?", "tool": "get_gap_behind"}
+    ]},
+    {"id": "identity-tr", "language": "tr", "turns": [
+      {"question": "Selam mühendis", "tool": null},
+      {"question": "Nerede olduğumuzu senin söylemen lazım", "tool": "get_current_race_position"},
+      {"question": "Arkayla fark?", "tool": "get_gap_behind"},
+      {"question": "Arkamdaki kim?", "tool": "report_unavailable_information"}
+    ]},
+    {"id": "fresh-position-tr", "language": "tr", "turns": [
+      {"question": "Şu anda yarışta kaçıncıyım?", "tool": "get_current_race_position"}
+    ]},
+    {"id": "fresh-behind-tr", "language": "tr", "turns": [
+      {"question": "Beni takip eden araç kaç saniye geride?", "tool": "get_gap_behind"}
+    ]},
+    {"id": "fresh-ahead-tr", "language": "tr", "turns": [
+      {"question": "Önümdeki araçla aramızda kaç saniye var?", "tool": "get_gap_ahead"}
+    ]},
+    {"id": "fresh-unsupported-tr", "language": "tr", "turns": [
+      {"question": "Pit stopta hangi lastik hamurunu takalım?", "tool": "report_unavailable_information"}
+    ]},
+    {"id": "social-and-mixed-tr", "language": "tr", "turns": [
+      {"question": "Çok pis bir hareketti bu", "tool": null},
+      {"question": "Adam yarışmayı bilmiyor. Arkayla fark ne kadar?", "tool": "get_gap_behind"},
+      {"question": "Öndekini yakalıyor muyuz?", "tool": "report_unavailable_information"},
+      {"question": "Sen kimsin?", "tool": null}
+    ]}
+  ]
+}

@@ -5,6 +5,14 @@ isolated in `PyIrSdkSource`; normalizers, event derivation, fixtures, and policy
 do not import it. The upstream binding supports live telemetry, session YAML data, and
 binary memory-map replay: <https://github.com/kutu/pyirsdk>.
 
+For proposed telemetry features, data limits and the expansion order, see the
+[telemetry expansion inventory](telemetry-expansion.md). The surface below
+describes the currently selected adapter fields.
+For possible write actions and their SDK/macro/input routes, see the separate
+[engineer control inventory](engineer-controls.md).
+The [implementation/access matrix](telemetry-expansion.md#implementation-and-ministral-access-snapshot)
+distinguishes selected adapter reads from core calculations and checked Ministral tools.
+
 ## Initial telemetry surface
 
 | Domain value | iRacing SDK source |
@@ -14,6 +22,10 @@ binary memory-map replay: <https://github.com/kutu/pyirsdk>.
 | Session phase | `SessionState`, `SessionFlags` |
 | Player identity | `PlayerCarIdx`, sanitized `DriverInfo.Drivers` metadata |
 | Lap and position | `Lap`, `PlayerCarPosition` |
+| Player completed laps | `LapCompleted` |
+| Last/session-best lap durations | `LapLastLapTime`, `LapBestLapTime` |
+| Race lap limit/remaining laps | `SessionLapsTotal`, `SessionLapsRemainEx` |
+| Session clock total/remaining | `SessionTimeTotal`, `SessionTimeRemain` |
 | Vehicle state | `Speed`, `FuelLevel`, `OnPitRoad` |
 | Nearby traffic | `CarDistAhead`, `CarDistBehind` |
 | Opponents | `CarIdxPosition`, `CarIdxLapCompleted`, sanitized driver metadata |
@@ -23,6 +35,17 @@ binary memory-map replay: <https://github.com/kutu/pyirsdk>.
 The upstream variable catalog describes `Speed` in m/s, `FuelLevel` in liters,
 `SessionTime` in seconds, the car-index arrays, and flag/state fields:
 <https://github.com/kutu/pyirsdk/blob/master/vars.txt>.
+
+The 18 November expansion selects 25 SDK variables in total. Completed lap count
+is separate from current lap number. Nonpositive last/best durations, negative
+counts and unlimited limits (32767 laps or seven-day clock values) normalize to
+unknown. Timed-only sessions do not acquire an exact remaining lap count.
+The current-lap F3 estimate (`LapCurrentLapTime`) is not selected or presented as
+elapsed lap time. Missing new channels do not block the original telemetry feed,
+and existing recordings remain readable with unknown defaults for new fields.
+
+See [core timing and fuel calculations](race-capabilities.md#lap-timing-and-race-progress-18-november-2026)
+for reserve assumptions, clock/finish limitations and model-access validation.
 
 Opponent `gap_to_player_s` is signed: negative means the opponent is ahead; positive means
 the opponent is behind. It is populated only in race sessions when both cars have the same

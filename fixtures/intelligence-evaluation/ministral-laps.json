@@ -1,0 +1,446 @@
+{
+  "revision": "ministral-lap-progress-development-v1",
+  "fixture": "fixtures/synthetic/ministral-lap-progress",
+  "sequences": [
+    {
+      "id": "ready-readings",
+      "language": "en",
+      "turns": [
+        {
+          "question": "Radio check",
+          "tool": "reply_to_driver"
+        },
+        {
+          "question": "Where are we?",
+          "tool": "get_current_race_position"
+        },
+        {
+          "question": "Gap ahead",
+          "tool": "get_gap_ahead"
+        },
+        {
+          "question": "Gap behind",
+          "tool": "get_gap_behind"
+        },
+        {
+          "question": "What's our fuel situation?",
+          "tools": [
+            "get_fuel_range",
+            "read_current_telemetry"
+          ]
+        },
+        {
+          "question": "How many laps of fuel do we have left?",
+          "tool": "get_fuel_range"
+        },
+        {
+          "question": "Which lap are we on?",
+          "tool": "read_current_telemetry"
+        },
+        {
+          "question": "How fast are we travelling?",
+          "unavailable": true
+        },
+        {
+          "question": "Am I first?",
+          "tool": "check_if_driver_is_first"
+        },
+        {
+          "question": "Are we last?",
+          "tool": "check_if_driver_is_last"
+        },
+        {
+          "question": "How many positions have we gained recently?",
+          "tool": "get_recent_position_change"
+        },
+        {
+          "question": "Are we catching the car ahead?",
+          "tool": "get_relative_pace_ahead"
+        },
+        {
+          "question": "When would we catch the car ahead at this rate?",
+          "tool": "get_catch_time_ahead"
+        },
+        {
+          "question": "Is the driver behind catching us?",
+          "tool": "get_relative_pace_behind"
+        },
+        {
+          "question": "Are we in the pits?",
+          "tool": "read_current_telemetry"
+        },
+        {
+          "question": "What flags are showing?",
+          "tool": "read_current_telemetry"
+        },
+        {
+          "question": "What's the session phase?",
+          "tool": "read_current_telemetry"
+        },
+        {
+          "question": "How far away is the car ahead in metres?",
+          "tool": "read_current_telemetry"
+        },
+        {
+          "question": "What's the pace?",
+          "tools": [
+            "get_last_lap_time",
+            "get_best_lap_time",
+            "compare_last_lap_to_best"
+          ]
+        },
+        {
+          "question": "How much are we gaining on the car ahead per lap?",
+          "unavailable": true
+        },
+        {
+          "question": "How much is the car behind gaining on us per lap?",
+          "unavailable": true
+        },
+        {
+          "question": "How has our speed changed over the last 30 seconds?",
+          "unavailable": true
+        }
+      ]
+    },
+    {
+      "id": "fresh-and-recalled",
+      "language": "en",
+      "turns": [
+        {
+          "question": "How much fuel is in the tank?",
+          "tool": "read_current_telemetry"
+        },
+        {
+          "question": "What did you say the fuel level was?",
+          "update": {
+            "fuel_l": 21
+          },
+          "tool": "recall_radio_reading",
+          "scope": "historical"
+        },
+        {
+          "question": "What is the fuel level right now?",
+          "update": {
+            "fuel_l": 20
+          },
+          "tool": "read_current_telemetry"
+        },
+        {
+          "question": "What was that lap number?",
+          "unavailable": true,
+          "note": "No lap reading has been delivered in this sequence; do not invent historical recall."
+        },
+        {
+          "question": "What lap are we on now?",
+          "update": {
+            "lap_number": 8
+          },
+          "tool": "read_current_telemetry"
+        },
+        {
+          "question": "Are we first now?",
+          "update": {
+            "position": 1
+          },
+          "tool": "check_if_driver_is_first"
+        },
+        {
+          "question": "Are we in the pit lane now?",
+          "update": {
+            "in_pit_lane": true
+          },
+          "tool": "read_current_telemetry"
+        },
+        {
+          "question": "What flags are showing now?",
+          "update": {
+            "flags": [
+              "yellow"
+            ],
+            "session_phase": "caution"
+          },
+          "tool": "read_current_telemetry"
+        }
+      ]
+    },
+    {
+      "id": "classification-details",
+      "language": "en",
+      "turns": [
+        {
+          "question": "What's my classification and the last reported position?",
+          "tool": "get_race_classification"
+        },
+        {
+          "question": "How many cars currently report a classified position?",
+          "tools": [
+            "get_race_classification",
+            "query_telemetry_history"
+          ]
+        },
+        {
+          "question": "Am I last now?",
+          "update": {
+            "position": 6,
+            "opponent_positions": [
+              1,
+              5
+            ]
+          },
+          "tool": "check_if_driver_is_last"
+        }
+      ]
+    },
+    {
+      "id": "repeated-read-regression",
+      "language": "en",
+      "turns": [
+        {
+          "question": "position",
+          "tool": "get_current_race_position"
+        },
+        {
+          "question": "position",
+          "update": {
+            "position": 4
+          },
+          "tool": "get_current_race_position"
+        },
+        {
+          "question": "position",
+          "update": {
+            "position": 3
+          },
+          "tool": "get_current_race_position"
+        },
+        {
+          "question": "position",
+          "update": {
+            "position": 6
+          },
+          "tool": "get_current_race_position"
+        },
+        {
+          "question": "Gap ahead",
+          "tool": "get_gap_ahead"
+        },
+        {
+          "question": "Is it one second or 1.6?",
+          "update": {
+            "ahead": 1.9
+          },
+          "tool": "recall_radio_reading",
+          "scope": "historical"
+        },
+        {
+          "question": "What is the gap ahead right now?",
+          "update": {
+            "ahead": 2.4
+          },
+          "tool": "get_gap_ahead"
+        },
+        {
+          "question": "That was dirty. What's the gap behind?",
+          "tool": "get_gap_behind"
+        }
+      ]
+    },
+    {
+      "id": "social-and-limits",
+      "language": "en",
+      "turns": [
+        {
+          "question": "He has no idea about racing",
+          "tool": "reply_to_driver"
+        },
+        {
+          "question": "That was dirty. What's the gap behind?",
+          "tool": "get_gap_behind"
+        },
+        {
+          "question": "What was my last lap time?",
+          "tool": "get_last_lap_time"
+        },
+        {
+          "question": "What's my best lap?",
+          "tool": "get_best_lap_time"
+        },
+        {
+          "question": "Where would I rejoin if I pit now?",
+          "unavailable": true
+        },
+        {
+          "question": "Set wet tyres for the next stop",
+          "unavailable": true
+        },
+        {
+          "question": "Set my ABS to three",
+          "unavailable": true
+        },
+        {
+          "question": "Who is the driver behind me?",
+          "unavailable": true
+        },
+        {
+          "question": "How much damage do we have?",
+          "unavailable": true
+        }
+      ]
+    },
+    {
+      "id": "turkish-readings-experimental",
+      "language": "tr",
+      "turns": [
+        {
+          "question": "Orada mısın?",
+          "tool": "reply_to_driver"
+        },
+        {
+          "question": "Kaçıncı sıradayız?",
+          "tool": "get_current_race_position"
+        },
+        {
+          "question": "Depoda ne kadar yakıt var?",
+          "tool": "read_current_telemetry"
+        },
+        {
+          "question": "Yakıt kaç tur gider?",
+          "tool": "get_fuel_range"
+        },
+        {
+          "question": "Kaçıncı turdayız?",
+          "tool": "read_current_telemetry"
+        },
+        {
+          "question": "Son tur sürem neydi?",
+          "unavailable": true
+        }
+      ]
+    },
+    {
+      "id": "lap-times-and-fuel-followups",
+      "language": "en",
+      "turns": [
+        {
+          "question": "What's the fuel level?",
+          "tool": "read_current_telemetry"
+        },
+        {
+          "question": "Is it enough?",
+          "tool": "get_fuel_to_finish"
+        },
+        {
+          "question": "How many laps of fuel do we have?",
+          "tool": "get_fuel_range"
+        },
+        {
+          "question": "How many laps left in the race?",
+          "tool": "get_race_progress"
+        },
+        {
+          "question": "What was my last lap time?",
+          "tool": "get_last_lap_time"
+        },
+        {
+          "question": "What's my best lap?",
+          "tool": "get_best_lap_time"
+        },
+        {
+          "question": "How far off my best was that lap?",
+          "tool": "compare_last_lap_to_best"
+        },
+        {
+          "question": "What is my last lap now?",
+          "update": {
+            "last_lap_time_s": 91.75
+          },
+          "tool": "get_last_lap_time"
+        },
+        {
+          "question": "Was that closer to my best?",
+          "tool": "compare_last_lap_to_best"
+        },
+        {
+          "question": "Enough fuel to finish?",
+          "update": {
+            "fuel_l": 5
+          },
+          "tool": "get_fuel_to_finish"
+        },
+        {
+          "question": "How many laps have I completed?",
+          "tools": [
+            "get_race_progress",
+            "read_current_telemetry"
+          ]
+        },
+        {
+          "question": "How many laps left now?",
+          "update": {
+            "lap_number": 8,
+            "laps_completed": 7,
+            "session_laps_remaining": 9
+          },
+          "tool": "get_race_progress"
+        }
+      ]
+    },
+    {
+      "id": "timed-race-and-missing-timing",
+      "language": "en",
+      "turns": [
+        {
+          "question": "How much time is left in the race?",
+          "update": {
+            "session_laps_total": null,
+            "session_laps_remaining": null,
+            "session_time_remaining_s": 600
+          },
+          "tool": "get_race_progress"
+        },
+        {
+          "question": "How many laps is that?",
+          "note": "No exact remaining lap count in a timed race. Explain the limitation rather than converting clock time or giving fuel endurance."
+        },
+        {
+          "question": "Will our fuel get us to the end?",
+          "unavailable": true
+        },
+        {
+          "question": "What was my last lap?",
+          "update": {
+            "last_lap_time_s": null
+          },
+          "unavailable": true
+        },
+        {
+          "question": "What's my best lap?",
+          "update": {
+            "best_lap_time_s": null
+          },
+          "unavailable": true
+        }
+      ]
+    },
+    {
+      "id": "clarification-not-catch-time",
+      "language": "en",
+      "turns": [
+        {
+          "question": "are catching",
+          "tool": "reply_to_driver",
+          "note": "No target established; ask a brief clarification."
+        },
+        {
+          "question": "The guy ahead. Are we catching him?",
+          "tool": "get_relative_pace_ahead"
+        },
+        {
+          "question": "When would we catch him if this continues?",
+          "tool": "get_catch_time_ahead"
+        }
+      ]
+    }
+  ]
+}

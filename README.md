@@ -13,6 +13,12 @@ The packaged app does not require Python. Initial setup downloads approximately
 
 ## Development overview
 
+The 0.2.0 source adds last/best lap timing, race progress and conservative
+fuel-to-finish calculations. It also includes a **source-only Ministral chat
+preview** with radio lap-time wording; the installed application still uses LFM.
+See [release preparation](docs/releases/0.2.0.md) and
+[preview setup and results](docs/dialogue-model-comparison.md#interactive-ministral-demo).
+
 This repository contains the M0 architecture baseline, the M1 iRacing telemetry reader,
 the deterministic M2 policy slice, and the local M3 speech path:
 

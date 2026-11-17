@@ -27,6 +27,328 @@ rebuilt to adopt LFM; component set 3 points to the matching model/CPU runtime.
 
 The diagnostic history below records earlier checkpoints before this adoption.
 
+The [15 November model comparison](dialogue-model-comparison.md) reopens this
+selection: LFM is not leading the tested configurations on request selection or
+typed latency. No replacement has been accepted or selected for the live app.
+
+## Installed-session social regression, 15 November 2026
+
+The installed session at 15:34-15:37 Istanbul time used LFM on CPU. It repeatedly
+added a radio check to unrelated social replies, echoed an identity question and
+treated a complaint about dirty driving as literal dirt. The original social
+prompt included an unconditional instruction to confirm a radio check. Core also
+received no dialogue for social follow-ups. This was reproduced with typed input.
+
+Native social generation now receives the original question, requested language
+and number-redacted delivered dialogue, without the empty telemetry inventory.
+The existing model-selected social kind supplies one short wording hint instead
+of presenting instructions for every social purpose together. The current question
+remains authoritative. Hints guide free generation; they are not canned answers
+or a driver-phrase router. Native tool descriptions also distinguish identity,
+neutral comments, acknowledgment and venting. One resident LFM model still performs
+selection and wording. Factual evidence bindings and delivery behavior are unchanged.
+
+Social wording requests eight words as guidance, not a validity requirement. The
+initial twelve-word rejection introduced in this slice was removed after it rejected
+valid requested jokes. The existing sixty-word grounded radio limit, schema/evidence
+validation and single repair attempt for invalid drafts remain. Replies are never
+chopped mid-sentence. Factual evidence constraints remain unchanged.
+
+The initial seed1 development set `fixtures/intelligence-evaluation/lfm-social-regression.json`
+contained 16 questions: the reported inputs, paraphrases, two delivered-history
+follow-ups and four telemetry/mixed controls. A CPU run against the installed
+Q4_K_M weights and b12088 runtime produced:
+
+| Check | Original instructions, one repeat | Revised instructions, two repeats |
+| --- | ---: | ---: |
+| Pipeline completed | 15/16 | 32/32 |
+| Exact expected plans, including social kind | 6/16 | 22/32 |
+| Evidence expectation matches | 15/16 | 32/32 |
+| Core repairs | 1 | 0 |
+| Typed median / p95 | 2.65 / 8.99 s | 2.58 / 5.43 s |
+
+These are development measurements, not an accuracy claim or a controlled speedup
+comparison. The original run used one repeat; the revised run used two. No STT,
+TTS, playback, race/VR or Turkish was exercised. Source/input fingerprints remained
+unchanged during each run. All 24 revised social replies were within twelve words.
+These measurements preceded the removal of the fatal twelve-word style check.
+
+Manual review found improved presence checks (`Yes, I'm here.`), identity
+(`I'm Pitward, your race engineer.`), greetings and venting (`We've got this,
+take it one lap at a time.`). Remaining failures are deliberately retained:
+neutral comments get generic wording, the name follow-up can return only the role,
+`Where are we running?` receives an unasked `No`, and a question about fuel laps
+receives liters. Mixed turns can omit their social acknowledgment. Correct tool
+selection and grounded values do not establish that the reply answers the question.
+See INT-016 in [known issues](known-issues.md).
+
+To repeat with provisioned source assets, close other engineers first:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\benchmark_intelligence.py --config data\trials\lfm3-native-cpu.toml --candidate lfm3-native-v1 --dataset fixtures\intelligence-evaluation\lfm-social-regression.json --repeats 2 --require-owned-runtime --expect-backend cpu --show-replies --output data\benchmarks\lfm-social-review.json
+```
+
+Choose a new output filename for each run. `--show-replies` prints synthetic text
+for human relevance review; the JSON report contains metrics rather than transcripts.
+For free-form typed testing, use `scripts\try_lfm3.py --native-tools --config` with
+the same profile. In this workspace an ignored CPU profile reusing installed assets
+is `data/diagnostics/lfm-social-20261115/cpu.toml`; before/final reports and console
+reviews are alongside it. Changes apply to source runs; the installed executable
+requires a new build/update. This slice does not alter TTS deadlines or fix missing
+normalized player-position data from the recorded race.
+
+### Sequential driver replay and style-check correction
+
+The driver's next eight-message terminal conversation was reproduced in order through
+the real planner, Core, evidence refresh and grounder. Four probes were then repeated
+with empty delivered history. The same bad overview, tyre-clarification and unrelated
+position replies occurred with empty history too. Recorded raw tool calls, Core inputs
+and drafts distinguish these causes:
+
+- `Can you tell me a joke?` selected social conversation correctly. LFM generated a
+  complete joke, then a complete repair, both over twelve words. Application validation
+  discarded both solely for length. This was an integration defect introduced by the
+  style ceiling. It is removed; brevity is guidance. Replaying the same sequence and
+  fresh probes now completes **12/12**, versus **10/12** before removal. Each joke uses
+  one Core call instead of a failed repair. These are completion counts, not accuracy.
+- `What's that guy doing there!!` selected `get_current_race_position`. The unrelated
+  position was already in LFM's raw reply template; grounding only inserted the value.
+  No automatic application position fallback was responsible for this example.
+- `Is this a good race so far?` retrieved only current classification. LFM's raw draft
+  gave position and echoed the question. Core received the original question verbatim.
+- `What tire should we use next?` selected `request_driver_clarification`. The application
+  returned its generic clarification without a wording call. The requested unsupported
+  recommendation was confused with an ambiguous request.
+- `What compound should we use at the pitstop?` selected
+  `project_stationary_pit_service_duration`. Its unavailable result became a generic
+  prediction limitation. That sentence sounded plausible while concealing wrong selection.
+
+The unresolved boundary is semantic relevance: a valid selected tool and a grounded
+number do not prove that the answer addresses the driver. Future work must allow the
+reply stage to reject irrelevant selected evidence and distinguish an unsupported but
+clear request from one needing clarification, while retaining numerical validation.
+Do not treat all of these failures as TTS, stale-history or an unseen second-model issue.
+This experiment used one local CPU LFM server, with no microphone or speech playback.
+Artifacts: `data/diagnostics/lfm-social-20261115/sequence-before.json` and
+`sequence-after.json`, including raw selection/drafts and delivered-history snapshots.
+
+### Relevance-review experiment: rejected, 15 November 2026
+
+The proposed boundary change was tested in isolation against the current source.
+Both runs used the same installed CPU Q4_K_M model, b12088 runtime, frozen sequence
+203 fixture and ordered questions. Each run used one resident server for selection
+and Core. The set contained the driver's eight-message conversation, four fresh-history
+probes and four factual controls (first, last, gap behind and fuel laps).
+
+The candidate added `answer`, `partial`, `social`, `unavailable` and `clarify` to
+the existing reply pass. It could discard irrelevant selected facts; clear unavailable
+and clarification decisions used application-owned wording. Factual replies still went
+through the production placeholder materializer, refresh and grounder. It did not fetch
+additional data or change the model. This was an experimental contract, not a live fix.
+
+| Check | Current source | Combined review and wording |
+| --- | ---: | ---: |
+| Pipeline completed | 16/16 | 13/16 |
+| Core requests, including repairs | 14 | 21 |
+| Median all-turn typed latency | 4.28 s | 4.58 s |
+
+Completion does not mean a correct answer. This single exploratory run is not a
+controlled performance claim. The candidate failed the sequential overview and both
+tyre-choice probes. Its initial position reply rambled about placeholders, social
+replies pulled unrelated position/compound requests out of history, and first/last
+controls were labeled social while speaking plain-text ordinal rank claims. Fuel
+**laps** still received **liters**. Declaring selected facts irrelevant in the same
+generation pass did not reliably prevent them from influencing the generated reply.
+
+A smaller decision-only probe returned one disposition without writing speech. A
+metadata-only pass was followed by a fairer pass with the same human-readable meanings,
+values and claims available to Core. All 16 full-fact decisions completed, with median
+latency **699 ms** per decision (not per complete answer). Clear tyre-choice and identity
+questions still became `clarify`; straightforward rank/gap controls became `partial`.
+The opponent remark changed between `partial` with history and `social` without it.
+This probe is not accurate enough to gate live speech, and adding it would add an
+inference call on top of the existing path. No end-to-end benefit was established.
+
+**Decision:** do not promote either candidate. The temporary CLI flag and candidate
+module were removed from application scripts. Current behavior, including the joke
+style-check correction, remains. A future experiment can examine whether retaining the
+original user turn and native tool-result exchange improves reply generation, rather
+than adding more responsibilities to the constrained reply object. That is untested.
+
+Ignored, reviewable artifacts under `data/diagnostics/lfm-social-20261115/`:
+
+- `relevance-baseline.json` and `relevance-candidate.json`: selections, Core inputs,
+  raw drafts, final text, failures and per-turn times;
+- `relevance_candidate.py`: the rejected candidate implementation snapshot;
+- `relevance-gate.json` and `relevance-gate-full.json`: decision-only probes; and
+- `conversation_trace.py` and `relevance_gate_probe.py`: reproduction scripts.
+
+To reproduce on this workspace, choose a new report name and run one at a time:
+
+```powershell
+.\.venv\Scripts\python.exe data\diagnostics\lfm-social-20261115\conversation_trace.py review-baseline-repeat
+.\.venv\Scripts\python.exe data\diagnostics\lfm-social-20261115\conversation_trace.py review-candidate-repeat candidate
+```
+
+These use a separate owned CPU server on port 18193 and close it afterwards. They
+exercise typed input and synthetic data, without microphone, STT, TTS, playback or
+game/VR load. They do not alter the installed application or its settings.
+
+The driver can also try the exact saved candidate interactively in this workspace:
+
+```powershell
+.\.venv\Scripts\python.exe data\diagnostics\lfm-social-20261115\interactive.py --variant relevance
+```
+
+Use `--variant current` to compare the existing application path. Run one at a time;
+`/clear` resets dialogue and `/quit` closes the owned model server. Both modes use
+the saved CPU profile on port 18192 and the same fixed synthetic fixture. Both were
+smoke-tested with the real local model; reset and exit were checked. This is access
+to the rejected relevance experiment, not the unimplemented native tool-result
+handoff experiment, and it does not change the live application.
+
+## Native tool-conversation trial, 15 November 2026
+
+This is a new source-only trial, separate from the rejected relevance reviewer.
+The ordinary control panel and `scripts/try_lfm3.py` keep their existing behavior.
+Start the native conversation trial from the repository root:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\try_lfm3_dialogue.py --config data\diagnostics\lfm-social-20261115\cpu.toml --trace
+```
+
+That ignored workspace profile reuses the installed CPU model/runtime. On another
+checkout, pass a provisioned native LFM source profile instead, such as
+`data/trials/lfm3-native-cpu.toml`. The server starts once and is reused. `/clear`
+resets dialogue; `/quit` exits and closes the owned server. Close other trials on
+the configured port first. `--question "Position?"` runs one prompt and exits;
+`--trace` prints the selected calls, tool results, model drafts and validation reasons.
+Input is typed English against synthetic sequence 203, with no STT, TTS or microphone.
+
+The flow preserves actual roles in one conversation:
+
+1. Original `user` message goes to LFM with optional native functions.
+2. A requested function is returned as an `assistant.tool_calls` message.
+3. Python validates the call before executing it. Current position uses the existing
+   deterministic classification capability. Gap tools reuse the existing nearest-car
+   capabilities. Unsupported questions use a named-quantity unavailable result. There
+   are no social-purpose tools or forced social labels.
+4. The actual `tool` result, paired by `tool_call_id`, is appended after that assistant
+   message. LFM continues the SAME conversation with a normal text reply, without a
+   `goal`/`speech` or relevance-decision JSON schema.
+5. Python checks numerical claims against the observed position, binds supported rank
+   forms to evidence, refreshes the reading and uses the existing grounder. Old history
+   cannot validate a new numerical claim. Unsupported-only output is rendered as an
+   application-owned limitation, so speculative tyre recommendations cannot be delivered.
+
+Only one tool may execute per turn in this initial slice. There are normally one
+model request for direct speech or two for a tool exchange, with one bounded repair
+and at most three total requests. Unknown calls/arguments, unsupported numbers, control
+markup, truncated output and failed validation are visible errors. Only completed turns
+enter bounded history; it retains actual message roles and delivered text rather than
+replacing previous numbers with synthetic redaction strings.
+
+The transport explicitly requests no thinking and separate reasoning output. Initial
+real probes nevertheless exposed residual `</think>` delimiters. It separates the final
+answer after a single complete boundary; unfinished or ambiguous blocks fail. Current
+tool-turn reasoning metadata is preserved for the next request and never spoken. This
+follows the [pinned llama.cpp API](https://github.com/ggml-org/llama.cpp/blob/b12088/tools/server/README.md)
+and [Liquid's tool conversation guidance](https://huggingface.co/LiquidAI/LFM3-1.7B#tool-calling).
+Liquid also documents that disabling thinking can be inconsistent. This observation
+does not establish that reasoning leakage caused the earlier JSON-path failures.
+
+The initial two-tool CPU development check covered 13 inputs: five consecutive messages, then
+fresh-context radio, position, tyre and role probes. **11/13 completed**. The initial
+presence, explicit position and tyre-advice sequence completed; examples included
+`Yes, I'm here`, a grounded P5 and an honest unavailable-data reply. Tyre advice is
+still unsupported: its safe final wording is owned by Python, not generated strategy.
+
+Remaining failures are retained: `Where am I?` in the sequence exhausted the bounded
+native selection, and `Where are we running?` generated lap numbers for a position
+result, which validation rejected. `Radio check` fetched and spoke an unrequested
+position. A role question correctly identified the engineer as on the radio but added
+position and unsolicited offers. Completion is not semantic acceptance. The tool menu
+is much smaller than the live catalog, so this is not a controlled comparison proving
+that conversation format alone improves LFM. No real-race, speech or VR acceptance is
+implied, and the live application has not been switched.
+
+Artifacts: `data/diagnostics/lfm-social-20261115/native-dialogue-check.json` and
+`native-dialogue-check-final.log`. Tests cover native role/call-ID continuity, reasoning
+separation, free radio replies, numeric and stale-history rejection, delivery refresh,
+unknown tools/arguments, unsupported recommendations and shutdown after failure.
+
+### Driver gap feedback: retry bug fixed, semantic acceptance still failing
+
+The driver's follow-up sequence was reproduced exactly: presence, `Where am i`,
+`How's the race going`, `Gap behind`, `Gap ahead`, and `What's the gap behind?`.
+It exposed a concrete integration defect. After rejecting a number copied from history,
+the trial changed the next call to `tool_choice="required"` and instructed LFM to fetch
+position. That forced a function call even when no offered function answered the
+original question. The race-overview and gap questions could therefore become tyre
+requests, whose generic application-owned limitation concealed the wrong selection.
+
+The repair now preserves `auto` when no tool was selected, keeps the original user
+message and asks for a relevant answer or an honest limitation without stale numbers.
+It never forces an unrelated function merely to validate a prior number. Traces now
+include the effective `tool_choice`. Regression tests preserve the optional-tool repair.
+
+The initial menu also omitted the existing gap capabilities. The current trial offers
+`get_current_race_position`, `get_gap_ahead`, `get_gap_behind` and
+`report_unavailable_information(quantity)`. The tyre-specific dummy tool is removed;
+the generic unavailable tool preserves the requested quantity. No telemetry calculation
+or live-app routing was replaced. Seed2 of the development corpus adds the driver's
+three gap phrasings, with expected direction-specific capabilities.
+
+Gap results carry seconds, a readable verified statement and the driver's relationship
+to the other car. Number binding validates gap units separately from rank, refreshes
+the selected gap before delivery and rejects stale rank substitutions. Explicit
+driver-relative gap statements are checked for the demonstrated direction inversion.
+This is bounded factual validation, not a complete natural-language truth checker.
+
+The paired CPU replay used the six sequential inputs plus six independent probes.
+The original two-tool path completed 12/12 but returned numerous irrelevant replies.
+An intermediate four-tool run completed 9/12. Inspection of the failed drafts exposed
+additional integration errors: valid `1.6-second cushion`, `a second behind`, and a
+reference to `the next one` were rejected by the number parser. Those failures were
+not evidence of a bad model interpretation. Number binding now accepts those forms
+while preserving exact-value/unit checks. Focused checks also reject the observed
+reversed edge claims, unsupported overall leadership and `holding your ground`
+assertions based on a single rank snapshot. Other qualitative inferences remain
+outside these bounded checks.
+
+The final current-read replay completed **11/12**, median **2.49 seconds** per typed
+CPU turn; the rejected turn took **6.62 seconds** including repair. All three fresh
+gap probes retrieved the correct 1.6-second behind gap or 1-second ahead gap. However,
+semantic acceptance still fails:
+
+- In the six-turn conversation, `Gap ahead` selected **get_gap_behind**, returning
+  the wrong quantity with a correct number for that wrong selection.
+- `How's the race going` became a gap reading or position instead of acknowledging
+  that this trial cannot assess overall race progress.
+- The rejected `Gap behind` turn invented leadership and combined unrelated facts
+  during repair. Completed replies also included unverified pace wording and repeated
+  unasked follow-up questions.
+
+These are real-model observations, not unit-test accuracy. A same-frame fact-reuse
+experiment did not resolve relevance and was removed; each new numerical answer
+still requires a current tool read. The trial remains unaccepted for live use.
+
+A separate request-level thinking experiment requested a 64-token reasoning budget
+and the existing 256-token total limit. It completed **3/12**, median 9.71 seconds per
+turn, with most gap/overview turns returning incomplete output under that limit.
+The default remains off.
+This rejects that bounded configuration, not every possible thinking setup or token
+budget. No new speech or game-load acceptance was performed.
+
+Artifacts under `data/diagnostics/lfm-social-20261115/`:
+`gap-driver-before.json`, `gap-driver-release-check.json`,
+`gap-driver-parser-fixed.json` (includes the discarded fact-reuse experiment),
+`gap-driver-current-read.json` (final code), `gap-driver-thinking64.json`,
+`driver-gap-summary.json` and `driver_gap_repro.py`. The earlier `after`, `final`
+and `verified` files retain intermediate gap-wording probes. All inference was typed
+English with synthetic telemetry; no microphone, audio or game-load validation was
+performed. The live application has not adopted any of these trial changes.
+
 ## Installed candidate
 
 - Model: `LiquidAI/LFM3-1.7B-GGUF`, official `LFM3-1.7B-Q4_K_M.gguf` (1,099,627,808 bytes).

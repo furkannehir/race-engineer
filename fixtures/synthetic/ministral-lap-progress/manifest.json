@@ -1,0 +1,6 @@
+{
+  "fixture_version": "race-fixture.v1",
+  "fixture_id": "synthetic:ministral-lap-progress:1",
+  "description": "Synthetic reported last/best lap times, fixed-lap race progress and fuel reserve. Compressed history for existing window calculations, not a physically faithful lap trajectory. No live data.",
+  "frames_file": "frames.jsonl"
+}

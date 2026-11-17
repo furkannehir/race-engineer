@@ -140,6 +140,12 @@ and [Inno Setup parameters](https://jrsoftware.org/inno-setup/documentation/topi
 
 ## Release flow
 
+The next feature release is prepared as **0.2.0** in
+[the preparation record](releases/0.2.0.md). It includes new timing/progress data
+and a source-only Ministral preview; the installed model/component set remains
+LFM. Pushing its version tag starts the existing draft-build flow, not public
+publication or website deployment.
+
 The current patch release is recorded in [the 0.1.1 release record](releases/0.1.1.md),
 including verified public assets, the tagged workflow and upgrade instructions.
 
