@@ -140,13 +140,14 @@ and [Inno Setup parameters](https://jrsoftware.org/inno-setup/documentation/topi
 
 ## Release flow
 
-The next feature release is prepared as **0.2.0** in
-[the preparation record](releases/0.2.0.md). It includes new timing/progress data
+The current feature release is **0.2.0**, published on 18 November 2026 and recorded
+in [the release record](releases/0.2.0.md). It includes new timing/progress data
 and a source-only Ministral preview; the installed model/component set remains
-LFM. Pushing its version tag starts the existing draft-build flow, not public
-publication or website deployment.
+LFM. The tagged Windows build, public assets, updater detection and download
+website publication were verified. Future version tags still create drafts;
+public release publication and website deployment are separate operations.
 
-The current patch release is recorded in [the 0.1.1 release record](releases/0.1.1.md),
+The previous patch release is recorded in [the 0.1.1 release record](releases/0.1.1.md),
 including verified public assets, the tagged workflow and upgrade instructions.
 
 For the first release, use the [0.1.0 preparation record](releases/0.1.0.md) and

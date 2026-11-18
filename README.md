@@ -7,7 +7,7 @@ language generation, and speech synthesis remain replaceable adapters.
 ## Download Pitward
 
 Get the Windows installer or portable ZIP at **[pitward.com](https://pitward.com)**
-or from the [0.1.1 GitHub release](https://github.com/furkannehir/race-engineer/releases/tag/v0.1.1).
+or from the [0.2.0 GitHub release](https://github.com/furkannehir/race-engineer/releases/tag/v0.2.0).
 The packaged app does not require Python. Initial setup downloads approximately
 5.9 GB of local AI components under their separate third-party terms.
 
@@ -16,7 +16,7 @@ The packaged app does not require Python. Initial setup downloads approximately
 The 0.2.0 source adds last/best lap timing, race progress and conservative
 fuel-to-finish calculations. It also includes a **source-only Ministral chat
 preview** with radio lap-time wording; the installed application still uses LFM.
-See [release preparation](docs/releases/0.2.0.md) and
+See [release record](docs/releases/0.2.0.md) and
 [preview setup and results](docs/dialogue-model-comparison.md#interactive-ministral-demo).
 
 This repository contains the M0 architecture baseline, the M1 iRacing telemetry reader,

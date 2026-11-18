@@ -6,6 +6,12 @@ that every original milestone exit criterion has been formally validated.
 
 ## Current checkpoint
 
+Pitward **0.2.0 is published** on GitHub and the download website as of 18 November
+2026. The tagged Windows build, checksums, frozen panel/speech workers and updater
+detection were verified; see the [release record](releases/0.2.0.md). The installed
+application retains LFM. Ministral remains a source-only preview pending live
+integration, and publication does not close the conversation-quality limitations.
+
 November 18 data expansion: the adapter now selects 25 SDK fields, including
 last/best lap duration, completed laps, race lap limit/remaining count and clock.
 Five new core capabilities provide last/best timing, their difference, race
