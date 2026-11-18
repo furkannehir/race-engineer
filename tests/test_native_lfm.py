@@ -209,7 +209,7 @@ def test_human_fact_view_keeps_original_references_and_live_refresh():
 
 
 def test_native_factory_runs_selection_execution_draft_and_grounding_on_same_model(monkeypatch):
-    config = load_config(ROOT / "config/default.toml", environ={}).conversation
+    config = load_config(ROOT / "config/lfm-legacy.toml", environ={}).conversation
     memory = BoundedTelemetryMemory()
     contexts = _contexts(
         load_fixture(ROOT / "fixtures/synthetic/intelligence-capabilities"),
@@ -277,10 +277,10 @@ def test_native_factory_runs_selection_execution_draft_and_grounding_on_same_mod
     assert selection.closed and reply.closed
 
 
-def test_native_profile_uses_the_mvp_model_and_qwen_rollback_is_explicit():
+def test_explicit_lfm_profile_and_qwen_rollback_remain_available():
     import tomllib
 
-    source = (ROOT / "config/default.toml").read_text(encoding="utf-8")
+    source = (ROOT / "config/lfm-legacy.toml").read_text(encoding="utf-8")
     profile = AppConfig.model_validate(tomllib.loads(trial_profile(source, "gpu", native=True)))
     assert profile.conversation.context_planner == LFM_NATIVE_ID
     assert profile.conversation.port == 8092

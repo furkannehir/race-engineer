@@ -53,6 +53,7 @@ Copy-Item -LiteralPath "LICENSE" -Destination $appRoot
 Copy-Item -LiteralPath "distribution\README.txt" -Destination $appRoot
 Copy-Item -LiteralPath "distribution\THIRD_PARTY_NOTICES.md" -Destination $appRoot
 Copy-Item -LiteralPath "distribution\REVIEW-0.1.0.md" -Destination $appRoot
+Copy-Item -LiteralPath "distribution\REVIEW-MINISTRAL.md" -Destination $appRoot
 Copy-Item -LiteralPath "distribution\licenses" -Destination $appRoot -Recurse -Force
 Copy-Item -LiteralPath "src\race_engineer\assets\components.v1.json" -Destination $appRoot
 

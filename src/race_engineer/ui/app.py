@@ -1117,7 +1117,8 @@ class RadioDesk(QWidget):
         prompt.setText(f"Pitward {release.version} is available. You have {__version__}.")
         prompt.setInformativeText(
             "Download and verify the update, then close Pitward and open the Windows installer? "
-            "Your models, profiles and settings will be kept."
+            "Your profiles and settings will be kept. New AI models may need a download; "
+            "replaced models are cleaned up after successful startup."
         )
         update = prompt.addButton("Update now", QMessageBox.ButtonRole.AcceptRole)
         later = prompt.addButton("Later", QMessageBox.ButtonRole.RejectRole)
@@ -1170,12 +1171,14 @@ class RadioDesk(QWidget):
         answer = QMessageBox.question(
             self,
             "Set up local AI components?",
-            "Pitward will download about 5.9 GB of pinned local models "
+            "Pitward will download about 7.0 GB of pinned local models "
             "and a CPU llama.cpp runtime.\n\n"
-            "LFM3 uses the LFM Open License v1.0. Qwen3-ASR uses Apache 2.0 terms. "
+            "Ministral and Qwen3-ASR use Apache 2.0 terms. "
             "Chatterbox and its built-in "
             "multilingual voice use MIT terms. Full notices are included with "
             "Pitward.\n\nPitward will restart automatically after successful setup.\n\n"
+            "Existing verified components are reused. The obsolete managed model is "
+            "removed only after its replacement loads successfully.\n\n"
             "Continue with the download?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,

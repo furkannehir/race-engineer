@@ -39,8 +39,8 @@ def test_default_configuration_is_valid() -> None:
     assert config.conversation.runtime.fallback_to_cpu is False
     assert config.conversation.runtime.reuse_external_server is False
     assert config.stt.device == "cpu"
-    assert config.conversation.context_planner == "lfm3-native-v1"
-    assert config.conversation.model == "LiquidAI/LFM3-1.7B"
+    assert config.conversation.context_planner == "ministral-native-v1"
+    assert config.conversation.model == "mistralai/Ministral-3-3B-Instruct-2512"
     assert config.conversation.port == 8092
     assert config.conversation.runtime.runtime_revision == "b12088"
     assert config.conversation.runtime.enable_thinking is False

@@ -32,11 +32,11 @@ def test_frozen_installation_keeps_program_and_user_data_separate(tmp_path: Path
     assert config.conversation.runtime.accelerated_backend is None
     assert config.conversation.runtime.device is None
     assert config.conversation.runtime.model_path == (
-        local / "Pitward/components/conversation/LFM3-1.7B-Q4_K_M.gguf"
+        local / "Pitward/components/conversation/Ministral-3-3B-Instruct-2512-Q4_K_M.gguf"
     )
     assert config.stt.worker_path == install / "workers/PitwardSTTWorker/PitwardSTTWorker.exe"
-    assert config.conversation.model == "LiquidAI/LFM3-1.7B"
-    assert config.conversation.context_planner == "lfm3-native-v1"
+    assert config.conversation.model == "mistralai/Ministral-3-3B-Instruct-2512"
+    assert config.conversation.context_planner == "ministral-native-v1"
     assert config.conversation.runtime.cpu_executable_path == (
         local / "Pitward/components/conversation/llama-b12088-cpu/llama-server.exe"
     )
@@ -81,7 +81,7 @@ def test_build_identity_requires_matching_version_and_valid_commit(tmp_path: Pat
 def test_component_manifest_is_unique_pinned_and_confined() -> None:
     component_set, artifacts = load_manifest()
     ids = [artifact.artifact_id for artifact in artifacts]
-    assert component_set == "3" and len(ids) == len(set(ids))
+    assert component_set == "4" and len(ids) == len(set(ids))
     assert not any(name.startswith("piper-") for name in ids)
     assert sum(artifact.size for artifact in artifacts) > 4_000_000_000
     for artifact in artifacts:
@@ -91,18 +91,21 @@ def test_component_manifest_is_unique_pinned_and_confined() -> None:
         assert ".." not in artifact.destination.parts
 
 
-def test_download_dashboard_matches_the_application_version_and_component_set() -> None:
+def test_download_dashboard_matches_the_prepared_release_components() -> None:
     dashboard = ROOT / "website/pitward-downloads/public/release.json"
     release = json.loads(dashboard.read_text(encoding="utf-8"))
     assert release["version"] == __version__
     assert release["repository"] == "furkannehir/race-engineer"
-    assert release["componentBytes"] == sum(artifact.size for artifact in load_manifest()[1])
+    assert release["componentBytes"] == sum(a.size for a in load_manifest()[1])
 
 
 def test_release_license_copies_match_the_recorded_upstream_texts() -> None:
     directory = ROOT / "distribution/licenses"
     sources = json.loads((directory / "sources.json").read_text(encoding="utf-8"))
-    assert {"LFM-Open-License-v1.0.txt", "Qwen3-ASR-Apache-2.0.txt", "Chatterbox-MIT.txt"} <= {
+    assert {
+        "LFM-Open-License-v1.0.txt", "Ministral-Apache-2.0.txt",
+        "Qwen3-ASR-Apache-2.0.txt", "Chatterbox-MIT.txt",
+    } <= {
         source["file"] for source in sources["sources"]
     }
     for source in sources["sources"]:
@@ -111,16 +114,19 @@ def test_release_license_copies_match_the_recorded_upstream_texts() -> None:
 
 
 def test_default_packaged_model_and_runtime_match_the_verified_installer_manifest(tmp_path):
-    from scripts.setup_lfm3_trial import CPU, MODEL
+    from scripts.setup_dialogue_comparison import MODELS
+    from scripts.setup_lfm3_trial import CPU
+
+    MODEL = MODELS["ministral"]
 
     _, artifacts = load_manifest()
     layout = Installation.discover(environ={"PITWARD_DATA_DIR": str(tmp_path)}, frozen=True)
     config = layout.apply_to(load_config(ROOT / "config/default.toml", environ={}))
     runtime = config.conversation.runtime
-    model = next(a for a in artifacts if a.artifact_id == "lfm3-1.7b-q4-k-m")
+    model = next(a for a in artifacts if a.artifact_id == "ministral-3-3b-instruct-2512-q4-k-m")
     cpu = next(a for a in artifacts if a.artifact_id == "llama-cpp-cpu-b12088")
     assert runtime.model_path == layout.components_root / model.destination
     assert runtime.cpu_executable_path == layout.components_root / cpu.destination / cpu.required
     assert (model.sha256, model.size) == (MODEL.sha256, MODEL.size)
     assert (cpu.sha256, cpu.size) == (CPU[0].sha256, CPU[0].size)
-    assert model.license == "LFM Open License v1.0"
+    assert model.license == "Apache-2.0"

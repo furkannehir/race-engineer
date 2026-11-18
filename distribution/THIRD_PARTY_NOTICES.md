@@ -11,13 +11,15 @@ third-party components governed by their own terms.
   recorded in `licenses/runtime-main/manifest.json`.
 - PyInstaller bootloader: GPL-2.0-or-later with the PyInstaller bootloader exception.
 - llama.cpp CPU runtime: MIT.
-- LFM3-1.7B Q4_K_M: [LFM Open License v1.0](https://huggingface.co/LiquidAI/LFM3-1.7B/blob/main/LICENSE).
-  These are separate model terms; Pitward's GPL license does not replace them.
-  The full text is in `licenses/LFM-Open-License-v1.0.txt`. Its commercial-use
-  revenue threshold applies separately to users of the model; review section 5.
+- Ministral 3 3B Instruct 2512 Q4_K_M: Apache-2.0, as declared by the pinned
+  official GGUF model card. See `licenses/Ministral-Apache-2.0.txt` and
+  `REVIEW-MINISTRAL.md` for the artifact and upstream attribution.
+- LFM3-1.7B remains an optional source rollback, not a component-set-4 download.
+  Its separate LFM Open License v1.0 and commercial-use revenue condition remain
+  in `licenses/LFM-Open-License-v1.0.txt` for users who select that model.
 - Qwen3-ASR-0.6B: Apache-2.0 model terms.
   The explicit source Qwen3-4B rollback also uses Apache-2.0 model terms; its
-  weights are not part of component set 3.
+  weights are not part of component set 4.
 - Chatterbox TTS 0.1.7 and the pinned ResembleAI/chatterbox multilingual V2 model: MIT.
   The built-in `conds.pt` voice is used; no reference recordings are uploaded.
 - PyTorch/torchaudio, Transformers, Resemble Perth watermarking, sounddevice and
@@ -34,10 +36,13 @@ Pinned model URLs/checksums are in `components.v1.json`. Old Piper engines/voice
 are no longer shipped. Model license: https://huggingface.co/ResembleAI/chatterbox
 
 The model license copies and their upstream URLs/checksums are in `licenses/sources.json`.
-Pinned Qwen and Chatterbox model cards declare Apache-2.0 and MIT respectively; the
+Pinned Ministral, Qwen and Chatterbox model cards declare Apache-2.0, Apache-2.0
+and MIT respectively; the
 LFM license is copied from the exact quantized model revision. These model files
 are downloaded from upstream after acceptance of the third-party terms; they are
 not bundled or relicensed under the application's GPL license.
 
 The original radio beep and procedural squelch are project assets under GPL-3.0.
 The 0.1.0 review and maintainer provenance confirmation are in `REVIEW-0.1.0.md`.
+
+The component-set-4 model migration review is in `REVIEW-MINISTRAL.md`.

@@ -1,5 +1,5 @@
 {
-  "reviewed_on": "2026-11-09",
+  "reviewed_on": "2026-11-18",
   "sources": [
     {
       "file": "LFM-Open-License-v1.0.txt",
@@ -42,6 +42,12 @@
       "url": "https://raw.githubusercontent.com/Templarian/MaterialDesign-Webfont/v6.9.96/LICENSE",
       "sha256": "3bae6305bcaa6d10219b999f65c342034c2d40b1c0e8567fa08605e73ccba829",
       "size": 992
+    },
+    {
+      "file": "Ministral-Apache-2.0.txt",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "size": 11358
     }
   ]
 }

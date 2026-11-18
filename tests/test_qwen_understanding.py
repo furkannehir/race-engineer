@@ -268,8 +268,9 @@ def test_v7_rejects_malformed_inventory_and_duplicate_work(updates):
         execute(draft(**updates))
 
 
-def test_v7_is_default_and_explicit_candidates_are_validated():
-    assert ConversationConfig().context_planner == PLANNER_V7_ID
+def test_explicit_qwen_v7_and_other_candidates_are_validated():
+    rollback = load_config(ROOT / "config/qwen-legacy.toml", environ={})
+    assert rollback.conversation.context_planner == PLANNER_V7_ID
     assert ConversationConfig(context_planner=PLANNER_V6_ID).context_planner == PLANNER_V6_ID
     assert ConversationConfig(context_planner=PLANNER_V7_ID).context_planner == PLANNER_V7_ID
     with pytest.raises(ValidationError):
@@ -298,7 +299,7 @@ def test_live_factory_honors_explicit_candidate_without_changing_defaults(monkey
         return object()
 
     monkeypatch.setattr("race_engineer.intelligence.factory.QwenContextQueryPlanner", planner)
-    live_intelligence(ConversationConfig(), memory())
+    live_intelligence(ConversationConfig(context_planner=PLANNER_V7_ID), memory())
     live_intelligence(ConversationConfig(context_planner=PLANNER_V6_ID), memory())
     assert selected == [PLANNER_V7_ID, PLANNER_V6_ID]
 
@@ -316,14 +317,14 @@ def test_explicit_qwen_rollback_and_direct_legacy_planner_default_to_v7():
     assert "social_kind" in model.calls[0]["schema"]["properties"]
 
 
-def test_live_factory_uses_actual_v7_contract_by_default(monkeypatch):
+def test_live_factory_uses_actual_v7_contract_when_explicit(monkeypatch):
     from race_engineer.intelligence.factory import live_intelligence
 
     model = Model(
         draft(social_kind="radio_check", requested_facts=[], temporal_scope=None, capability_ids=[])
     )
     monkeypatch.setattr("race_engineer.intelligence.factory.LocalJsonModel", lambda _: model)
-    engineer = live_intelligence(ConversationConfig(), memory())
+    engineer = live_intelligence(ConversationConfig(context_planner=PLANNER_V7_ID), memory())
     packet = asyncio.run(engineer._context.analyze(turn("Are you there?")))
     assert packet.situation == ("driver_social_turn", "driver_radio_check")
     assert packet.evidence == packet.unknowns == ()

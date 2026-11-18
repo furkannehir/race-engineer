@@ -41,8 +41,8 @@ def analyze(raw, candidate=PLANNER_V8_ID):
     return engine, model
 
 
-def test_v7_prompt_is_frozen_and_remains_default():
-    assert PLANNER_ID == ConversationConfig().context_planner == PLANNER_V7_ID
+def test_v7_prompt_is_frozen_and_remains_the_legacy_default():
+    assert PLANNER_ID == PLANNER_V7_ID
     assert hashlib.sha256(_v7_prompt().encode()).hexdigest() == (
         "99f0439f704b44d3882663e5b8ca0d0f397bbd5c67a2a30e3f32ad47fa57fb0c"
     )

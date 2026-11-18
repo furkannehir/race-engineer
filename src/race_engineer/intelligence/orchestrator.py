@@ -144,4 +144,12 @@ class EngineerOrchestrator:
             )
 
     async def respond(self, turn: DriverTurn) -> GroundedResponse:
-        return await self.ground(await self.prepare(turn))
+        prepared = await self.prepare(turn)
+        grounded = await self.ground(prepared)
+        self.delivered(prepared, grounded)
+        return grounded
+
+    def delivered(
+        self, prepared: PreparedEngineerResponse, grounded: GroundedResponse
+    ) -> None:
+        """Commit a delivered turn; stateless legacy compositions have no work here."""

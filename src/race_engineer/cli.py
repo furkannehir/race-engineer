@@ -125,7 +125,7 @@ def _parser() -> argparse.ArgumentParser:
         "--candidate",
         choices=(
             "qwen-context-v5", "qwen-context-v6", "qwen-context-v7", "qwen-context-v8",
-            "lfm3-native-v1",
+            "lfm3-native-v1", "ministral-native-v1",
         ),
         help="override the configured context planner for this typed replay only",
     )

@@ -6,6 +6,7 @@ from race_engineer.intelligence.context_engine import QueryDrivenContextEngineer
 from race_engineer.intelligence.context_planner import LFM_NATIVE_ID, QwenContextQueryPlanner
 from race_engineer.intelligence.grounding import StrictEvidenceGrounder
 from race_engineer.intelligence.local_model import LocalJsonModel
+from race_engineer.intelligence.ministral import MINISTRAL_NATIVE_ID, MinistralEngineer
 from race_engineer.intelligence.native_lfm import LfmNativePlanner
 from race_engineer.intelligence.orchestrator import EngineerOrchestrator
 from race_engineer.intelligence.portable_engineer import PortableQwenEngineer
@@ -17,6 +18,9 @@ def live_intelligence(
     memory: BoundedTelemetryMemory,
 ) -> EngineerOrchestrator:
     """Build the selected local Context/Core composition and shared grounding."""
+
+    if config.context_planner == MINISTRAL_NATIVE_ID:
+        return MinistralEngineer(config, memory)
 
     # Native functions select facts; the reply still needs decoder-enforced
     # placeholder constraints. Both clients use this same configured model/server.

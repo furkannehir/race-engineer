@@ -73,8 +73,8 @@ queue_capacity = 8
 adapter = "llama-cpp"
 # English MVP: one resident LFM model selects native tools and writes grounded replies.
 # Explicit Qwen rollback: --config config/qwen-legacy.toml.
-context_planner = "lfm3-native-v1"
-model = "LiquidAI/LFM3-1.7B"
+context_planner = "ministral-native-v1"
+model = "mistralai/Ministral-3-3B-Instruct-2512"
 port = 8092
 timeout_s = 30.0
 history_turns = 6
@@ -91,9 +91,9 @@ cpu_executable_path = "data/lfm3-prototype/llama-b12088-cpu/llama-server.exe"
 accelerated_executable_path = "data/lfm3-prototype/llama-b12088-cuda-13.4/llama-server.exe"
 accelerated_backend = "cuda"
 device = "CUDA0"
-model_path = "data/lfm3-prototype/LFM3-1.7B-Q4_K_M.gguf"
+model_path = "data/dialogue-comparison/Ministral-3-3B-Instruct-2512-Q4_K_M.gguf"
 runtime_revision = "b12088"
-model_revision = "cd0c74c575b5c416f3011b5b4c298077f26ca8c2"
+model_revision = "eb599d408350ea2bb60452cb86be7c7b2fc28227"
 quantization = "Q4_K_M"
 threads = 8
 context_size = 8192

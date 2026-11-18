@@ -256,10 +256,11 @@ def test_existing_server_is_reused_and_never_terminated(monkeypatch):
 
 
 def test_owned_server_stopped_after_cancel_during_startup(tmp_path, monkeypatch):
-    assets = tmp_path / "data/conversation-prototype"
-    (assets / "llama-b10964-cpu").mkdir(parents=True)
-    (assets / "llama-b10964-cpu/llama-server.exe").touch()
-    (assets / "Qwen3-4B-Instruct-2507-Q4_K_M.gguf").touch()
+    runtime = AppConfig().conversation.runtime
+    for relative in (runtime.cpu_executable_path, runtime.model_path):
+        target = tmp_path / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.touch()
     events = []
 
     class Process:
@@ -370,3 +371,61 @@ def test_engineer_stop_does_not_cancel_live_cleanup_a_second_time(monkeypatch):
         )
     )
     assert events == ["cleanup completed"]
+
+
+@pytest.mark.parametrize("scenario", ["owned", "external", "failed", "stopped", "deferred"])
+def test_model_retirement_runs_only_after_successful_owned_startup(monkeypatch, scenario):
+    import threading
+
+    from race_engineer.model_migrations import CleanupResult
+
+    events = []
+    parent_thread = threading.get_ident()
+    control = LiveControl()
+    config = AppConfig()
+    loaded_path = Path("loaded-ministral.gguf")
+
+    class Server:
+        process = None if scenario == "external" else object()
+        effective = SimpleNamespace(model_path=loaded_path)
+
+        def __init__(self, *args):
+            pass
+
+        async def start(self):
+            events.append("loaded")
+            if scenario == "failed":
+                raise RuntimeError("test_startup_failed")
+            if scenario == "stopped":
+                control.stop.set()
+
+        async def aclose(self):
+            events.append("closed")
+
+    def retire(installation, passed_config, passed_path, *, cancelled):
+        assert events == ["loaded"]
+        assert threading.get_ident() != parent_thread
+        assert passed_config == config.conversation and passed_path == loaded_path
+        assert not cancelled()
+        events.append("retired")
+        return CleanupResult("deferred" if scenario == "deferred" else "completed")
+
+    async def live(*args, **kwargs):
+        events.append("live")
+
+    monkeypatch.setattr(panel_runtime, "ConversationServer", Server)
+    monkeypatch.setattr(panel_runtime, "retire_loaded_model", retire)
+    monkeypatch.setattr(panel_runtime, "voice_iracing", live)
+    task = run_engineer(ROOT, ROOT / "config/default.toml", config, PanelSettings(),
+                        CommunicationPreferences(profile_id="default"), control)
+    if scenario == "failed":
+        with pytest.raises(RuntimeError, match="test_startup_failed"):
+            asyncio.run(task)
+    else:
+        asyncio.run(task)
+    expected = ["loaded"]
+    if scenario in {"owned", "deferred"}:
+        expected.append("retired")
+    if scenario not in {"failed", "stopped"}:
+        expected.append("live")
+    assert events == [*expected, "closed"]

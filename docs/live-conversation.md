@@ -1,7 +1,7 @@
 # Live iRacing conversational shakedown
 
 `voice-iracing` runs telemetry, strict-policy automatic announcements, push-to-talk,
-Qwen3-ASR, the local LFM3 conversational model and shared Chatterbox speech in one application.
+Qwen3-ASR, the local Ministral conversational model and shared Chatterbox speech in one application.
 Conversation now reads the latest accepted iRacing context rather than a replay fixture.
 It is read-only: there are no pit commands, setup changes, or simulator controls.
 
@@ -11,14 +11,14 @@ For the native Windows controls, use the [control panel](control-panel.md). It m
 the local model server and this same live pipeline. The terminal workflow below remains
 available; do not run it at the same time as a panel session.
 
-Use the existing [LFM](lfm3-trial.md), [STT](speech-to-text.md), and
+Use the existing [Ministral](ministral-live.md), [STT](speech-to-text.md), and
 [Chatterbox](text-to-speech.md) installations. The TTS migration needs its own
 initial setup/download; old Piper files are no longer used.
 Start with a practice/test session, not a competitive race.
 
 ## Test without iRacing
 
-The bundled intelligence fixture exercises the same Context/Core/LFM/grounding path
+The bundled intelligence fixture exercises the configured intelligence/grounding path
 without iRacing, microphone capture or TTS. Start the local conversation server in one
 terminal:
 

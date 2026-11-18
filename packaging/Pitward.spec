@@ -12,6 +12,7 @@ VERSION_FILE = os.environ["PITWARD_VERSION_FILE"]
 
 datas = [
     (str(ROOT / "config/default.toml"), "config"),
+    (str(SRC / "race_engineer/assets/components.v1.json"), "race_engineer/assets"),
     (
         str(SRC / "race_engineer/assets/pitward-brand-pack/icons/pitward.ico"),
         "race_engineer/assets/pitward-brand-pack/icons",

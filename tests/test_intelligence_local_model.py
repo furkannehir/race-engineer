@@ -47,7 +47,7 @@ class FakeConnection:
 def install(monkeypatch, connection: FakeConnection) -> None:
     def factory(host, port, timeout):
         assert host == "127.0.0.1"
-        assert port == 8087
+        assert port == ConversationConfig().port
         assert timeout == 30
         return connection
 

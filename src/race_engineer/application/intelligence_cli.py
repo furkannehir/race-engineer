@@ -26,15 +26,15 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _failure_hint(reason: str) -> str | None:
-    if reason.endswith("model_unreachable"):
-        return "The local Qwen server is not reachable. Start it, then try again."
-    if reason.endswith("model_timeout"):
+    if reason.endswith("model_unreachable") or reason == "dialogue_unreachable":
+        return "The local model server is not reachable. Start it, then try again."
+    if reason.endswith("model_timeout") or reason == "dialogue_timeout":
         return (
-            "The local Qwen model timed out. It may still be loading or busy; check the server log."
+            "The local model timed out. It may still be loading or busy; check the server log."
         )
-    if "model_http_" in reason:
+    if "model_http_" in reason or reason.startswith("dialogue_http_"):
         return (
-            "The Qwen server is reachable but rejected or failed the structured response. "
+            "The local model server is reachable but rejected or failed the structured response. "
             "Check the server log, then retry."
         )
     return None
@@ -76,7 +76,7 @@ async def intelligence_replay(
     json_output: bool = False,
     candidate_id: str | None = None,
 ) -> int:
-    """Run one typed question through the real Context/Core/Qwen/grounding path."""
+    """Run one typed question through the real configured intelligence/grounding path."""
 
     config = load_config(config_path)
     if candidate_id is not None:

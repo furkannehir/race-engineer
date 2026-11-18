@@ -28,14 +28,18 @@ in-place upgrades retain the models too. A custom `PITWARD_DATA_DIR` is outside 
 installer cleanup rule and must be cleaned up manually. Existing 0.1.0 uninstallers
 retain their old behavior until replaced by a rebuilt installer.
 
-Component set 3 selects LFM3-1.7B Q4_K_M and llama.cpp b12088 CPU. It retains
-Qwen3-ASR and the five pinned multilingual V2 speech assets, including `conds.pt`
-for the built-in voice. Total downloads are about 5.9 GB. Frozen paths follow
-the configured model/runtime names and match the installer manifest; old installed
-Qwen weights are retained but are no longer selected by the new configuration.
-Existing published or locally built executables do not change until rebuilt.
-LFM uses its own [LFM Open License v1.0](https://huggingface.co/LiquidAI/LFM3-1.7B/blob/main/LICENSE);
-the 0.1.0 review is recorded in [the distribution review](../distribution/REVIEW-0.1.0.md).
+Development component set 4 selects Ministral 3 3B Instruct 2512 Q4_K_M and
+llama.cpp b12088 CPU. Qwen3-ASR and the five multilingual V2 speech assets retain
+their existing pins. Fresh setup downloads about 7.0 GB. Frozen paths match the
+new model/runtime manifest. Upgrades reuse speech assets. After successful owned
+Ministral startup and checksum verification, migration removes the known obsolete
+LFM weights. Failed/cancelled starts, custom paths and unrecognized files retain
+their old files. Locked-file cleanup retries on a later start. Published v0.2.0 files still contain component set 3 and do not change until a new version is built and published.
+
+Ministral's pinned official model card declares Apache-2.0. The current review is
+[REVIEW-MINISTRAL.md](../distribution/REVIEW-MINISTRAL.md); the earlier
+[0.1.0 review](../distribution/REVIEW-0.1.0.md) still covers unchanged speech and
+radio assets. See the [production migration guide](ministral-live.md).
 Full model license texts and runtime wheel notices are included in each package.
 The release workflow builds a CPU TTS worker; racing latency on CPU is not
 established. CUDA builds can use `setup_radio_tts.py --backend cuda` instead.

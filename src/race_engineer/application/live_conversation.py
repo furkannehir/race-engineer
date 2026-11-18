@@ -417,6 +417,7 @@ async def live_dialogue(
                     delivery: dict[str, str] = delivery,
                     prepared_at: float = prepared_at,
                 ) -> None:
+                    grounded = None
                     if queued_response is not None:
                         if state.epoch != answer_epoch or not state.available:
                             raise LiveTelemetryUnavailable("live_session_changed")
@@ -498,6 +499,11 @@ async def live_dialogue(
                     if (
                         delivery["outcome"] == "spoken" or (speaker is None and control is None)
                     ) and state.epoch == answer_epoch:
+                        if queued_response is not None and grounded is not None:
+                            assert intelligence is not None
+                            commit = getattr(intelligence, "delivered", None)
+                            if commit is not None:
+                                commit(queued_response, grounded)
                         recent_dialogue.extend(
                             (f"driver: {question}", f"engineer: {refreshed.text}")
                         )

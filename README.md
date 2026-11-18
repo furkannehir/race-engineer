@@ -7,16 +7,19 @@ language generation, and speech synthesis remain replaceable adapters.
 ## Download Pitward
 
 Get the Windows installer or portable ZIP at **[pitward.com](https://pitward.com)**
-or from the [0.2.0 GitHub release](https://github.com/furkannehir/race-engineer/releases/tag/v0.2.0).
+or from the [0.2.1 GitHub release](https://github.com/furkannehir/race-engineer/releases/tag/v0.2.1).
 The packaged app does not require Python. Initial setup downloads approximately
-5.9 GB of local AI components under their separate third-party terms.
+7.0 GB of local AI components under their separate third-party terms.
 
 ## Development overview
 
-The 0.2.0 source adds last/best lap timing, race progress and conservative
-fuel-to-finish calculations. It also includes a **source-only Ministral chat
-preview** with radio lap-time wording; the installed application still uses LFM.
-See [release record](docs/releases/0.2.0.md) and
+Version 0.2.1 connects **Ministral 3 3B Q4_K_M to the live desktop radio**,
+including lap timing, race progress and fuel-to-finish tools. New Windows builds
+select Ministral in component set 4 (about 7.0 GB for fresh setup). The published
+0.2.0 installer remains unchanged and still uses LFM. Upgrades remove its old
+managed LFM weights only after Ministral successfully loads and passes verification. See the
+[Ministral setup and validation guide](docs/ministral-live.md).
+See [release record](docs/releases/0.2.1.md) and
 [preview setup and results](docs/dialogue-model-comparison.md#interactive-ministral-demo).
 
 This repository contains the M0 architecture baseline, the M1 iRacing telemetry reader,
@@ -55,18 +58,18 @@ the initial live prototype as sufficient to continue; quality upgrades and quant
 validation remain open. See the [live run guide](docs/live-conversation.md) and
 [current roadmap / next task](docs/roadmap.md).
 
-The standard source edition uses **LFM3-1.7B Q4_K_M on NVIDIA/CUDA** for native
-tool selection and grounded conversational replies. This is the selected English
-MVP model; Turkish conversation is not yet validated. Qwen3-ASR stays on CPU.
-Chatterbox independently prefers CUDA, using
-BF16 T3 on supported GPUs and an FP32 audio decoder. Its visible FP32 CPU fallback
-may not meet racing deadlines. The normal `start-panel.cmd` now
-uses the GPU configuration directly, with no silent CPU fallback or external-server
-reuse. See [LFM setup, measurements and remaining quality work](docs/lfm3-trial.md).
-The next packaged component set selects LFM and a CPU llama.cpp runtime; packaged
-CUDA distribution, CPU race latency and AMD/Vulkan validation remain unverified.
-The previous Qwen setup remains an explicit source rollback:
-`start-panel.cmd --config config/qwen-legacy.toml`.
+The standard source edition uses **Ministral 3 3B Instruct 2512 Q4_K_M on
+NVIDIA/CUDA** for native read-only tools and grounded conversation. Qwen3-ASR
+stays on CPU. Chatterbox independently prefers CUDA, using BF16 T3 on supported
+GPUs and an FP32 decoder; its visible CPU fallback may miss racing deadlines.
+`start-panel.cmd` selects the GPU configuration without silent CPU fallback or
+external-server reuse. English is primary; Turkish social understanding still
+needs work. New installer builds retain the existing CPU conversation runtime.
+Packaged CUDA, CPU race latency and AMD/Vulkan validation remain open.
+
+See [Ministral setup, lifecycle and test commands](docs/ministral-live.md).
+LFM and Qwen remain explicit source rollbacks in `config/lfm-legacy.toml` and
+`config/qwen-legacy.toml`; neither is selected after a Ministral failure.
 
 An [offline Qwen cache benchmark](docs/qwen-cache-trial.md) compares FP16/Q8 cache
 memory, latency and bilingual checks without changing live model/prompt settings.

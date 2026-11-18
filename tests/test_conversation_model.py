@@ -52,7 +52,7 @@ class FakeConnection:
 def install(monkeypatch, connection):
     def factory(host, port, timeout):
         assert host == "127.0.0.1"
-        assert port == 8087
+        assert port == ConversationConfig().port
         assert timeout == 30
         return connection
 
@@ -73,7 +73,7 @@ def test_local_adapter_sends_schema_and_does_not_use_proxies(monkeypatch):
     method, path, body, headers = connection.requests[0]
     assert method == "POST"
     assert path == "/v1/chat/completions"
-    assert body["model"] == "Qwen3-4B-Instruct-2507"
+    assert body["model"] == ConversationConfig().model
     branches = body["response_format"]["schema"]["oneOf"]
     assert all(branch["additionalProperties"] is False for branch in branches)
     assert branches[0]["properties"]["queries"]["minItems"] == 1

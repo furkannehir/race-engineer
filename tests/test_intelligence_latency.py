@@ -54,10 +54,10 @@ def planner_reply(extra=False):
     }
 
 
-def test_benchmark_inherits_native_default_for_both_selection_and_reply(monkeypatch):
+def test_benchmark_preserves_explicit_lfm_selection_and_reply(monkeypatch):
     from race_engineer.intelligence.native_model import NativeToolCall, NativeToolReply
 
-    config = load_config(ROOT / "config/default.toml", environ={}).conversation
+    config = load_config(ROOT / "config/lfm-legacy.toml", environ={}).conversation
     _, contexts, group = setup()
     selected = []
 

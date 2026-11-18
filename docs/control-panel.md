@@ -22,7 +22,7 @@ Then double-click `start-panel.cmd`, or run:
 .\.venv\Scripts\python.exe -m race_engineer.ui
 ```
 
-The local LFM3 conversation model, Qwen3-ASR runtime and Chatterbox model must
+The local Ministral conversation model, Qwen3-ASR runtime and Chatterbox model must
 already be installed. See [LFM setup](lfm3-trial.md) and the
 [speech setup guides](live-conversation.md#run).
 Opening the window enumerates audio devices but does not start telemetry, inference,

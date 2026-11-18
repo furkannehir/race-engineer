@@ -2,6 +2,6 @@
   "schema_version": "pitward-release-clearance.v1",
   "radio_cue_source_cleared": true,
   "speech_model_distribution_reviewed": true,
-  "review_record": "distribution/REVIEW-0.1.0.md",
-  "reviewed_on": "2026-11-09"
+  "review_record": "distribution/REVIEW-MINISTRAL.md",
+  "reviewed_on": "2026-11-18"
 }

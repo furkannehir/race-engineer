@@ -13,7 +13,9 @@ from race_engineer.application.live_conversation import voice_iracing
 from race_engineer.config import AppConfig
 from race_engineer.conversation.runtime import ConversationServer as LocalConversationServer
 from race_engineer.core.conversation import ConversationReply, RadioLanguage
+from race_engineer.installation import Installation
 from race_engineer.memory import CommunicationPreferences
+from race_engineer.model_migrations import retire_loaded_model
 from race_engineer.stt.capture import _sounddevice
 from race_engineer.tts.chatterbox import ChatterboxSpeechBackend
 from race_engineer.ui.settings import PanelSettings
@@ -37,6 +39,17 @@ async def run_engineer(
     server = ConversationServer(root, config, control)
     try:
         await run_until_stopped(server.start(), control)
+        if control.stop.is_set():
+            return
+        if server.process is not None and server.effective is not None:
+            cleanup = await asyncio.to_thread(
+                retire_loaded_model, Installation.discover(cwd=root), config.conversation,
+                server.effective.model_path, cancelled=control.stop.is_set,
+            )
+            if cleanup.removed:
+                control.emit("notice", "Ministral is ready. Removed the obsolete managed model.")
+            elif cleanup.status == "deferred":
+                control.emit("notice", "Old model cleanup was deferred. See the application log.")
         if control.stop.is_set():
             return
         control.emit("phase", "loading_speech")

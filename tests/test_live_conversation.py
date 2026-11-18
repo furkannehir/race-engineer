@@ -301,6 +301,68 @@ def test_live_dialogue_retains_configured_history_across_long_conversations(
     assert "Engineer (en)" in capsys.readouterr().out
 
 
+@pytest.mark.parametrize("played", [True, False])
+def test_native_history_is_committed_only_after_actual_radio_playback(monkeypatch, played):
+    from test_lfm3_dialogue import Model, call
+    from test_stt_audio import tone
+
+    from race_engineer.intelligence.ministral import MinistralEngineer
+    from race_engineer.intelligence.native_dialogue import ChatReply
+
+    state = LiveRaceState(3)
+    state.update(context())
+    memory = BoundedTelemetryMemory()
+    memory.update(context())
+    engineer = MinistralEngineer(
+        ConversationConfig(), memory,
+        model=Model(ChatReply(None, (call("reply_to_driver", message="Copy. I'm here."),))),
+    )
+
+    class Microphone:
+        def __init__(self, config):
+            self.clips = iter((tone(), None))
+
+        async def next_clip(self, *, before_capture):
+            before_capture()
+            return next(self.clips)
+
+        async def aclose(self):
+            pass
+
+    class Recognizer:
+        async def start(self):
+            pass
+
+        async def transcribe(self, audio):
+            return Transcription(status="transcribed", text="Radio check", language="en",
+                                 audio_duration_s=1)
+
+    class Speaker:
+        async def start(self):
+            pass
+
+        async def speak(self, reply, *, before_playback, preparation_timeout_s):
+            assert before_playback()
+            assert not engineer._engine.history
+            return SpeechOutputResult(language="en", played=played, audio_duration_s=1,
+                                      synthesis_ms=1, playback_ms=1)
+
+    monkeypatch.setattr(
+        "race_engineer.application.live_conversation.PushToTalkMicrophone", Microphone
+    )
+
+    async def run():
+        radio = LiveRadio(None)
+        try:
+            await live_dialogue(AppConfig(), SttConfig(), state, radio, Recognizer(), Speaker(),
+                                None, intelligence=engineer)
+        finally:
+            await radio.aclose()
+
+    asyncio.run(run())
+    assert len(engineer._engine.history) == int(played)
+
+
 def test_live_recording_continues_while_conversation_is_blocked(tmp_path, monkeypatch):
     from race_engineer.cli import _read_iracing
 

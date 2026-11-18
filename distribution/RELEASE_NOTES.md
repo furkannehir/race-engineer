@@ -1,72 +1,49 @@
-# Pitward 0.2.0
+# Pitward 0.2.1
 
-This release adds lap timing and race-progress data, deterministic fuel estimates,
-and a source-only Ministral conversation preview. **The Windows application still
-uses LFM3-1.7B. Ministral is not yet connected to the live desktop radio.**
+Ministral 3 3B Instruct 2512 Q4_K_M is now the default conversation model in the
+live desktop application and Windows component setup. The source chat preview
+and desktop radio share the same checked native-tool implementation.
 
-## New telemetry and calculations
+## Conversation and delivery
 
-- iRacing capture now includes completed laps, last/best lap durations, the race
-  lap limit, remaining race laps and the session clock. Missing channels and
-  unlimited-session sentinels remain unknown rather than becoming fake readings.
-- New core tools read last/best lap time, compare the last lap with the best,
-  distinguish lap counts and estimate fuel for the full scheduled distance.
-- Fuel-to-finish includes an explicit one-lap reserve at observed consumption.
-  This is a conservative estimate, not a guaranteed finish or pit strategy.
-  Timed-only races do not receive an invented exact remaining lap count or finish
-  fuel prediction.
-- Existing recordings remain readable; new fields require a new capture.
+- Read position, gaps, classification, fuel/range/to-finish, lap number, last/best
+  lap times, race progress, qualitative closing movement and bounded history.
+- Refresh selected telemetry when the radio grants a reply its delivery slot.
+  Only successfully delivered readings enter dialogue history and radio recall.
+- Preserve Chatterbox's shared output queue, priorities, interruption, output
+  device selection and separate PTT WAV cues.
+- Source GPU smoke replies took about 0.19-0.51 seconds before speech generation.
+  This is a small synthetic smoke run, not a general accuracy/performance guarantee.
 
-## Conversation preview for source users
+## Upgrade from 0.1.0, 0.1.1 or 0.2.0
 
-The checked Ministral 3 3B Q4_K_M demo offers fresh native-tool readings, bounded
-history and recall of delivered readings. It exposes 14 implemented core
-capabilities through 26 read/conversation operations. English is the test focus.
+1. Install the update over the existing installation. Profiles, preferences,
+   push-to-talk bindings and audio settings remain intact.
+2. Select **Set up local AI components** when the new model is missing. Setup
+   verifies and reuses existing speech assets, downloads the 2.15 GB Ministral
+   weights, then restarts Pitward. Fresh setup totals about 7.0 GB.
+3. Start the engineer. After its owned server successfully loads Ministral,
+   Pitward verifies both models, records the migration and removes the known
+   obsolete 1.10 GB LFM file from its managed component folder.
 
-Last/best lap durations use race-radio wording: **92.5 seconds becomes "one thirty
-two point five"**. Fuel range explicitly says "laps of fuel". Instantaneous speed
-and numerical per-second gap rates are excluded; recent closing movement is
-qualitative. Lap differences and gaps keep seconds as their unit.
+Failed setup or model startup retains LFM. Locked files are retained and cleanup
+retries on a later start. Source/experimental/custom model files are preserved.
+Cleanup does not remove speech assets, profiles, settings, logs or recordings.
 
-With the repository development environment installed, explicitly set up the
-separate preview weights and then start typed chat:
+Ministral weights use Apache-2.0 terms. The unchanged CPU llama.cpp runtime uses
+MIT terms; Qwen3-ASR and Chatterbox retain their existing pinned assets/licenses.
 
-```powershell
-.\.venv\Scripts\python.exe scripts\setup_dialogue_comparison.py --model ministral
-.\.venv\Scripts\python.exe scripts\try_ministral.py
-```
+## Known limitations
 
-This starts its own local GPU server and uses synthetic telemetry without audio.
-`--backend cpu` selects an explicit CPU trial; CPU racing latency is not established.
-Model weights, recordings and local diagnostic reports are not included in Git.
+- Windows packages still use CPU conversation/speech runtimes. The source CUDA
+  timings do not represent installed CPU performance; cold CPU questions can
+  take about 19 seconds before speech. Packaged GPU support remains future work.
+- English is the primary tested conversation language. Turkish position/lap-time
+  smoke replies work, but Turkish radio checks may be misclassified as unavailable.
+- Ambiguous requests, unsupported race assessments and recall topic selection
+  still need quality work. Pit strategy, opponent lap pace and car controls
+  remain unavailable.
+- A single source Chatterbox startup OSError was observed in live testing; retry
+  succeeded and all five subsequent replies played. Its exact cause is unknown.
 
-## Existing desktop path
-
-The LFM social prompt now uses the current question and bounded dialogue context
-more directly, and supports a bounded repair for invalid social output. Repeated
-uses of one verified evidence binding no longer reject an otherwise valid reply.
-These changes do not establish general conversation accuracy.
-
-The installer component set, Qwen3-ASR, Chatterbox voice, PTT cues and driver
-profiles are unchanged. The installer does not download Ministral or include the
-source-only chat scripts. In-place upgrades retain downloaded models and driver
-data; uninstalling first is unnecessary.
-
-## Validation and known limitations
-
-- Source: 965 tests passed, two NumPy-dependent audio tests skipped; Ruff and mypy
-  passed. Windows packaging checks run separately in the tagged workflow.
-- The expanded GPU text replay delivered 135/140 replies at a 348 ms median.
-  Completion is not accuracy: remaining failures and misleading reserve/recall
-  wording are documented. Timing excludes startup, STT, TTS and racing/VR load.
-- The radio-format smoke check delivered eight replies with the requested lap
-  pronunciation; a separate last-versus-best recall-selection error remains open.
-- Opponent lap pace/fastest-driver comparisons, multi-lap clean-lap history and
-  pit projections remain unavailable. Cockpit controls stay driver-operated.
-- Turkish conversation is unvalidated. English/Turkish speech support is retained,
-  but this release's source checks do not validate actual audio playback.
-- Windows 11 x64 remains the packaging target. Builds are unsigned; packaged
-  inference uses CPU and may miss racing deadlines. The source CUDA setup is separate.
-
-See [known issues](https://github.com/furkannehir/race-engineer/blob/main/docs/known-issues.md)
-and the [telemetry access matrix](https://github.com/furkannehir/race-engineer/blob/main/docs/telemetry-expansion.md).
+The published v0.2.0 tag and assets remain unchanged.

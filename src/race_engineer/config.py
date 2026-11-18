@@ -112,7 +112,7 @@ class ConversationRuntimeConfig(ConfigModel):
 
     mode: Literal["cpu", "gpu", "auto"] = "cpu"
     cpu_executable_path: Path = Path(
-        "data/conversation-prototype/llama-b10964-cpu/llama-server.exe"
+        "data/lfm3-prototype/llama-b12088-cpu/llama-server.exe"
     )
     accelerated_executable_path: Path | None = None
     accelerated_backend: Literal["cuda", "vulkan", "hip", "metal", "sycl"] | None = None
@@ -122,12 +122,12 @@ class ConversationRuntimeConfig(ConfigModel):
         max_length=100,
         pattern=r"^[A-Za-z0-9_.:-]+$",
     )
-    model_path: Path = Path("data/conversation-prototype/Qwen3-4B-Instruct-2507-Q4_K_M.gguf")
+    model_path: Path = Path("data/dialogue-comparison/Ministral-3-3B-Instruct-2512-Q4_K_M.gguf")
     runtime_revision: str = Field(
-        default="b10964", min_length=1, max_length=100, pattern=r"^[A-Za-z0-9_.+-]+$"
+        default="b12088", min_length=1, max_length=100, pattern=r"^[A-Za-z0-9_.+-]+$"
     )
     model_revision: str = Field(
-        default="a06e946bb6b655725eafa393f4a9745d460374c9",
+        default="eb599d408350ea2bb60452cb86be7c7b2fc28227",
         min_length=1,
         max_length=100,
         pattern=r"^[A-Za-z0-9_.+-]+$",
@@ -163,16 +163,16 @@ class ConversationConfig(ConfigModel):
     adapter: Literal["llama-cpp"] = "llama-cpp"
     context_planner: Literal[
         "qwen-context-v5", "qwen-context-v6", "qwen-context-v7", "qwen-context-v8",
-        "lfm3-native-v1",
-    ] = "qwen-context-v7"
+        "lfm3-native-v1", "ministral-native-v1",
+    ] = "ministral-native-v1"
     model: str = Field(
-        default="Qwen3-4B-Instruct-2507",
+        default="mistralai/Ministral-3-3B-Instruct-2512",
         min_length=1,
         max_length=200,
         pattern=r"^[A-Za-z0-9][A-Za-z0-9_.:/+-]*$",
     )
     # The adapter connects only to literal 127.0.0.1, never a remote host or proxy.
-    port: int = Field(default=8087, ge=1, le=65535)
+    port: int = Field(default=8092, ge=1, le=65535)
     timeout_s: float = Field(default=30.0, gt=0, le=120, allow_inf_nan=False)
     history_turns: int = Field(default=6, ge=0, le=MAX_CONVERSATION_HISTORY_TURNS)
     max_snapshot_age_s: float = Field(default=3.0, gt=0, le=30, allow_inf_nan=False)

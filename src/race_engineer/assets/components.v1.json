@@ -1,6 +1,6 @@
 {
   "schema_version": "pitward-components.v1",
-  "component_set": "3",
+  "component_set": "4",
   "artifacts": [
     {
       "id": "llama-cpp-cpu-b12088",
@@ -13,13 +13,13 @@
       "license": "MIT"
     },
     {
-      "id": "lfm3-1.7b-q4-k-m",
+      "id": "ministral-3-3b-instruct-2512-q4-k-m",
       "kind": "file",
-      "url": "https://huggingface.co/LiquidAI/LFM3-1.7B-GGUF/resolve/cd0c74c575b5c416f3011b5b4c298077f26ca8c2/LFM3-1.7B-Q4_K_M.gguf",
-      "sha256": "3793e1e6e2266919d6e015287221b41100175a98eddaba92e111aed3b05c93c4",
-      "size": 1099627808,
-      "destination": "conversation/LFM3-1.7B-Q4_K_M.gguf",
-      "license": "LFM Open License v1.0"
+      "url": "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512-GGUF/resolve/eb599d408350ea2bb60452cb86be7c7b2fc28227/Ministral-3-3B-Instruct-2512-Q4_K_M.gguf",
+      "sha256": "9ed150d4367e68df0ac8e1540f6ddc65b42d0ee26378329d1ecbca60f93fc5f8",
+      "size": 2147023008,
+      "destination": "conversation/Ministral-3-3B-Instruct-2512-Q4_K_M.gguf",
+      "license": "Apache-2.0"
     },
     {
       "id": "qwen3-asr-config",
@@ -128,6 +128,22 @@
       "size": 107374,
       "destination": "tts/chatterbox/5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18/conds.pt",
       "license": "MIT"
+    }
+  ],
+  "model_migrations": [
+    {
+      "migration_id": "lfm3-to-ministral-v1",
+      "model": "mistralai/Ministral-3-3B-Instruct-2512",
+      "context_planner": "ministral-native-v1",
+      "replacement_id": "ministral-3-3b-instruct-2512-q4-k-m",
+      "retired": [
+        {
+          "artifact_id": "lfm3-1.7b-q4-k-m",
+          "destination": "conversation/LFM3-1.7B-Q4_K_M.gguf",
+          "size": 1099627808,
+          "sha256": "3793e1e6e2266919d6e015287221b41100175a98eddaba92e111aed3b05c93c4"
+        }
+      ]
     }
   ]
 }
