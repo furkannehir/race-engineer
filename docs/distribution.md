@@ -28,7 +28,7 @@ in-place upgrades retain the models too. A custom `PITWARD_DATA_DIR` is outside 
 installer cleanup rule and must be cleaned up manually. Existing 0.1.0 uninstallers
 retain their old behavior until replaced by a rebuilt installer.
 
-Development component set 4 selects Ministral 3 3B Instruct 2512 Q4_K_M and
+Release component set 4 selects Ministral 3 3B Instruct 2512 Q4_K_M and
 llama.cpp b12088 CPU. Qwen3-ASR and the five multilingual V2 speech assets retain
 their existing pins. Fresh setup downloads about 7.0 GB. Frozen paths match the
 new model/runtime manifest. Upgrades reuse speech assets. After successful owned
@@ -144,14 +144,15 @@ and [Inno Setup parameters](https://jrsoftware.org/inno-setup/documentation/topi
 
 ## Release flow
 
-The current feature release is **0.2.0**, published on 18 November 2026 and recorded
-in [the release record](releases/0.2.0.md). It includes new timing/progress data
-and a source-only Ministral preview; the installed model/component set remains
-LFM. The tagged Windows build, public assets, updater detection and download
+The current release is **0.2.1**, published on 18 November 2026 and recorded
+in [the release record](releases/0.2.1.md). Ministral is the live desktop default,
+and component set 4 retires verified obsolete LFM weights after successful model
+startup. The tagged Windows build, public assets, updater detection and download
 website publication were verified. Future version tags still create drafts;
 public release publication and website deployment are separate operations.
 
-The previous patch release is recorded in [the 0.1.1 release record](releases/0.1.1.md),
+The unchanged feature release is recorded in [the 0.2.0 record](releases/0.2.0.md).
+The earlier patch release is recorded in [the 0.1.1 release record](releases/0.1.1.md),
 including verified public assets, the tagged workflow and upgrade instructions.
 
 For the first release, use the [0.1.0 preparation record](releases/0.1.0.md) and

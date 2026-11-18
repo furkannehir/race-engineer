@@ -88,8 +88,8 @@ files, source caches, speech assets and driver data are preserved.
 The installer continues to distribute the verified **CPU** llama.cpp runtime.
 Source CUDA support does not imply packaged CUDA support or proven CPU race
 latency. The new model uses Apache-2.0 terms; see
-[the component review](../distribution/REVIEW-MINISTRAL.md). Old release records
-and website metadata describe the published assets, not this development set.
+[the component review](../distribution/REVIEW-MINISTRAL.md). The release record and website metadata describe component set 4. Historical
+0.2.0 records still describe the original LFM downloads.
 
 ## Limits and acceptance
 

@@ -6,13 +6,13 @@ that every original milestone exit criterion has been formally validated.
 
 ## Current checkpoint
 
-Pitward **0.2.0 is published** on GitHub and the download website as of 18 November
-2026. The tagged Windows build, checksums, frozen panel/speech workers and updater
-detection were verified; see the [release record](releases/0.2.0.md). The installed
-0.2.0 application retains LFM. Development now connects Ministral to the live
-radio and component set 4; see [setup and validation](ministral-live.md). This
-migration is prepared for v0.2.1, including verified retirement of the old LFM
-weights after successful model startup. Conversation-quality limitations remain.
+Pitward **0.2.1 is published** on GitHub and the download website as of 18 November
+2026. Ministral is the live/default conversation model and component set 4 selects
+its pinned weights. Upgrades retire the verified obsolete managed LFM weights
+only after successful Ministral startup. The Windows build, checksums, frozen
+panel/speech workers and updater detection for 0.1.0/0.1.1/0.2.0 were verified;
+see the [release record](releases/0.2.1.md). The 0.2.0 assets remain unchanged.
+Conversation-quality limitations and installed CPU race performance remain open.
 
 November 18 data expansion: the adapter now selects 25 SDK fields, including
 last/best lap duration, completed laps, race lap limit/remaining count and clock.

@@ -15,7 +15,7 @@ The packaged app does not require Python. Initial setup downloads approximately
 
 Version 0.2.1 connects **Ministral 3 3B Q4_K_M to the live desktop radio**,
 including lap timing, race progress and fuel-to-finish tools. New Windows builds
-select Ministral in component set 4 (about 7.0 GB for fresh setup). The published
+select Ministral in component set 4 (about 7.0 GB for fresh setup). The older
 0.2.0 installer remains unchanged and still uses LFM. Upgrades remove its old
 managed LFM weights only after Ministral successfully loads and passes verification. See the
 [Ministral setup and validation guide](docs/ministral-live.md).
