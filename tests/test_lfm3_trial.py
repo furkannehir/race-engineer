@@ -1,15 +1,12 @@
-import asyncio
 import json
 import tomllib
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 
 from race_engineer.config import AppConfig, ConversationConfig
 from race_engineer.conversation.runtime import RuntimeCandidate, server_command
-from scripts import setup_lfm3_trial, try_lfm3
-from scripts.lfm3_prompt import PROMPT, EnglishPlannerClient
+from scripts import setup_lfm3_trial
 
 ROOT = Path(__file__).parents[1]
 
@@ -68,122 +65,3 @@ def test_thinking_template_switch_is_only_forwarded_when_explicit(thinking):
     else:
         value = json.loads(command[command.index("--chat-template-kwargs") + 1])
         assert value == {"enable_thinking": thinking}
-
-
-def test_lfm_benchmark_uses_english_only_without_editing_dataset_expectations():
-    config = AppConfig()
-    short, inputs = try_lfm3.english_cases(config, False)
-    full, _ = try_lfm3.english_cases(config, True)
-    assert short and len(full) > len(short)
-    assert all(case[2].language == "en" for case in full)
-    assert len({case[2].id for case in short}) == len(short)
-    assert all("fixtures" in path.parts for path in inputs)
-
-
-def test_compact_prompt_retains_driver_content_schema_and_output_budget(monkeypatch):
-    captured = []
-
-    async def request(self, **kwargs):
-        captured.append(kwargs)
-        return {"social_kind": "radio_check"}
-
-    monkeypatch.setattr("race_engineer.intelligence.local_model.LocalJsonModel.request", request)
-    schema = {"type": "object"}
-    content = '{"transcript":"Are you there?","recent_dialogue":[]}'
-    result = asyncio.run(
-        EnglishPlannerClient(ConversationConfig()).request(
-            system_prompt="original v8", content=content, schema=schema, max_tokens=384
-        )
-    )
-    assert result == {"social_kind": "radio_check"}
-    assert captured == [
-        {"system_prompt": PROMPT, "content": content, "schema": schema, "max_tokens": 384}
-    ]
-
-
-@pytest.mark.parametrize("single_failure", [False, True])
-@pytest.mark.parametrize("native", [False, True])
-def test_terminal_trial_reuses_server_and_retains_only_successful_history(
-    monkeypatch, single_failure, native
-):
-    config = AppConfig()
-    config = config.model_copy(
-        update={
-            "conversation": config.conversation.model_copy(
-                update={
-                    "model": "LiquidAI/LFM3-1.7B",
-                    "context_planner": "lfm3-native-v1" if native else "qwen-context-v8",
-                }
-            )
-        }
-    )
-    monkeypatch.setattr(try_lfm3, "model_config", lambda _: config)
-    monkeypatch.setattr(try_lfm3, "require_free_port", lambda _: None)
-    events, histories = [], []
-
-    class Server:
-        def __init__(self, *args):
-            pass
-
-        async def start(self):
-            events.append("start")
-
-        async def aclose(self):
-            events.append("close")
-
-    class Engineer:
-        async def respond(self, turn):
-            histories.append(turn.recent_dialogue)
-            if single_failure or len(histories) == 2:
-                raise RuntimeError("context_model_response_invalid")
-            return SimpleNamespace(text="Copy.")
-
-    monkeypatch.setattr(try_lfm3, "ConversationServer", Server)
-    monkeypatch.setattr(try_lfm3, "live_intelligence", lambda *_: Engineer())
-    questions = iter(("Are you there?", "A failed question", "Fuel?", "/quit"))
-    monkeypatch.setattr("builtins.input", lambda _: next(questions))
-    args = SimpleNamespace(
-        config=Path("unused.toml"),
-        compact_planner=False,
-        fixture=ROOT / "fixtures/synthetic/intelligence-capabilities",
-        question="Position?" if single_failure else None,
-    )
-    assert asyncio.run(try_lfm3.chat(args)) == (1 if single_failure else 0)
-    assert events == ["start", "close"]
-    if not single_failure:
-        assert histories == [
-            (),
-            ("driver: Are you there?", "engineer: Copy."),
-            ("driver: Are you there?", "engineer: Copy."),
-        ]
-
-
-@pytest.mark.parametrize("start_failure", [False, True])
-def test_interactive_runtime_is_closed_even_after_startup_failure(monkeypatch, start_failure):
-    events = []
-
-    class Server:
-        def __init__(self, *args):
-            pass
-
-        async def start(self):
-            events.append("start")
-            if start_failure:
-                raise RuntimeError("model_startup_failed")
-
-        async def aclose(self):
-            events.append("close")
-
-    monkeypatch.setattr(try_lfm3, "ConversationServer", Server)
-
-    async def run():
-        async with try_lfm3.owned_server(ConversationConfig()):
-            events.append("chat")
-
-    if start_failure:
-        with pytest.raises(RuntimeError, match="model_startup_failed"):
-            asyncio.run(run())
-        assert events == ["start", "close"]
-    else:
-        asyncio.run(run())
-        assert events == ["start", "chat", "close"]

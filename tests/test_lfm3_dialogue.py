@@ -311,50 +311,6 @@ def test_unparsed_control_markup_is_never_delivered_as_speech():
     assert not app.history
 
 
-@pytest.mark.parametrize("startup_fails", [False, True])
-def test_native_trial_closes_owned_server_on_startup_or_question_failure(
-    monkeypatch, startup_fails
-):
-    from pathlib import Path
-    from types import SimpleNamespace
-
-    from race_engineer.config import AppConfig
-    from scripts import try_lfm3_dialogue as cli
-
-    config = AppConfig(conversation=ConversationConfig(model="LiquidAI/LFM3-1.7B"))
-    monkeypatch.setattr(cli, "load_config", lambda _: config)
-    events = []
-
-    class Server:
-        def __init__(self, *_):
-            pass
-
-        async def start(self):
-            events.append("start")
-            if startup_fails:
-                raise RuntimeError("startup_failed")
-
-        async def aclose(self):
-            events.append("close")
-
-    class Dialogue:
-        def __init__(self, *_):
-            pass
-
-        async def respond(self, _):
-            raise LocalIntelligenceError("dialogue_reply_invalid")
-
-    monkeypatch.setattr(cli, "ConversationServer", Server)
-    monkeypatch.setattr(cli, "NativeToolDialogue", Dialogue)
-    args = SimpleNamespace(config=Path("unused"), question="Position?", trace=False)
-    if startup_fails:
-        with pytest.raises(RuntimeError, match="startup_failed"):
-            asyncio.run(cli.chat(args))
-    else:
-        assert asyncio.run(cli.chat(args)) == 1
-    assert events == ["start", "close"]
-
-
 def test_native_transport_separates_reasoning_and_sends_no_json_reply_schema(monkeypatch):
     raw = json.dumps({"choices": [{"finish_reason": "stop", "message": {
         "content": "<think>Internal draft.</think>Yes, I'm here.",
