@@ -15,13 +15,23 @@ from race_engineer.intelligence.telemetry_memory import BoundedTelemetryMemory
 from race_engineer.policy import DefaultRaceContextBuilder
 
 if __package__:
-    from .benchmark_qwen_cache import require_free_port
-    from .compare_dialogue_models import CANDIDATES, ROOT, RawConversation, configuration
+    from .compare_dialogue_models import (
+        CANDIDATES,
+        ROOT,
+        RawConversation,
+        configuration,
+        require_free_port,
+    )
     from .lfm3_dialogue import LocalDialogueModel, NativeToolDialogue
     from .ministral_dialogue import MinistralConversation
 else:
-    from benchmark_qwen_cache import require_free_port
-    from compare_dialogue_models import CANDIDATES, ROOT, RawConversation, configuration
+    from compare_dialogue_models import (
+        CANDIDATES,
+        ROOT,
+        RawConversation,
+        configuration,
+        require_free_port,
+    )
     from lfm3_dialogue import LocalDialogueModel, NativeToolDialogue
     from ministral_dialogue import MinistralConversation
 

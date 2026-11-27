@@ -10,8 +10,6 @@ import asyncio
 import http.client
 import json
 import random
-import re
-import socket
 import time
 from datetime import UTC, datetime
 from pathlib import Path
@@ -36,6 +34,11 @@ from race_engineer.evaluation.system import (
 from race_engineer.fixtures import load_fixture
 from race_engineer.intelligence.context_planner import PLANNER_V7_ID, PLANNER_V8_ID
 from race_engineer.intelligence.limitations import UNSUPPORTED_DATA_POLICY
+
+if __package__:
+    from .compare_dialogue_models import parse_runtime_log, require_free_port
+else:
+    from compare_dialogue_models import parse_runtime_log, require_free_port
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_ROOT = ROOT / "data/benchmarks"
@@ -71,56 +74,6 @@ def new_output(path):
         raise ValueError("output must be a NEW subdirectory of data/benchmarks")
     path.mkdir(parents=True, exist_ok=False)
     return path
-
-
-def require_free_port(port):
-    with socket.socket() as connection:
-        if hasattr(socket, "SO_EXCLUSIVEADDRUSE"):
-            connection.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
-        try:
-            connection.bind(("127.0.0.1", port))
-        except OSError as error:
-            raise ValueError(
-                f"Trial port {port} is occupied; existing servers are left untouched"
-            ) from error
-
-
-def parse_runtime_log(text):
-    """Read effective backend allocations, not just requested command-line flags."""
-    result = {"cuda_model_mib": 0.0, "cuda_kv_mib": 0.0, "cuda_compute_mib": 0.0}
-    proof = []
-    for line in text.splitlines():
-        lowered = line.lower()
-        if match := re.search(r"\bn_ctx\s*=\s*(\d+)", line):
-            result["context_size"] = int(match[1])
-        if "flash attention enabled" in lowered:
-            result["flash_attention_enabled"] = True
-        elif "flash attention disabled" in lowered:
-            result["flash_attention_enabled"] = False
-        elif match := re.search(r"flash_attn\s*=\s*(enabled|disabled|on|off|1|0)\b", lowered):
-            result["flash_attention_enabled"] = match[1] in {"enabled", "on", "1"}
-        if match := re.search(r"K\s*\((\w+)\):.*V\s*\((\w+)\):", line):
-            result["cache_k"], result["cache_v"] = match[1], match[2]
-        if match := re.search(r"offloaded\s+(\d+)/(\d+)\s+layers", line):
-            result["offloaded_layers"], result["total_layers"] = int(match[1]), int(match[2])
-        if match := re.search(
-            r"CUDA\d+\s+(model|KV|compute) buffer size\s*=\s*([\d.]+)\s*MiB", line
-        ):
-            key = f"cuda_{match[1].lower()}_mib"
-            result[key] += float(match[2])
-        if any(
-            word in lowered
-            for word in (
-                "buffer size",
-                "llama_kv_cache: size",
-                "flash_attn",
-                "flash attention",
-                "offloaded",
-            )
-        ):
-            proof.append(line)
-    result["proof_lines"] = proof
-    return result
 
 
 def validate_runtime(observed, cache_type, context_size, require_flash=True):

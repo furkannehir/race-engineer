@@ -216,23 +216,3 @@ def test_trial_closes_owned_server_and_keeps_partial_results(tmp_path, monkeypat
         assert result["automatic_reply_accuracy"] is None
     elif outcome == "cancel":
         assert result["status"] == "cancelled"
-
-
-def test_occupied_port_is_refused_without_contacting_or_stopping_the_listener(monkeypatch):
-    class Socket:
-        def __enter__(self):
-            return self
-
-        def __exit__(self, *args):
-            pass
-
-        def setsockopt(self, *args):
-            pass
-
-        def bind(self, address):
-            assert address[0] == "127.0.0.1"
-            raise OSError("occupied")
-
-    monkeypatch.setattr(benchmark.socket, "socket", Socket)
-    with pytest.raises(ValueError, match="left untouched"):
-        benchmark.require_free_port(8097)
