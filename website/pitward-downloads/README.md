@@ -97,3 +97,24 @@ The download page checks GitHub's public target release from `public/release.jso
 once per page load. It enables links only for the complete published asset set.
 The [generated hero and its prompt](ASSETS.md), existing brand pack and actual Qt
 panel preview are unchanged by the analytics addition.
+
+## Custom domain
+
+The site is served at https://pitward.com and https://www.pitward.com, both on the same
+Sites project with HTTPS. The domain's nameservers are `launch1.spaceship.net` and
+`launch2.spaceship.net`; DNS is managed in Spaceship. Hosts are relative to `pitward.com`.
+The verification values are public DNS records, not credentials. Keep mail and other
+unrelated records.
+
+| Type | Host | Value |
+| --- | --- | --- |
+| CNAME | `www` | `custom-domains.chatgpt.site` |
+| TXT | `_openai-site-verification.www` | `openai-site-verification=qunkN-0liWmw61l09tbPYFZ9TYMooUc-XgGDs6xi9dI` |
+| TXT | `_cf-custom-hostname.www` | `46dbe81f-dfe7-43e8-9ea6-d7ef559aeb97` |
+| A | `@` | `162.159.143.30` |
+| A | `@` | `172.66.3.26` |
+| TXT | `_openai-site-verification` | `openai-site-verification=m5qi0r_N0rEbbsR5mNW90mLh40DhIkLjIMgHiE84ltM` |
+| TXT | `_cf-custom-hostname` | `030fd4f4-b78e-4282-8b9a-d7b9bfaac173` |
+
+After changing records, refresh both custom domains in Sites and wait for validation and
+SSL provisioning.
