@@ -48,7 +48,7 @@ async def chat_replay(
             print(_state_line(state))
             print(f"Engineer: {reply.text}")
             if reply.status == "model_error":
-                print("Start the local Qwen server; see docs/conversation.md.")
+                print("Start the local Qwen server; see docs/development.md.")
         return 1 if reply.status == "model_error" else 0
 
     print(_state_line(state))
@@ -86,7 +86,7 @@ async def chat_replay(
                 reply = await session.ask(line, reply_language=reply_language)
                 print(f"Engineer: {reply.text}")
                 if reply.status == "model_error":
-                    print("Start the local Qwen server; see docs/conversation.md.")
+                    print("Start the local Qwen server; see docs/development.md.")
         except ValueError as error:
             # Do not echo validation errors containing user input into logs.
             del error

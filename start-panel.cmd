@@ -1,7 +1,7 @@
 @echo off
 cd /d "%~dp0"
 if not exist ".venv\Scripts\pythonw.exe" (
-    echo Create the virtual environment and install .[desktop] first. See docs\control-panel.md.
+    echo Create the virtual environment and install .[desktop] first. See docs\development.md.
     pause
     exit /b 1
 )

@@ -99,7 +99,7 @@ async def voice_replay(
                     await speaker.start()
                 except SpeechOutputError as error:
                     print(f"Speech output unavailable: {error}. Continuing with text replies.")
-                    print("Run scripts/setup_radio_tts.py; see docs/conversational-speech.md.")
+                    print("Run scripts/setup_radio_tts.py; see docs/development.md.")
                     await speaker.aclose()
                     speaker = None
             microphone = PushToTalkMicrophone(stt)
@@ -135,7 +135,7 @@ async def voice_replay(
                     print(f"Engineer: {reply.text}", flush=True)
                     print(f"ASR + reply processing: {(time.perf_counter() - started):.2f}s")
                     if reply.status == "model_error":
-                        print("Start the local conversation model; see docs/conversation.md.")
+                        print("Start the local conversation model; see docs/development.md.")
                     if speaker is not None:
                         try:
                             print("Speaking...", flush=True)
@@ -147,7 +147,7 @@ async def voice_replay(
                         except SpeechOutputError as error:
                             playback_failed = True
                             print(f"Speech output failed: {error}. The text reply is above.")
-                            print("Check docs/conversational-speech.md or use --text-only.")
+                            print("Check docs/development.md or use --text-only.")
                 if audio_path is not None:
                     return (
                         0
@@ -161,7 +161,7 @@ async def voice_replay(
                     flush=True,
                 )
             except SpeechInputError as error:
-                print(f"Speech input failed: {error}. See docs/speech-to-text.md.")
+                print(f"Speech input failed: {error}. See docs/development.md.")
                 if audio_path is not None:
                     return 1
     finally:

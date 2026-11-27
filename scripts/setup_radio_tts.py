@@ -127,7 +127,7 @@ def main() -> None:
         print(f"V3 trial source: {V3_SOURCE_REVISION}; runtime: {runtime}", flush=True)
     if backend == "cuda":
         print(
-            "CUDA uses PyTorch 2.7.1 compatibility override; see docs/text-to-speech.md.",
+            "CUDA uses PyTorch 2.7.1 compatibility override; see docs/development.md.",
             flush=True,
         )
     else:
