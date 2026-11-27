@@ -1,217 +1,69 @@
 # Pitward
 
-Pitward is a local-first, simulator-adaptable foundation for real-time racing
-assistance. Its central policy engine decides what is worth communicating; telemetry,
-language generation, and speech synthesis remain replaceable adapters.
+Pitward is a local AI race engineer for iRacing on Windows. It makes automatic radio calls
+(flags, position, pit, session phase) and answers push-to-talk questions about gaps,
+position, lap times, race progress and fuel, in English and Turkish.
 
-## Download Pitward
+Everything runs on your PC: speech recognition (Qwen3-ASR), the dialogue model
+(Ministral 3 3B through llama.cpp) and the voice (Chatterbox Multilingual). No account,
+no cloud, and no telemetry leaves the machine. Pitward is read-only: it never changes car
+settings or sends inputs to the simulator.
 
-Get the Windows installer or portable ZIP at **[pitward.com](https://pitward.com)**
-or from the [0.2.1 GitHub release](https://github.com/furkannehir/race-engineer/releases/tag/v0.2.1).
-The packaged app does not require Python. Initial setup downloads approximately
-7.0 GB of local AI components under their separate third-party terms.
+## Download
 
-## Development overview
+Get the Windows installer or portable ZIP at **[pitward.com](https://pitward.com)** or from
+the [GitHub releases](https://github.com/furkannehir/race-engineer/releases). The packaged
+app doesn't need Python. First setup downloads about 7.0 GB of local AI components under
+their own third-party terms.
 
-Version 0.2.1 connects **Ministral 3 3B Q4_K_M to the live desktop radio**,
-including lap timing, race progress and fuel-to-finish tools. New Windows builds
-select Ministral in component set 4 (about 7.0 GB for fresh setup). The older
-0.2.0 installer remains unchanged and still uses LFM. Upgrades remove its old
-managed LFM weights only after Ministral successfully loads and passes verification. See the
-[Ministral setup and validation guide](docs/ministral-live.md).
-See [release record](docs/releases/0.2.1.md) and
-[preview setup and results](docs/dialogue-model-comparison.md#interactive-ministral-demo).
+An NVIDIA GPU is recommended. Installed builds currently run the dialogue model and the
+voice on CPU, so replies are slower (see [known issues](docs/known-issues.md)).
 
-This repository contains the M0 architecture baseline, the M1 iRacing telemetry reader,
-the deterministic M2 policy slice, and the local M3 speech path:
+## Development
 
-- versioned domain contracts and adapter protocols;
-- validated TOML configuration with environment overrides;
-- structured console or JSON logging;
-- deterministic, versioned replay fixtures;
-- a headless async pipeline and fake implementations;
-- automated contract, configuration, fixture, and pipeline tests;
-- a reconnecting iRacing shared-memory reader with atomic snapshots, normalization,
-  event derivation, and fixture-compatible recording;
-- deterministic race-context features, strict rules, scheduling constraints, and
-  traceable policy decisions;
-- fact-bound English wording with deterministic replay and an explicit fallback boundary;
-  and
-- local Chatterbox speech with bounded priority queueing, expiry, interruption, and
-  failure isolation; and
-- local English LFM conversations over live or replay telemetry, with an explicit
-  legacy Qwen profile for bilingual experiments; and
-- local Qwen3-ASR push-to-talk and Chatterbox spoken replies with text fallback; and
-- a native Windows control panel for the live radio, audio checks, press-to-bind
-  keyboard/mouse/wheel PTT, mute and SQLite-backed driver preferences; and
-- versioned local SQLite driver profiles with validated, auditable explicit preferences;
-  and
-- privacy-safe durable policy-decision and automatic-radio outcome history.
-
-Model-backed language generation, higher-quality speech adapters, adaptive policies, and
-advanced desktop controls remain later work.
-
-The conversational prototype supports text chat and local Qwen3-ASR push-to-talk, with
-Chatterbox spoken replies over replay data and live iRacing context. The combined
-`voice-iracing` command coordinates automatic calls and questions. The driver accepted
-the initial live prototype as sufficient to continue; quality upgrades and quantitative
-validation remain open. See the [live run guide](docs/live-conversation.md) and
-[current roadmap / next task](docs/roadmap.md).
-
-The standard source edition uses **Ministral 3 3B Instruct 2512 Q4_K_M on
-NVIDIA/CUDA** for native read-only tools and grounded conversation. Qwen3-ASR
-stays on CPU. Chatterbox independently prefers CUDA, using BF16 T3 on supported
-GPUs and an FP32 decoder; its visible CPU fallback may miss racing deadlines.
-`start-panel.cmd` selects the GPU configuration without silent CPU fallback or
-external-server reuse. English is primary; Turkish social understanding still
-needs work. New installer builds retain the existing CPU conversation runtime.
-Packaged CUDA, CPU race latency and AMD/Vulkan validation remain open.
-
-See [Ministral setup, lifecycle and test commands](docs/ministral-live.md).
-LFM and Qwen remain explicit source rollbacks in `config/lfm-legacy.toml` and
-`config/qwen-legacy.toml`; neither is selected after a Ministral failure.
-
-An [offline Qwen cache benchmark](docs/qwen-cache-trial.md) compares FP16/Q8 cache
-memory, latency and bilingual checks without changing live model/prompt settings.
-
-Interpreter experiments, draft datasets and training tools are preserved on
-[`light-version`](https://github.com/furkannehir/race-engineer/tree/light-version),
-the development branch for **Pitward Light**, a planned CPU-only edition with a
-trained request interpreter and smaller reply model. It is not yet Qwen-4B-free.
-The standard edition does not load the experimental interpreter.
-
-faster-whisper is reserved as a future performance alternative. See the
-[speech-input setup](docs/speech-to-text.md),
-[spoken-reply setup and voice license notices](docs/conversational-speech.md),
-[conversation setup and demo](docs/conversation.md) and
-[prototype decisions](docs/architecture.md#conversational-prototype).
-
-## Requirements
-
-- Python 3.12 or newer
-- Git
-- Windows for the desktop/iRacing app; no installed system voice is required
-- Python 3.12 for the isolated Chatterbox runtime
-
-## Development setup
+Requires Windows, Python 3.12 and, for the source default, an NVIDIA GPU.
 
 ```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-python -m pip install -e ".[dev,desktop]"
-python -m pytest
-python -m ruff check .
-python -m mypy
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e ".[dev,desktop]"
+.\.venv\Scripts\python.exe -m pytest
+.\.venv\Scripts\python.exe -m ruff check .
+.\.venv\Scripts\python.exe -m mypy
 ```
 
-## Desktop control panel
-
-Set up the shared English/Turkish default voice first (about 3.2 GB of model files
-plus a separate PyTorch runtime; weights stay out of Git):
+Install the local models, then start the panel:
 
 ```powershell
+.\.venv\Scripts\python.exe scripts\setup_ministral.py --backend gpu
+.\.venv\Scripts\python.exe scripts\setup_stt.py
 .\.venv\Scripts\python.exe scripts\setup_radio_tts.py
-.\.venv\Scripts\python.exe -m race_engineer test-radio --config config\default.toml --language en
-.\.venv\Scripts\python.exe -m race_engineer test-radio --config config\default.toml --language tr
+.\start-panel.cmd
 ```
 
-All replies and announcements now share one local Chatterbox backend/output device.
-PTT WAV cues are unchanged. See [speech setup](docs/text-to-speech.md) for CUDA
-requirements and CPU limitations. Old custom configs must remove `[radio_tts]`
-and replace legacy `[tts]` settings with the current shared block.
-
-With the existing local speech/model installations available, double-click
-`start-panel.cmd` or run `python -m race_engineer.ui` from the repository root.
-The panel starts/reuses the local conversation server when you click Start. It does not
-start the microphone just by opening the window. See the [control panel guide](docs/control-panel.md)
-for audio checks, steering-wheel/controller binding, preferences, tray controls and
-current limitations.
-
-Versioned portable Windows builds, installers and GitHub releases are documented in the
-[distribution guide](docs/distribution.md).
-
-Do not run a separate live engineer CLI alongside the panel.
-
-Inspect or update the default local driver profile:
-
-```powershell
-race-engineer profile --config config/default.toml show
-race-engineer profile --config config/default.toml rename "Furkan"
-race-engineer profile --config config/default.toml set reply_language tr
-```
-
-The panel and these commands use the same default profile. See the
-[driver-profile storage guide](docs/driver-profile.md) for persistence, migration and reset
-behavior.
-
-Inspect recent content-free decision and automatic-radio totals:
-
-```powershell
-.\.venv\Scripts\python.exe -m race_engineer history --config config\default.toml recent
-```
-
-See the [decision-history guide](docs/decision-history.md) for the exact data boundary and
-30-day default retention.
-
-## Command-line tools
-
-Validate the default configuration or inspect a replay fixture:
-
-```powershell
-race-engineer validate-config --config config/default.toml
-race-engineer inspect-fixture fixtures/synthetic/green_flag
-race-engineer replay-policy fixtures/synthetic/m2_green_flag `
-  --config config/default.toml
-race-engineer replay-language fixtures/synthetic/m3_green_flag `
-  --config config/default.toml
-```
-
-List the installed local voices, then run an audible radio check:
-
-```powershell
-race-engineer list-tts-voices --config config/default.toml
-race-engineer test-tts --config config/default.toml
-```
-
-With iRacing running, print normalized frames until interrupted:
-
-```powershell
-race-engineer read-iracing --config config/default.toml
-```
-
-Record 600 normalized frames plus their events, policy decisions, speech intents, and
-generated utterances into a new replayable session directory. Approved, non-expired
-utterances are also spoken through the configured local voice:
-
-```powershell
-race-engineer read-iracing --config config/default.toml --limit 600 `
-  --output recordings/my-session
-```
-
-The live reader intentionally does not retain driver names or arbitrary raw SDK data.
+Contribution rules for people and agents are in [AGENTS.md](AGENTS.md).
 
 ## Design constraints
 
-- The domain never imports a simulator SDK, Qt, an LLM SDK, or a TTS SDK.
+- The domain never imports a simulator SDK, Qt, an LLM SDK or a TTS SDK.
+- Python owns the race facts; the model only chooses what to read and how to say it.
+- Critical calls are deterministic and never wait on a model.
 - Serialized contracts and fixtures carry explicit schema versions.
-- Internal measurements use SI units.
-- Wall-clock timestamps are timezone-aware UTC values; session time is monotonic seconds.
-- Queues are bounded and expired work is designed to be discarded rather than accumulated.
-- Driver data and logs remain local unless explicitly exported.
+- Internal measurements use SI units. Timestamps are timezone-aware UTC.
+- Queues are bounded, and expired speech is dropped rather than played late.
+- Driver data and logs stay local unless explicitly exported.
 
-See [docs/architecture.md](docs/architecture.md) and
-[docs/fixture-format.md](docs/fixture-format.md) for the M0 decisions, and
-[docs/strict-policy.md](docs/strict-policy.md) for the M2 policy behavior. The M3 wording
-boundary is described in [docs/language-generation.md](docs/language-generation.md), and
-[docs/text-to-speech.md](docs/text-to-speech.md) covers local playback. The architecture
-also records the historical Jev-assisted ranking proposal. The next increment is the
-[local context engine and portable inference plan](docs/context-engine-implementation-plan.md),
-covering smaller bilingual judges, optional CPU/GPU execution, and local shadow ranking.
-It extends the [original implementation
-plan](docs/personalized-ai-race-engineer-implementation-plan.docx); hosted Jev is deferred.
-These next-increment capabilities are planned, not yet implemented. Open defects are tracked in
-[docs/known-issues.md](docs/known-issues.md).
+## Docs
 
-The [English LFM3 native-tool guide](docs/lfm3-trial.md) includes setup, terminal
-tests, VR measurements and outstanding answer-quality work. The next slice improves
-tool selection and adds lap-performance telemetry before expanding pit strategy.
+- [Architecture](docs/architecture.md): processes, data flow, dialogue, radio and key
+  decisions
+- [Development](docs/development.md): source setup, running, terminal tools,
+  configuration and diagnostics
+- [Distribution](docs/distribution.md): Windows builds, updates and the release flow
+- [Known issues](docs/known-issues.md)
+- [Fixture format](docs/fixture-format.md)
+- [Release records](docs/releases/)
+
+## License
+
+See [LICENSE](LICENSE). Third-party model and runtime terms are in
+[distribution/](distribution/).

@@ -1,302 +1,200 @@
-# M0 architecture baseline
+# Architecture
 
-## Decision status
+Pitward is a local race engineer for iRacing on Windows. It reads telemetry, makes
+automatic radio calls, and answers push-to-talk questions in English and Turkish. Speech
+recognition, the language model and speech synthesis all run on the driver's PC. The only
+network use is the explicit component download and the optional update check.
 
-This document records the decisions implemented by M0. Changes to a compatibility
-boundary require a schema-version change and a test demonstrating migration or rejection.
+## Processes
 
-## Runtime shape
+| Process | What it runs | Notes |
+|---|---|---|
+| Panel (`Pitward.exe` or `python -m race_engineer.ui`) | Qt control panel, telemetry reader, policy, radio scheduler, dialogue engine | One per machine; a lock prevents a second panel from the same checkout |
+| `llama-server` (llama.cpp b12088) | Ministral 3 3B Instruct 2512, Q4_K_M | Loopback HTTP on `127.0.0.1:8092`, owned and stopped by the panel |
+| STT worker | Qwen3-ASR 0.6B (Transformers) | Isolated Python runtime on CPU, private stdin/stdout pipe |
+| TTS worker | Chatterbox Multilingual 0.1.7, built-in voice | Isolated PyTorch runtime, CUDA preferred, private pipe |
 
-The application is a headless Python 3.12+ modular monolith built around bounded asyncio
-work. The logical flow is:
+The two speech workers have separate runtimes because they pin different PyTorch and
+Transformers versions. The panel never runs inference on the UI, telemetry or microphone
+threads.
+
+## Flow
+
+Automatic calls:
 
 ```text
-TelemetryAdapter
-  -> EventDeriver
-  -> RaceContextBuilder
-  -> PolicyStrategy
-  -> LanguageGenerator
-  -> TextToSpeechEngine
+iRacing shared memory -> normalizer -> event deriver -> race context
+  -> strict policy -> scheduler -> deterministic wording -> LiveRadio -> Chatterbox
 ```
 
-These are in-process interfaces, not network services. Model inference may later move to a
-child process without changing the domain contracts.
+Driver questions:
 
-## Dependency rules
+```text
+PTT capture -> Qwen3-ASR -> Ministral picks one read-only tool
+  -> Python computes the facts -> Ministral writes a short reply -> reply check
+  -> LiveRadio slot -> tool re-run on fresh telemetry -> Chatterbox -> playback
+```
 
-- `core` owns contracts and interfaces and imports no adapter implementation.
-- `telemetry`, `policy`, `language`, and `tts` implement core interfaces.
-- `memory` owns local persistence adapters and consumes versioned core commands; it does
-  not ingest simulator SDK objects, audio, transcripts, or unrestricted model output.
-- `application` composes interfaces but does not depend on vendor SDKs.
-- `observability` and `config` are cross-cutting infrastructure.
-- Qt is permitted only under a future `ui` package.
-- Game SDK types must be normalized before entering `core` or `policy`.
+## Package boundaries
+
+- `core` owns contracts and interfaces and imports no adapter.
+- `telemetry`, `policy`, `language`, `stt` and `tts` implement core interfaces.
+- `intelligence` owns the dialogue engine, the race capabilities and reply validation.
+- `conversation` owns the llama-server runtime manager (`runtime.py`).
+- `memory` owns SQLite persistence and accepts only versioned core commands.
+- `application` composes the pieces and does not import vendor SDKs.
+- `ui` is the only package that imports Qt.
+- Simulator SDK types are normalized before they reach `core` or `policy`.
 
 ## Data conventions
 
-- Serialized models use a fixed `schema_version` discriminator.
-- Internal physical measurements use SI units and include the unit in field names.
-- `observed_at`, deadlines, and expirations are timezone-aware and normalized to UTC.
-- `session_time_s` is monotonic simulator/session time and drives deterministic replay.
-- Source sequence numbers establish frame order. Adapters will define duplicate, stale,
-  and session-transition behavior before M1 live telemetry is accepted.
-- Missing simulator capabilities are represented explicitly with optional fields and a
-  sorted capability list; fabricated values are forbidden.
-- Facts and metadata contain JSON-compatible values only.
+- Serialized contracts and fixtures carry a fixed `schema_version`.
+- Internal measurements use SI units, with the unit in the field name.
+- Wall-clock times are timezone-aware UTC. `session_time_s` is monotonic session time and
+  drives deterministic replay.
+- Missing telemetry is `None` plus an explicit capability list. Values are never invented.
+- TOML is the configuration format. Unknown keys fail validation. `RACE_ENGINEER_*`
+  environment variables override selected values.
 
-## Configuration and privacy
+## Telemetry
 
-TOML is the human-editable configuration format. Selected machine-specific values can be
-overridden with `RACE_ENGINEER_*` environment variables. Unknown configuration keys fail
-validation so misspellings cannot silently change runtime behavior.
+`PyIrSdkSource` (pyirsdk 1.3.6) is the only module that imports the SDK. It waits for
+iRacing, reconnects after a disconnect, freezes the latest variable buffer for each read,
+and drops incomplete, duplicate and out-of-order samples. A session change resets ordering.
+Replay samples are dropped unless configured.
 
-Raw telemetry, prompts, and model outputs are not recorded by default. Logs are local and
-must use identifiers and reason codes rather than unnecessary raw telemetry.
+It samples at 10 Hz against monotonic deadlines and skips missed slots rather than
+bursting stale reads. Slow reads (`slow_read_warning_s`, 50 ms) and frame gaps
+(`sample_gap_warning_s`, 250 ms) are logged.
 
-## Deferred decisions
+Selected values: session identity and phase, flags, player position, current and completed
+laps, last and best lap times, lap limit and remaining laps, session clock, speed, fuel,
+pit road, distance to the cars ahead and behind, opponent positions and completed laps, and
+same-lap race gaps from `CarIdxF2Time`. Opponent `gap_to_player_s` is signed: negative is
+ahead. It is set only when both cars are on the same lap in a race.
 
-M1 selects `pyirsdk` as the first Windows shared-memory binding, isolated behind an
-`IracingSource` protocol. The domain receives only normalized contracts and can replay
-privacy-safe source samples without importing `irsdk`. Model-backed language generation,
-inference runtime, speech engines beyond the initial Windows adapter, adaptive ranker, UI
-design, distribution format, and license remain deferred. SQLite is the persistence
-baseline; its first concrete profile/preference boundary is described below.
+A blue flag in a race needs a valid player position and an active opponent with more
+completed laps. Otherwise it fails closed. Outside races the raw blue bit is kept.
 
-## Driver-memory foundation
+Only car indices, numeric user IDs and pace-car markers are kept from driver metadata.
+Names and the raw session YAML never enter contracts, fixtures or recordings.
 
-SQLite schema v1 stores local driver profiles and explicit, driver-scoped communication
-preferences. Current values are materialized for predictable reads, while the versioned
-`PreferenceCommand` that produced each change is retained for provenance and later voice/UI
-convergence. Command IDs are idempotent, stale/conflicting updates fail closed, migrations
-are transactional, and unrelated or newer databases are rejected.
+## Automatic calls
 
-The setting vocabulary is restricted to reply language plus the existing position and pit
-announcement switches. The control panel reads and writes the default profile through the
-same repository as the headless commands and passes an immutable preference snapshot into
-each runtime worker. Critical behavior cannot be disabled here. Session/global override
-precedence, inferred preferences, driver-feedback semantics, and ranking remain later
-migrations or application work. See
-[driver-profile.md](driver-profile.md).
+`DefaultRaceContextBuilder` keeps bounded session state: recent events, stint lap, rolling
+fuel use per lap, nearest gaps, and battle state (`attacking`, `defending`, `sandwiched`,
+`contested`, `clear`).
 
-SQLite schema v2 adds content-free policy-decision and automatic-radio outcome history.
-Existing decision and playback contracts cross this boundary without telemetry facts or
-spoken text. Writes are idempotent and failure-isolated from the live loop; a configurable
-rolling retention cutoff deletes decisions and linked outcomes together. The data is
-observational only and cannot influence policy in this slice. See
-[decision-history.md](decision-history.md).
+The strict policy approves session-phase and flag calls and, by default, position changes.
+Pit transitions are silent by default. Caution and red, yellow and black flags are
+critical: they use fixed templates and may interrupt. The scheduler applies priority,
+expiry, de-duplication, cooldowns (15 s routine, 5 s important, none for critical) and one
+call per frame. Every candidate produces a `PolicyDecision` with a reason: `approved`,
+`disabled`, `expired`, `duplicate`, `cooldown` or `superseded`.
 
-## iRacing M1 boundary
+The `deterministic` language adapter turns approved intents into short English templates.
+Automatic calls are English only; replies to questions follow the driver's language. The
+adapter rejects unknown facts, unsupported languages and over-long text rather than
+improvising.
 
-The live source freezes the latest SDK variable buffer before reading the selected fields,
-then unfreezes it immediately. Session metadata is cached by the SDK update counter. Only
-car indices, numeric user IDs, and pace-car markers are retained from driver metadata;
-names are discarded.
+## Dialogue
 
-The adapter reconnects after simulator startup and disconnect events, rejects duplicate or
-out-of-order `SessionTick` values within a session, resets ordering on session transition,
-and suppresses replay frames unless explicitly configured. M1 samples lap, position,
-speed, fuel, flags, pit state, traffic distance, and reliable same-lap race gaps where the
-SDK exposes all required fields.
+The dialogue engine (`intelligence/ministral_dialogue.py`) makes two model calls per
+question:
 
-## Deterministic M2 boundary
+1. **Tool selection.** Ministral picks one read-only tool, or `reply_to_driver` for a social
+   reply. Tools cover position and classification, gaps ahead and behind, relative pace and
+   catch time, last and best lap times, race progress, fuel range, fuel to finish, history
+   queries and recall of earlier radio readings.
+2. **Wording.** Python runs the tool against telemetry memory and returns facts. Ministral
+   writes a short reply from them.
 
-M2 receives only normalized frames and race events. The context builder owns bounded
-session state, fuel-trend calculations, nearby battle context, and event expiry. The strict
-policy maps eligible current-frame events into candidates; the scheduler then applies
-priority, expiry, semantic deduplication, cooldowns, and per-frame capacity before emitting
-`SpeechIntent` values.
+The reply check binds every number, unit and verdict in the draft to the tool's facts. One
+repair is allowed. Python owns all race arithmetic; the model never calculates.
 
-Each candidate produces a versioned `PolicyDecision` containing an approval or suppression
-reason. Decision time comes from the telemetry frame rather than the wall clock, keeping
-replay deterministic. Critical calls may carry fixed templates, but ordinary intent wording
-remains the responsibility of a later language adapter.
+When `LiveRadio` grants the reply its slot, the tool runs again on current telemetry, with
+no extra model call. A changed session, changed availability or a contradicted verdict
+cancels the reply. Only replies that actually played enter dialogue history, which holds up
+to `history_turns` exchanges and is cleared on reconnect or language change.
 
-The live iRacing command runs this context and policy path for every accepted frame. A
-policy failure is isolated: telemetry recording continues and the policy state is rebuilt
-for the next frame.
+Race capabilities (`intelligence/capabilities.py`) are plain Python over normalized
+telemetry: classification, fuel range (fuel divided by rolling burn), fuel to finish (with a
+one-lap reserve), 30 s position change, gaps, 10 s relative-pace trend and catch time, lap
+times and race progress. Pit-loss and rejoin projections are declared but always return an
+explicit unavailable reason.
 
-## Local M3 speech boundary
+The older Qwen and LFM planners are still in the code as explicit rollback configs
+(`config/qwen-legacy.toml`, `config/lfm-legacy.toml`). They are never selected
+automatically.
 
-The first language adapter converts only policy-approved `SpeechIntent` facts into short
-English `Utterance` values. Its fixed templates cover the initial phase, flag, position,
-pit, and fuel facts. Critical fixed wording bypasses normal fact rendering. Unknown facts,
-unsupported languages, mismatched intent IDs, and word-limit violations fail closed rather
-than encouraging invented advice.
+## Radio scheduling and freshness
 
-The replaceable language interface includes a timeout-and-fallback wrapper for future
-model-backed generators. The initial live configuration uses the deterministic adapter
-directly. Language failure is isolated from telemetry and policy processing, and logs
-contain identifiers and template metadata rather than utterance text.
+`LiveRadio` is the single queue for automatic calls and replies. It orders work by
+priority, drops expired work, and grants the microphone a capture slot.
 
-Version 3 session recordings persist frames, events, intents, decisions, and utterances as
-separate streams. Fixture replay compares generated utterances byte-for-byte at the
-contract level without depending on audio hardware.
+- Replies have priority 50: important and critical calls go first, routine calls after.
+- A PTT press while the radio is busy is refused.
+- Critical calls cancel capture or lower-priority playback, wait for cleanup, then play.
+- Telemetry must be fresh (`max_snapshot_age_s`, 3 s) and in the same session generation at
+  playback dispatch. Replies get a separate 15 s budget (`reply_delivery_timeout_s`) for
+  queueing and synthesis.
+- Disconnects, session changes and stale telemetry invalidate pending and playing speech. A
+  watchdog checks every 100 ms.
 
-The shared speech adapter now uses Chatterbox Multilingual 0.1.7's built-in default
-voice for replies and announcements. One persistent isolated worker loads the pinned
-V2 model and retains it across English/Turkish requests and normal interruptions.
-There are no reference recordings, SAPI/Piper fallbacks, or hosted TTS calls.
-The async playback queue is bounded, drops expired speech, orders
-pending calls by priority, and honors the intent's interruption policy. Telemetry capture
-does not wait for audio to finish.
+## Speech
 
-Playback failures and shutdown timeouts are logged with intent IDs and reason codes but not
-utterance text. They do not stop telemetry, policy evaluation, language generation, or
-recording. Output-device selection and volume now apply to all speech. The model
-prefers CUDA with visible CPU fallback; CPU racing latency is not guaranteed.
-See [speech lifecycle/setup](text-to-speech.md). PTT WAV cues are unchanged.
+**Input.** PTT capture is memory-only, 0.2–15 s, with an energy gate against silence.
+Bindings can be keyboard keys, mouse buttons, or digital wheel and controller buttons or
+hats. Analog axes are never read. Opening and closing WAV cues play around capture and are
+excluded from the clip.
 
-## Conversational prototype
+**Output.** One persistent Chatterbox worker serves replies and automatic calls. It uses the
+built-in voice for both languages, with no reference audio. On CUDA, T3 runs in BF16 and the
+decoder in FP32. The cloning modules stay in system RAM. A silent warm-up runs before
+readiness. Cancellation is checked between modules and between 20 ms output chunks, and the
+model is kept across interruptions. A stuck cancel disables speech until restart.
+Synthesis failures leave telemetry and text running and never switch to another voice.
 
-The following direction was agreed on 2026-09-19. Text-over-replay, local push-to-talk
-speech input, bilingual audio output, and live iRacing integration are implemented;
-the driver accepted the combined live prototype as sufficient to continue on 2026-09-21.
-Quantitative validation and the [deferred quality upgrades](known-issues.md) remain open:
+## Local data
 
-- push-to-talk input, with English and Turkish supported from the first prototype;
-- entirely local speech recognition, conversational inference, and speech synthesis;
-- natural-language questions and contextual follow-ups, without a fixed spoken command
-  vocabulary; and
-- answers grounded in current race data, with explicit handling of missing or stale facts.
+`data/race_engineer.sqlite3` (or `%LOCALAPPDATA%\Pitward` when installed) holds:
 
-Qwen3-ASR is the selected first speech-recognition engine. Keep recognition behind a
-replaceable adapter boundary so faster-whisper can be evaluated as an alternative if
-latency or resource use is unacceptable. These engines are alternatives, not sequential
-stages. faster-whisper is not part of the initial implementation and is not an automatic
-runtime fallback.
+- **Driver profile (schema v1).** One default profile with three driver-scoped settings:
+  `reply_language`, `announce_position_changes`, `announce_pit_transitions`. Each change is
+  stored as an idempotent `PreferenceCommand` for provenance. Critical calls can't be
+  disabled.
+- **Decision history (schema v2).** Content-free policy decisions and automatic-radio
+  outcomes, kept 30 days by default (`[history] retention_days`). No telemetry values,
+  spoken text, audio or names. Writes are failure-isolated from the live loop.
 
-The initial ASR adapter uses the native Transformers Qwen3-ASR-0.6B-hf checkpoint in an
-isolated CPU worker, with local-only loading and bounded private-pipe requests. Microphone
-capture is push-to-talk, memory-only, duration-limited, and guarded against silence and
-overflow. The desktop binding adapter accepts held keyboard/mouse controls and
-device-qualified digital wheel/controller buttons or hats while excluding analog axes.
-The worker is killed on cancellation or timeout. See
-[speech-to-text.md](speech-to-text.md) for setup and limitations.
-Evaluation must still cover human English and Turkish recognition quality,
-push-to-talk release-to-first-audio latency, memory use, and iRacing frame-time impact.
-Qwen3-4B-Instruct-2507 is the selected conversational model. The first adapter uses a
-loopback-only llama.cpp endpoint with schema-constrained query plans. Q4_K_M on CPU is the
-initial integration baseline; the standard source edition now uses CUDA Qwen.
-Chatterbox is behind `ConversationSpeaker` and `TextToSpeechEngine` facades sharing
-one model/worker. PCM remains in memory and plays only in the coordinated radio slot.
-The worker protocol accepts cancellation while synthesis runs on a separate thread,
-retains the model on normal interruption, and disables speech after a stuck cancel.
-Speech failures leave telemetry and text active, never select an old voice. See
-[conversational-speech.md](conversational-speech.md).
+Machine-local PTT, device and volume settings live in `data/control-panel.json`.
 
-The implemented replay client uses bounded session memory, read-only queries, fresh fact
-retrieval after inference, and deterministic English/Turkish reply rendering. It does not
-accept model-generated numeric values or unrestricted reply text. The model interprets
-free-form questions rather than matching a fixed command vocabulary. Replay clock semantics
-are explicit, and this command is separate from the unchanged live policy/speech path.
-See [conversation.md](conversation.md) for setup, limitations, and real-model evaluation.
+## Privacy and logs
 
-The `voice-iracing` composition shares the live context/policy/recorder path with the
-existing reader. A latest-only `LiveRaceState` uses current UTC and connection generations;
-no replay clock or synthetic default frame can masquerade as live data. The `LiveRadio`
-scheduler serializes Chatterbox automatic calls and answers, bounds/expires pending work,
-and grants microphone capture slots. Critical calls cancel capture or lower-priority
-playback and wait for cleanup off the telemetry path. Answers refresh facts after
-inference and again at their radio slot; Chatterbox confirms freshness after synthesis before
-playing. Disconnect, session change, and stale-frame detection invalidate old work.
-See [live-conversation.md](live-conversation.md) for operation and validation limits.
-Critical calls remain deterministic; model inference does not run in the telemetry task.
-The remote ranking proposal below is not part of this local conversational prototype.
+Microphone audio is never written to disk. Diagnostic logs (`logs/control-panel.jsonl`, or
+`%LOCALAPPDATA%\Pitward\logs`) record timing, routing and reason codes per radio attempt.
+`[privacy] record_radio_text` adds transcripts and replies; `record_raw_telemetry` adds
+evidence values. Full model prompts are never logged.
 
-CE-01 separates the planner model identity from llama.cpp process configuration. A shared
-launcher now owns model/runtime paths, context, threads, optional device/offload settings,
-bounded capability probing, process ownership, and a single CPU fallback. The panel and
-standalone launcher use that service, while conversation entry points use a planner factory.
-CPU remains the configured and installed baseline. Accelerated runtimes, Automatic mode,
-and their UI are configuration boundaries pending CE-03 installation and hardware evidence;
-an externally managed loopback server carries no verified compute-mode claim. See the
-[context-engine plan](context-engine-implementation-plan.md).
+## Key decisions
 
-## Context/Core Engineer architecture v3
+**Local only.** A race engineer must work offline, with no account and no telemetry
+leaving the PC. Every model runs locally, and the only network calls are the
+user-started component download and the optional update check.
 
-The [Context/Core Engineer architecture](context-core-architecture-v3.md) supersedes the
-planned CE-04 bounded semantic-query design. The replacement path treats normalized
-telemetry as continuous evidence, lets a Context Engineer select and derive relevant
-information, lets a Core Engineer decide what a teammate should communicate, and uses Qwen
-to generate the actual response.
+**Ministral 3 3B for dialogue.** It replaced LFM in 0.2.1. In the November 2026
+comparison against LFM, Qwen3-4B and Qwen3.5-2B, it had the best Turkish tool selection
+(18/20, English also 18/20) and the fastest typed replies (about 0.1 s median on CUDA). It
+costs more GPU memory than LFM (about 2.9 GiB) and still makes wording mistakes. It is
+Apache-2.0. The model chooses tools and words; Python owns the facts.
 
-INT-06 now also gives the Context Engineer a value-free catalog of typed deterministic
-[race capabilities](race-capabilities.md). Qwen selects calculations semantically, while
-application code owns the arithmetic and returns fresh sourced evidence or an explicit
-unavailable result.
+**Chatterbox Multilingual for speech.** It is the only permissively licensed option found
+with acceptable English and Turkish in one voice. Its costs are GPU memory, a CPU path that
+isn't real-time, and occasional tails after a sentence (TTS-002).
 
-Versioned contracts now separate driver turns, evidence packets, engineer briefs,
-Qwen-authored templates and final grounded responses. Numeric telemetry must cross the
-language boundary through refreshed evidence placeholders. Session scope, evidence
-provenance, freshness and radio limits remain deterministic. The initial orchestration has
-scripted coverage for direct facts, analytical questions and evidence-free human
-interaction. The existing v1 conversation path remains operational until the replacement
-earns live integration.
+**Qwen3-ASR for recognition.** It handles English and Turkish in one 0.6B model on CPU.
+faster-whisper and whisper.cpp remain possible alternatives if accuracy or resource use
+requires a change.
 
-INT-03 adds a model-directed Context Engineer baseline. Local Qwen sees the driver turn and
-a value-free catalog of normalized numeric signals, then selects bounded generic telemetry
-operations. Deterministic memory executes the plan and returns sourced evidence or explicit
-unknowns; social turns may require no telemetry. Current-field aggregation allows generic
-ranking comparisons without adding a spoken `is_last` intent.
-
-The INT-07 repair makes raw queries catalog-bound and separates social/factual/mixed purpose
-from factual time scope in that same planner inference. Missing-information reasons are
-application-owned; rejected plans never execute. Stable catalogs precede dialogue for local
-prompt-prefix reuse, without caching telemetry or bypassing delivery-time refresh. These
-development improvements do not constitute a model-promotion or full-radio quality result.
-
-The current v6 planner first emits a bounded factual-request inventory and an independent
-social-content flag, then selects catalog-bound evidence in that same inference. Purpose is
-derived from the social flag and factual time scope; the inventory is discarded, not exposed
-as evidence or persisted to driver memory. This changes neither deterministic arithmetic nor
-the two-inference composition. V6 is the live/replay development default, with bilingual
-examples for opinions, hypotheticals and compound requests. V5 remains available for explicit
-evaluation comparisons. Extra evidence and social-purpose regressions remain in INT-004;
-release-quality evaluation and live radio acceptance are still pending.
-
-The portable INT-04/05 baseline is now the production `voice-iracing` conversation path.
-A second local Qwen inference combines the Core Engineer decision and natural response,
-then selected evidence is re-executed and grounded only when the existing radio scheduler
-delivers the answer. The legacy bounded query/template session remains available to replay
-and tests during migration, but is no longer the normal live composition.
-
-The combined Core/response inference now returns a compact wire contract: `goal` plus `speech`
-with short evidence placeholders. Application code reconstructs the full evidence references,
-brief defaults and response contract before delivery-time refresh. This removes repeated tone,
-guidance, confidence and reference metadata from model generation without weakening provenance,
-relationship closure or numeric grounding.
-
-## Post-M3 improvement: Jev-assisted policy ranking
-
-Status update, 2026-09-22: the following is the historical optional remote proposal.
-The [local context engine and portable inference plan](context-engine-implementation-plan.md)
-now defines the next increment: CPU-capable bilingual judgment, optional CUDA/Vulkan,
-grounded conversational routing, and a local ranker in shadow mode. It supersedes hosted
-Jev as the next implementation task. These changes are planned, not current runtime
-capabilities; the remote option remains deferred and requires separate explicit opt-in.
-
-After the M3 speech path is complete, evaluate Jev as an optional ranking adapter for
-ambiguous, noncritical communication decisions. Jev may score whether a candidate is worth
-announcing, rank simultaneous candidates, or classify a bounded message type. It does not
-create race facts, generate wording, or own the final scheduling decision.
-
-Context Engineer candidate evaluation is defined separately in
-[INT-07 Context Engineer evaluation](intelligence-evaluation.md). It compares typed evidence
-plans and deterministic execution outcomes; it does not treat a single-label classifier or a
-temporal model as a drop-in conversational answer generator.
-
-The integration must preserve these constraints:
-
-- critical safety and race-control calls remain deterministic and bypass learned ranking;
-- calls are event-triggered rather than issued for every telemetry frame;
-- the scheduler continues to enforce expiry, cooldown, deduplication, and capacity;
-- timeout, service failure, or insufficient confidence falls back to the strict policy;
-- only compact, privacy-safe derived context may leave the machine, with explicit opt-in;
-- initial operation is shadow-only, recording probabilities and disagreements without
-  changing what the driver hears; and
-- promotion beyond shadow mode requires replay fixtures plus measured latency and
-  decision-quality evidence.
-
-This keeps Jev behind a replaceable policy-ranking interface. The local strict policy
-remains sufficient for offline operation and is never dependent on the remote adapter.
+**Deterministic critical calls.** Flags and safety calls use fixed templates and never wait
+on a model.
