@@ -71,8 +71,8 @@ queue_capacity = 8
 
 [conversation]
 adapter = "llama-cpp"
-# English MVP: one resident LFM model selects native tools and writes grounded replies.
-# Explicit Qwen rollback: --config config/qwen-legacy.toml.
+# One resident Ministral model selects read-only tools and writes grounded replies.
+# Explicit rollbacks: --config config/lfm-legacy.toml or config/qwen-legacy.toml.
 context_planner = "ministral-native-v1"
 model = "mistralai/Ministral-3-3B-Instruct-2512"
 port = 8092
@@ -83,8 +83,9 @@ max_snapshot_age_s = 3.0
 reply_delivery_timeout_s = 15.0
 default_language = "en"
 
-# LFM runs on NVIDIA/CUDA. Qwen3-ASR stays on CPU; Chatterbox selects its own device.
-# CPU LFM is explicit; never silently reuse a different server or switch model/backend.
+# Ministral runs on NVIDIA/CUDA. Qwen3-ASR stays on CPU; Chatterbox selects its own device.
+# CPU mode is explicit; never silently reuse a different server or switch model/backend.
+# The data/lfm3-prototype folder name is historical; it holds the Ministral llama.cpp builds.
 [conversation.runtime]
 mode = "gpu"
 cpu_executable_path = "data/lfm3-prototype/llama-b12088-cpu/llama-server.exe"

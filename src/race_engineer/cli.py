@@ -695,7 +695,7 @@ def main() -> None:
                     )
                 )
             except SpeechInputError as error:
-                print(f"Live speech input failed: {error}. See docs/live-conversation.md.")
+                print(f"Live speech input failed: {error}. See docs/development.md.")
                 live_code = 1
             except (ValueError, OSError):
                 print("Cannot start live conversation; check configuration and recording path.")
@@ -723,7 +723,7 @@ def main() -> None:
                         )
                     )
             except SpeechOutputError as error:
-                print(f"Speech output failed: {error}. See docs/conversational-speech.md.")
+                print(f"Speech output failed: {error}. See docs/development.md.")
                 radio_code = 1
             except (ValueError, OSError):
                 print("Cannot start radio check; check configuration and voice paths.")
@@ -757,7 +757,7 @@ def main() -> None:
                         )
                     )
             except SpeechInputError as error:
-                print(f"Speech input failed: {error}. See docs/speech-to-text.md.")
+                print(f"Speech input failed: {error}. See docs/development.md.")
                 speech_code = 1
             except (ValueError, OSError):
                 print("Cannot start speech input; check configuration, fixture, and audio path.")

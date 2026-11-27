@@ -13,7 +13,8 @@ from PySide6.QtWidgets import QApplication
 from race_engineer.ui.app import BindingDialog, RadioDesk
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "docs/design/control-panel"
+OUTPUT = ROOT / "data/diagnostics/control-panel"
+MOCKUP = ROOT / "scripts/assets/control-panel-mockup.png"
 
 
 def main() -> None:
@@ -35,7 +36,7 @@ def main() -> None:
     panel.show()
     app.processEvents()
     panel.grab().save(str(OUTPUT / "implementation.png"))
-    source = QImage(str(OUTPUT / "selected-radio-desk.png"))
+    source = QImage(str(MOCKUP))
     if source.isNull():
         raise RuntimeError("Selected mockup missing")
     # Native OS chrome is intentionally excluded; normalize density, not app geometry.
