@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 from test_lfm3_dialogue import Model, call, setup
 
+from scripts import compare_dialogue_models
 from scripts.compare_dialogue_models import DATASET, RawConversation, configuration, summarize
 from scripts.lfm3_dialogue import ChatReply, LocalDialogueModel
 
@@ -137,3 +138,47 @@ def test_timeout_stops_candidate_and_closes_owned_server(monkeypatch, tmp_path):
     assert events == ["start", "request", "close"]
     assert report["server_closed"] and len(report["rows"]) == 1
     assert report["failure"]
+
+
+LOG = """
+load_tensors: offloaded 37/37 layers to GPU
+load_tensors: CUDA0 model buffer size = 2375.91 MiB
+llama_context: n_ctx = 8192
+llama_kv_cache: CUDA0 KV buffer size = 1152.00 MiB
+llama_kv_cache: size = 1152.00 MiB (8192 cells, 36 layers), K (f16): 576 MiB, V (f16): 576 MiB
+resolve_fused_ops: Flash Attention enabled
+sched_reserve: CUDA0 compute buffer size = 83.01 MiB
+sched_reserve: CUDA_Host compute buffer size = 18.01 MiB
+"""
+
+
+def test_runtime_log_reports_effective_backend_allocations():
+    observed = compare_dialogue_models.parse_runtime_log(LOG)
+    assert observed["context_size"] == 8192
+    assert observed["flash_attention_enabled"] is True
+    assert (observed["cache_k"], observed["cache_v"]) == ("f16", "f16")
+    assert (observed["offloaded_layers"], observed["total_layers"]) == (37, 37)
+    assert observed["cuda_model_mib"] == 2375.91
+    assert observed["cuda_kv_mib"] == 1152
+    assert observed["cuda_compute_mib"] == 83.01
+    assert len(observed["proof_lines"]) == 7
+
+
+def test_occupied_port_is_refused_without_contacting_or_stopping_the_listener(monkeypatch):
+    class Socket:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def setsockopt(self, *args):
+            pass
+
+        def bind(self, address):
+            assert address[0] == "127.0.0.1"
+            raise OSError("occupied")
+
+    monkeypatch.setattr(compare_dialogue_models.socket, "socket", Socket)
+    with pytest.raises(ValueError, match="left untouched"):
+        compare_dialogue_models.require_free_port(8097)

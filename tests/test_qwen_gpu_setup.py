@@ -3,13 +3,13 @@ import json
 import stat
 import subprocess
 import zipfile
-from argparse import Namespace
 from pathlib import Path
 
 import pytest
 
 from race_engineer.config import AppConfig, load_config
-from scripts import benchmark_intelligence, setup_qwen_gpu
+from race_engineer.evaluation.system import gpu_memory_snapshot
+from scripts import setup_qwen_gpu
 
 ROOT = Path(__file__).parents[1]
 
@@ -175,16 +175,6 @@ def test_existing_gpu_runtime_requires_complete_provenance_and_unchanged_files(
         setup_qwen_gpu.install_runtime()
 
 
-def test_controlled_benchmark_rejects_unknown_external_backend():
-    class Server:
-        process = effective = None
-
-    with pytest.raises(ValueError, match="external server"):
-        benchmark_intelligence.verify_trial_runtime(Server(), Namespace(require_owned_runtime=True))
-    with pytest.raises(ValueError, match="Expected owned cuda"):
-        benchmark_intelligence.verify_trial_runtime(Server(), Namespace(expect_backend="cuda"))
-
-
 def test_gpu_memory_report_is_whole_device_and_handles_wddm_without_claiming_zero(
     tmp_path, monkeypatch
 ):
@@ -196,7 +186,7 @@ def test_gpu_memory_report_is_whole_device_and_handles_wddm_without_claiming_zer
         )
 
     monkeypatch.setattr("race_engineer.evaluation.system.subprocess.run", run)
-    report = benchmark_intelligence.gpu_memory_snapshot()
+    report = gpu_memory_snapshot()
     assert report == {
         "available": True,
         "devices": [
@@ -207,7 +197,7 @@ def test_gpu_memory_report_is_whole_device_and_handles_wddm_without_claiming_zer
 
 def test_gpu_memory_unknown_measurement_is_unavailable_not_zero(monkeypatch):
     monkeypatch.setattr("race_engineer.evaluation.system.shutil.which", lambda _: None)
-    assert benchmark_intelligence.gpu_memory_snapshot()["available"] is False
+    assert gpu_memory_snapshot()["available"] is False
 
 
 def test_gpu_launcher_uses_main_default_and_regular_launcher_forwards_options():
